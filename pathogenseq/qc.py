@@ -9,6 +9,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 plt.ioff()
 import json
+import re
 
 ################################
 ########## Functions ###########
@@ -70,6 +71,7 @@ def flagstat(bam_file):
 ################################
 
 class qc_fastq:
+	""" A class to extract basic QC stats and run QC programs on fastQ files"""
 	params = {"fq1":"","fq2":""}
 	read_len = [] 
 	read_num = 0
@@ -187,4 +189,15 @@ class qc_bam:
 			arr = l.rstrip().split()
 			regions.append(tuple(arr))
 		return self.region_cov(regions)
-
+	def gff_cov(self,gff_file,key="ID"):
+		regions = []
+		key_re = re.compile("%s=([\w\.\-\_]+)"%key)
+		for l in open(gff_file):
+			if l[0]=="#": continue
+			arr = l.rstrip().split()
+			if "%s="%key not in l: 
+				print "Warining: %s not found in %s" % (key,l) 
+				continue
+			name = key_re.search(l).group(1)
+			regions.append((arr[0],arr[3],arr[4],name))
+		return self.region_cov(regions)
