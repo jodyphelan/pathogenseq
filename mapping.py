@@ -10,7 +10,7 @@ import argparse
 
 
 def main(args):
-	x= pathogenseq.fastq(args.r1,args.r2,args.ref,args.prefix,threads=args.threads)
+	x= pathogenseq.mapping(args.r1,args.r2,args.ref,args.prefix,threads=args.threads)
 	x.trim()
 	x.map()
 	x.call_snps()
@@ -27,3 +27,6 @@ parser.add_argument('--ref','-r', help='Reference Sequence')
 parser.add_argument('--threads','-t', type=int, default=1, help='Number of threads')
 parser.add_argument('--prefix','-p', help='Prefix for files')
 parser.set_defaults(func=main)
+
+args = parser.parse_args()
+args.func(args)

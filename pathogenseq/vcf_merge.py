@@ -4,35 +4,20 @@ import subprocess
 import json
 import os
 from files import *
-
-def fa2dict(filename):
-    fa_dict = {}
-    seq_name = ""
-    for l in open(filename):
-            line = l.rstrip()
-            if line[0] == ">":
-                    seq_name = line[1:].split()[0]
-                    fa_dict[seq_name] = []
-            else:
-                    fa_dict[seq_name].append(line)
-    result = {}
-    for seq in fa_dict:
-            result[seq] = "".join(fa_dict[seq])
-    return result
-	
+from fasta import *
 
 def create_mappability_file(ref_file,threads):
 	cmd = "gem-indexer -i %s -o genome" % ref_file
 	run_cmd(cmd)
 	cmd = "gem-mappability -I genome.gem -o genome -l 75 -T %s" % threads
 	run_cmd(cmd)
-	cmd = "gem-2-wig -I genome.gem -i genome.mappability -o genome" 
+	cmd = "gem-2-wig -I genome.gem -i genome.mappability -o genome"
 	run_cmd(cmd)
-	
+
 	lines = []
 	for l in open("genome.wig"):
 		arr = l.rstrip().split()
-		if arr[0]=="variableStep": 
+		if arr[0]=="variableStep":
 			chrom = arr[1].split()[0][6:]
 			continue
 		lines.append((chrom,int(arr[0]),arr[1]))
@@ -42,9 +27,32 @@ def create_mappability_file(ref_file,threads):
 	O.close()
 
 class vcf_merge:
+	"""
+	A class to manage the merging of gVCF files and subsequence filtering
+
+	Args:
+		sample_file(str):
+		File containing the sample names with 1 per line
+		ref_file(str): Reference file
+		prefix(str): Prefix for all output files
+		mappability_file(str): Name of the mappability file (will generage if NoneType given)
+		vcf_dir(str): Directory contianing the gVCF files
+		min_dp(int): Minimum depth for calls
+		fmiss(float): The maximum fraction of missing data to keep SNP position
+		miss_cut(float): Max fraction cutoff for missing calls per sample
+		mix_cut(float): Max fraction cutoff for mixed calls per sample
+		low_cov(bool): Optimise filtering for low coverage sequencing
+		bed_include(str): Only include variants in regions specified in the BED files
+		bed_exclude(str): Exclude variants in regions specified in the BED files
+		vcf_ext(str): The extension the the VCF files have (after sample name)
+		threads(int): Number of threads to use
+
+	Returns:
+		vcf_merge: A vcf_merge class object
+	"""
 	params = {}
 	samples = []
-	def __init__(self,sample_file,ref_file,prefix,mappability_file=False,vcf_dir=".",min_dp=10,threads=20,fmiss=0.1,vcf_ext="vcf.gz",miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=False,bed_exclude=False):
+	def __init__(self,sample_file,ref_file,prefix,mappability_file=None,vcf_dir=".",min_dp=10,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=False,bed_exclude=False,threads=20,vcf_ext="vcf.gz"):
 		self.params["sample_file"] = sample_file
 		self.params["ref_file"] = ref_file
 		self.params["threads"] = threads
@@ -67,7 +75,7 @@ class vcf_merge:
 		self.params["qual_file"] = "%s.sample_quals.txt" % prefix
 		self.params["bed_include"] = "bcftools view -T %s |" % bed_include if bed_include!=False else ""
 		self.params["bed_exclude"] = "bcftools view -T ^%s |" % bed_exclude if bed_exclude!=False else ""
-		if mappability_file==False:
+		if not mappability_file:
 			create_mappability_file(ref_file,threads)
 			self.params["mappability_file"] = "genome.mappability.bed"
 		else:
@@ -80,9 +88,10 @@ class vcf_merge:
 			filecheck("%(vcf_dir)s/%(temp)s.%(vcf_ext)s" %self.params)
 		filecheck(sample_file)
 		filecheck(ref_file)
-		
+
 
 	def merge(self):
+		"""Merge gVCF files"""
 		cmd = "cat %(sample_file)s | xargs -i sh -c \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % self.params
 		run_cmd(cmd)
 		self.params["vcf_files"] = " ".join(["%s/%s.%s" % (self.params["vcf_dir"],x,self.params["vcf_ext"]) for x in self.samples])
@@ -90,10 +99,12 @@ class vcf_merge:
 		run_cmd(cmd)
 
 	def extract_variants(self):
+		"""Extract all variant positions"""
 		cmd = "bcftools +setGT %(merged_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view -i 'AC>=0 && F_MISSING<%(miss_cut)s' -o %(prefilt_bcf)s -O b" % self.params
 		run_cmd(cmd)
 
 	def filt_non_uniq(self):
+		"""Filter out non unique positions"""
 		non_uniq = []
 		O = open("genome.non_uniq.bed","w")
 		for l in open(self.params["mappability_file"]):
@@ -106,10 +117,11 @@ class vcf_merge:
 		run_cmd(cmd)
 
 	def sample_filt(self):
+		"""Filter out low quality samples"""
 		num_calls = int(subprocess.Popen("bcftools view %(uniq_filt_bcf)s -H | wc -l" % self.params,shell=True,stdout=subprocess.PIPE).communicate()[0].rstrip())
 		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"bcftools view -s {} %(uniq_filt_bcf)s | bcftools view -g miss -H | wc -l > {}.miss\"" % self.params
 		run_cmd(cmd)
-		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"bcftools view -s {} %(uniq_filt_bcf)s | bcftools view -g het -H | wc -l > {}.mix\"" % self.params	
+		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"bcftools view -s {} %(uniq_filt_bcf)s | bcftools view -g het -H | wc -l > {}.mix\"" % self.params
 		run_cmd(cmd)
 		miss = {}
 		mix = {}
@@ -129,28 +141,27 @@ class vcf_merge:
 				self.lq_samples.append(s)
 				LQ.write("%s\n" % s)
 			else:
-				self.hq_samples.append(s)		
+				self.hq_samples.append(s)
 				HQ.write("%s\n" % s)
 		HQ.close()
 		LQ.close()
 		QF.close()
 		cmd = "bcftools view -S %(hq_sample_file)s -a -c 1 -o %(sample_filt_bcf)s -O b %(uniq_filt_bcf)s" % self.params
 		run_cmd(cmd)
-		
+
 	def mask_mixed(self):
+		"""Create a BCF file with mixed called masked as missing"""
 		cmd = "bcftools +setGT %(sample_filt_bcf)s -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(mix_masked_bcf)s" % self.params
 		run_cmd(cmd)
-	
+
 	def generate_fasta(self):
+		"""Create a fasta file from the SNPs"""
 		cmd = "bcftools query -l %(mix_masked_bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools query -s {} -f '[%%IUPACGT]' %(mix_masked_bcf)s >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
 		run_cmd(cmd)
 		O = open(self.params["snp_fasta"],"w")
 		for s in self.hq_samples:
-			fdict = fa2dict(s+".fa")
-			fdict = fa2dict(s+".fa")
+			fdict = fasta(s+".fa").fa_dict
 			fdict[s] = fdict[s].replace("./.","N")
 			O.write(">%s\n%s\n" % ( s,fdict[s]))
 			os.remove(s+".fa")
-		O.close()	
-
-
+		O.close()

@@ -29,9 +29,3 @@ class bcf:
 		O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
 		run_cmd(cmd,verbose=v)
-			
-		
-x = bcf("test.mix_masked.bcf")
-x.annotate("/home/jody/refgenome/MTB-h37rv_asm19595v2-eg18.fa","/home/jody/refgenome/MTB-h37rv_asm19595v2-eg18.gff")
-x.extract_matrix()
-		
