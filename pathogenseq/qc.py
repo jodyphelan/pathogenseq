@@ -153,7 +153,7 @@ class qc_fastq:
 			if self.kraken_run==False:
 				print "Please run kraken filtering first...exiting"
 				quit()
-			return mapping(self.params["kr_filt_fq_1"],self.params["kr_filt_fq_2"],ref,self.prefix)
+			return mapping(self.params["kr_filt_fq_1"],self.params["kr_filt_fq_2"],ref,self.prefix,threads=20,platform="Illumina",call_method="optimise",mapper="bwa")
 
 
 

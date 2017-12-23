@@ -32,9 +32,11 @@ cov_plot = "%s.cov.png" % (prefix)
 bamqc.plot_cov("Chromosome",cov_plot)
 stats["bam_pct_reads_mapped"] = bamqc.pct_reads_mapped
 stats["bam_med_dp"] = bamqc.med_dp
+stats["bam_depth_10"] = bamqc.genome_cov[10]
+stats["bam_depth_20"] = bamqc.genome_cov[20]
 
 json.dump(stats,open("%s.stats.json","w"))
 O = open("%s.log"%prefix,"w")
-for x in ["fastq_mean_read_len","fastq_read_num","kraken_pct_filt","bam_pct_reads_mapped","bam_med_dp"]:
+for x in ["fastq_mean_read_len","fastq_read_num","kraken_pct_filt","bam_pct_reads_mapped","bam_med_dp","bam_depth_10","bam_depth_20"]:
 	O.write("%s\t%s\n" % (x,stats[x]))
 O.close()
