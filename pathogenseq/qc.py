@@ -11,7 +11,7 @@ plt.ioff()
 import json
 import re
 from fasta import *
-
+from map_call_snps import *
 ################################
 ########## Functions ###########
 ################################
@@ -76,6 +76,7 @@ class qc_fastq:
 	read_len = []
 	read_num = 0
 	paired = False
+	kraken_run = False
 	def __init__(self,prefix,fq1,fq2=None,optimise=True,threads=20,kraken_db = None):
 		if filecheck(fq1):
 			self.params["fq1"] = fq1
@@ -141,7 +142,18 @@ class qc_fastq:
 					O2.write("%s\n%s\n+\n%s\n" % (seqname2,seq2,qual2))
 			O1.close()
 			O2.close()
+			self.run_kraken = True
+		def get_mapper_from_kraken(self,ref):
+			"""
+			Get a mapping class from the kraken filtered fastQ files
 
+			Returns:
+				mapping: A mapping class object
+			"""
+			if self.kraken_run==False:
+				print "Please run kraken filtering first...exiting"
+				quit()
+			return mapping(self.params["kr_filt_fq_1"],self.params["kr_filt_fq_2"],ref,self.prefix)
 
 
 
