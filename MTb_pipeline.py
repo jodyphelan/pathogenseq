@@ -1,12 +1,12 @@
 from __future__ import division
 import sys
-import pathogenseq
+import pathogenseq as ps
 import argparse
 import json
 
-r1 = sys.argv[1]
-r2 = sys.argv[2]
-ref = sys.argv[3]
+ref = sys.argv[1]
+r1 = sys.argv[2]
+r2 = sys.argv[3]
 prefix = sys.argv[4]
 threads = sys.argv[5]
 
@@ -23,7 +23,7 @@ fr2 = "%s_2.kraken_filt.fastq.gz" %prefix
 newfastqqc = ps.qc_fastq(prefix,fr1,fr2)
 stats["kraken_pct_filt"] = newfastqqc.read_num/fastqqc.read_num*100
 
-mapper = pathogenseq.mapping(fr1,fr2,ref,prefix,threads=threads)
+mapper = ps.mapping(fr1,fr2,ref,prefix,threads=threads)
 mapper.trim()
 mapper.map()
 
