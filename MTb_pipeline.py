@@ -4,6 +4,11 @@ import pathogenseq
 import argparse
 import json
 
+r1 = sys.argv[1]
+r2 = sys.argv[2]
+ref = sys.argv[3]
+prefix = sys.argv[4]
+threads = sys.argv[5]
 
 stats = {}
 fastqqc = ps.qc_fastq(prefix,r1,r2,kraken_db="/opt/storage2/ernest/kraken/kraken/standard_db")
