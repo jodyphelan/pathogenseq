@@ -3,7 +3,7 @@ import subprocess
 from files import *
 import os
 import numpy as np
-
+from qc import *
 
 class mapping:
 	"""
@@ -120,3 +120,13 @@ class mapping:
 		else:
 			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg 10 -V indels -Oz -o %(vcf_file)s" % self.params
 		run_cmd(cmd)
+	def get_bam_qc(cov_thresholds=[1,5,10,100]):
+		"""
+		Get a qc_bam object
+
+		Args:
+			cov_thresholds(list): List of integers to use in the percentage genome covered calculation
+		Returns:
+			qc_bam: A qc_bam object
+		"""
+		return qc_bam(self.params["bam_file"],self.params["ref_file"],cov_thresholds)
