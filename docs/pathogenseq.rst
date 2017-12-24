@@ -20,6 +20,14 @@ pathogenseq\.files module
     :undoc-members:
     :show-inheritance:
 
+pathogenseq\.logger module
+--------------------------
+
+.. automodule:: pathogenseq.logger
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pathogenseq\.map\_call\_snps module
 -----------------------------------
 
