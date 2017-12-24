@@ -77,7 +77,7 @@ class qc_fastq:
 	read_num = 0
 	paired = False
 	kraken_run = False
-	def __init__(self,prefix,fq1,fq2=None,optimise=True,threads=20,kraken_db = None):
+	def __init__(self,prefix,fq1,fq2=None,optimise=True,threads=20):
 		if filecheck(fq1):
 			self.params["fq1"] = fq1
 		if fq2 and filecheck(fq2):
@@ -85,7 +85,7 @@ class qc_fastq:
 			self.paried = True
 		self.params["prefix"] = prefix
 		self.params["threads"] = threads
-		self.params["kraken_db"] = kraken_db
+
 
 		self.read_num = int(gz_file_len(fq1)/4)*2 if self.paired else int(gz_file_len(fq1)/4)
 		self.read_pairs = self.read_num/2 if self.paired else self.read_num
@@ -101,13 +101,14 @@ class qc_fastq:
 	def approx_depth(self,genome_size):
 		"""Return approx depth for a given genome size"""
 		return self.read_num*self.mean_read_len/gsize_convert(genome_size)
-	def run_kraken(self,filter_fastq = None):
+	def run_kraken(self,kraken_db,filter_fastq = None):
 		"""
 		Run kraken with an option to create filtered fastq files
 
 		Args:
 			filter_fastq(str): NCBI Taxonomy code use when extracting reads
 		"""
+		self.params["kraken_db"] = kraken_db
 		self.params["kraken_file"] = "%(prefix)s.kraken" % self.params
 		cmd = "kraken --db %(kraken_db)s --threads %(threads)s --fastq-input --gzip-compressed --output %(kraken_file)s --paired --check-names %(fq1)s %(fq2)s" % self.params
 		run_cmd(cmd)
