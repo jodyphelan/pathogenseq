@@ -23,7 +23,7 @@ fr2 = "%s_2.kraken_filt.fastq.gz" %prefix
 newfastqqc = ps.qc_fastq(prefix,fr1,fr2)
 stats["kraken_pct_filt"] = newfastqqc.read_num/fastqqc.read_num*100
 
-mapper = ps.mapping(fr1,fr2,ref,prefix,threads=threads)
+mapper = ps.fastq(fr1,fr2,ref,prefix,threads=threads)
 mapper.trim()
 mapper.map()
 
