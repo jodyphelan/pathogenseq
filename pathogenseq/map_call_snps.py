@@ -5,7 +5,7 @@ import os
 import numpy as np
 from qc import *
 
-class mapping:
+class fastq:
 	"""
 	Class for performing mapping to reference.
 
@@ -26,7 +26,7 @@ class mapping:
 	paired = False
 	call_method = "high"
 	mapper = "bwa"
-	def __init__(self,r1,r2,ref_file,prefix,threads=20,platform="Illumina",call_method="optimise",mapper="bwa"):
+	def __init__(self,r1,r2,ref_file,prefix,threads=20,platform="Illumina",mapper="bwa"):
 		if r1 and filecheck(r1):
 			self.params["r1"] = r1
 		else:
@@ -48,7 +48,6 @@ class mapping:
 		self.params["r2_tp"] = "%s_2_trim_pair.fq" % prefix
 		self.params["r2_tu"] = "%s_2_trim_unpair.fq" % prefix
 		self.params["r1t"] = "%s_trim.fq" % prefix
-		self.params["vcf_file"] = "%s.vcf.gz" % self.params["prefix"]
 		self.call_method = call_method
 
 	def trim(self):
@@ -58,7 +57,6 @@ class mapping:
 		else:
 			cmd = "java -jar ~/bin/trimmomatic.jar SE -threads %(threads)s -phred33 %(r1)s %(r1t)s LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36" % self.params
 		run_cmd(cmd)
-
 
 	def map(self):
 		"""Perform mapping"""
@@ -96,9 +94,35 @@ class mapping:
 				cmd = "bowtie2 -p %(threads)s -x %(ref_file)s -U %(r1t)s | samtools view -@ %(threads)s -b - | samtools sort -@ %(threads)s -o %(bam_file)s" % self.params
 			run_cmd(cmd)
 			rm_files([self.params["r1t"]])
-	def call_snps(self):
-		"""Perform SNP calling"""
-		if self.call_method=="optimise":
+
+
+
+class bam:
+	params = {}
+	def __init__(self,bam_file,prefix,ref_file=None):
+		if filecheck(bam_file): self.params["bam_file"] = bam_file
+		self.params["prefix"] = prefix
+		if ref_file:
+			if filecheck(ref_file): self.params["ref_file"] = ref_file
+		else:
+			self.params["ref_file"] = ref_file
+
+	def call_snps(self,ref_file=None,call_method="optimise"):
+		"""
+		Perform SNP calling
+
+		Args:
+			ref_file(str): reference file (not required if passed to the bam initiator).
+			call_method(str): optimise variant calling based on high or low depth. Options: high|low|optimise
+		"""
+		self.params["vcf_file"] = "%s.vcf.gz" % self.params["prefix"]
+		if ref_file:
+			if filecheck(ref_file): self.params["ref_file"] = ref_file
+		else:
+			if self.params["ref_file"]==None and ref_file==None:
+				print "Please provide a reference fasta file...Exiting"
+				quit()
+		if call_method=="optimise":
 			dp = []
 			cmd = "samtools depth %(bam_file)s" % self.params
 			print "Optimising call method"
@@ -109,18 +133,17 @@ class mapping:
 			print "Median depth: %s" % med_dp
 			if med_dp<30:
 				print "Using low depth approach"
-				self.call_method = "low"
+				call_method = "low"
 			else:
-				self.call_method = "high"
+				print "Using high depth approach"
+				call_method = "high"
 
-		else:
-			print self.call_method
-		if self.call_method=="high":
+		if call_method=="high":
 			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg 10 -V indels -Oz -o %(vcf_file)s" % self.params
 		else:
 			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg 10 -V indels -Oz -o %(vcf_file)s" % self.params
 		run_cmd(cmd)
-	def get_bam_qc(self,cov_thresholds=[1,5,10,20]):
+	def get_bam_qc(self,ref_file,cov_thresholds=[1,5,10,20]):
 		"""
 		Get a qc_bam object
 
@@ -129,4 +152,10 @@ class mapping:
 		Returns:
 			qc_bam: A qc_bam object
 		"""
+		if ref_file:
+			if filecheck(ref_file): self.params["ref_file"] = ref_file
+		else:
+			if ref_file==None:
+				print "Please provide a reference fasta file...Exiting"
+				quit()
 		return qc_bam(self.params["bam_file"],self.params["ref_file"],cov_thresholds)
