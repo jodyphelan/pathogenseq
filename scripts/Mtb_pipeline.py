@@ -11,11 +11,11 @@ prefix = sys.argv[4]
 threads = sys.argv[5]
 
 stats = {}
-fastqqc = ps.qc_fastq(prefix,r1,r2,kraken_db="/opt/storage2/ernest/kraken/kraken/standard_db")
+fastqqc = ps.qc_fastq(prefix,r1,r2)
 stats["fastq_mean_read_len"] = fastqqc.mean_read_len
 stats["fastq_read_num"] = fastqqc.read_num
 
-fastqqc.run_kraken("77643,1773,78331,33894,1765")
+fastqqc.run_kraken("/opt/storage2/ernest/kraken/kraken/standard_db","77643,1773,78331,33894,1765")
 
 fr1 = "%s_1.kraken_filt.fastq.gz" %prefix
 fr2 = "%s_2.kraken_filt.fastq.gz" %prefix
@@ -23,9 +23,14 @@ fr2 = "%s_2.kraken_filt.fastq.gz" %prefix
 newfastqqc = ps.qc_fastq(prefix,fr1,fr2)
 stats["kraken_pct_filt"] = newfastqqc.read_num/fastqqc.read_num*100
 
-mapper = ps.fastq(fr1,fr2,ref,prefix,threads=threads)
-mapper.trim()
-mapper.map()
+fastq = ps.fastq(fr1,fr2,ref,prefix,threads=threads)
+fastq.trim()
+fastq.map()
+
+bam_file = "%s.bam" % prefix
+
+bam = ps.bam(bam_file,prefix,ref_file)
+bam.call_snps()
 
 bamqc = mapper.get_bam_qc()
 cov_plot = "%s.cov.png" % (prefix)

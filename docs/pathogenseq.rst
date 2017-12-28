@@ -44,6 +44,14 @@ pathogenseq\.mvcf module
     :undoc-members:
     :show-inheritance:
 
+pathogenseq\.phylo module
+-------------------------
+
+.. automodule:: pathogenseq.phylo
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pathogenseq\.qc module
 ----------------------
 
