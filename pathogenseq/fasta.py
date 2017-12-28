@@ -69,11 +69,11 @@ class fasta:
 					result.append((s,x,"-"))
 		return result
 	def write_philip(self,out_file):
-
+		fa_dict = self.fa_dict
 		O = open(out_file,"w")
 		O.write("\t%s\t%s\n" % (len(fa_dict.keys()),len(fa_dict[fa_dict.keys()[0]])))
-		for s in self.fa_dict:
-			O.write("%s\t%s\n" % (s,self.fa_dict[s]))
+		for s in fa_dict:
+			O.write("%s\t%s\n" % (s,fa_dict[s]))
 		O.close()
 
 def revcom(s):
