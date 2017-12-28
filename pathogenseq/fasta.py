@@ -71,7 +71,7 @@ class fasta:
 	def write_philip(self,out_file):
 
 		O = open(out_file,"w")
-		O.wirte("\t%s\t%s\n" % (len(fa_dict.keys()),len(fa_dict[fa_dict.keys()[0]])))
+		O.write("\t%s\t%s\n" % (len(fa_dict.keys()),len(fa_dict[fa_dict.keys()[0]])))
 		for s in self.fa_dict:
 			O.write("%s\t%s\n" % (s,self.fa_dict[s]))
 		O.close()
