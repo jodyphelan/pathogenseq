@@ -52,7 +52,7 @@ class vcf_merge:
 	"""
 	params = {}
 	samples = []
-	def __init__(self,sample_file,ref_file,prefix,mappability_file=None,vcf_dir=".",min_dp=10,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=False,bed_exclude=False,threads=20,vcf_ext="vcf.gz"):
+	def __init__(self,sample_file,ref_file,prefix,mappability_file=None,vcf_dir=".",min_dp=10,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=None,bed_exclude=None,threads=20,vcf_ext="vcf.gz"):
 		self.params["sample_file"] = sample_file
 		self.params["ref_file"] = ref_file
 		self.params["threads"] = threads
@@ -73,8 +73,8 @@ class vcf_merge:
 		self.params["mix_cut"] = mix_cut
 		self.params["low_cov"] = low_cov
 		self.params["qual_file"] = "%s.sample_quals.txt" % prefix
-		self.params["bed_include"] = "bcftools view -T %s |" % bed_include if bed_include!=False else ""
-		self.params["bed_exclude"] = "bcftools view -T ^%s |" % bed_exclude if bed_exclude!=False else ""
+		self.params["bed_include"] = "bcftools view -T %s |" % bed_include if bed_include!=None else ""
+		self.params["bed_exclude"] = "bcftools view -T ^%s |" % bed_exclude if bed_exclude!=None else ""
 		if not mappability_file:
 			create_mappability_file(ref_file,threads)
 			self.params["mappability_file"] = "genome.mappability.bed"

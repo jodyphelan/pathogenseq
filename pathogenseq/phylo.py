@@ -23,3 +23,4 @@ class phylo:
 		run_cmd(cmd)
 		print "Running EXaML"
 		cmd = "examl-OMP -s %(prefix)s -n examl -m PSR -D -t RAxML_parsimonyTree.StartingTree" % self.params
+		run_cmd(cmd)
