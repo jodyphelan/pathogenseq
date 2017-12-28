@@ -22,5 +22,5 @@ class phylo:
 		cmd = "parse-examl -s %(phylip_file)s -n %(prefix)s -m DNA" % self.params
 		run_cmd(cmd)
 		print "Running EXaML"
-		cmd = "examl-OMP -s %(prefix)s -n examl -m PSR -D -t RAxML_parsimonyTree.StartingTree" % self.params
+		cmd = "examl-OMP -s %(prefix)s.binary -n examl -m PSR -D -t RAxML_parsimonyTree.StartingTree" % self.params
 		run_cmd(cmd)
