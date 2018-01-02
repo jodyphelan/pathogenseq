@@ -9,6 +9,7 @@ class phylo:
 	Args:
 		fa_file(str): Fasta file containing the aligned whole genomes or SNPs
 		prefix(str): Prefix for your results
+		threads(int): Number of threads to use for multithreaded operations (default:4)
 	Returns:
 		phylo: A phylo class object
 	"""
