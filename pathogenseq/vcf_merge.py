@@ -52,7 +52,7 @@ class vcf_merge:
 	"""
 	params = {}
 	samples = []
-	def __init__(self,sample_file,ref_file,prefix,mappability_file=None,vcf_dir=".",min_dp=10,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=None,bed_exclude=None,threads=20,vcf_ext="vcf.gz"):
+	def __init__(self,sample_file,ref_file,prefix,mappability_file=None,vcf_dir=".",min_dp=10,keep_samples=None,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=None,bed_exclude=None,threads=20,vcf_ext="vcf.gz"):
 		self.params["sample_file"] = sample_file
 		self.params["ref_file"] = ref_file
 		self.params["threads"] = threads
@@ -86,6 +86,8 @@ class vcf_merge:
 		for s in self.samples:
 			self.params["temp"] = s
 			filecheck("%(vcf_dir)s/%(temp)s.%(vcf_ext)s" %self.params)
+		if keep_samples and filecheck(keep_samples):
+			self.keep_samples = [x.rstrip() for x in open(keep_samples).readlines()]
 		filecheck(sample_file)
 		filecheck(ref_file)
 
@@ -137,7 +139,10 @@ class vcf_merge:
 			QF.write("%s\t%s\t%s\n" % (s,mix[s],miss[s]))
 			os.remove("%s.miss" % (s))
 			os.remove("%s.mix" % (s))
-			if miss[s]>self.params["miss_cut"] or mix[s]>self.params["mix_cut"]:
+			if s in self.keep_samples:
+				self.hq_samples.append(s)
+				HQ.write("%s\n" % s)
+			elif miss[s]>self.params["miss_cut"] or mix[s]>self.params["mix_cut"]:
 				self.lq_samples.append(s)
 				LQ.write("%s\n" % s)
 			else:
