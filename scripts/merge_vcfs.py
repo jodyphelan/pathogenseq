@@ -4,7 +4,7 @@ import argparse
 
 
 def main(args):
-	vcf = ps.vcf_merge(args.samples,args.ref,args.prefix,args.mappability,args.vcf_dir,args.min_dp,args.fmiss,args.miss_cut,args.mix_cut,args.low_cov,args.bed_include,args.bed_exclude,args.threads,args.vcf_ext)
+	vcf = ps.vcf_merge(args.samples,args.ref,args.prefix,args.mappability,args.vcf_dir,args.min_dp,args.keep_samples,args.fmiss,args.miss_cut,args.mix_cut,args.low_cov,args.bed_include,args.bed_exclude,args.threads,args.vcf_ext)
 	vcf.merge()
 	vcf.extract_variants()
 	vcf.filt_non_uniq()
@@ -21,6 +21,7 @@ parser.add_argument('prefix', help='Reference Sequence')
 parser.add_argument('--threads','-t', type=int, default=1, help='Number of threads')
 parser.add_argument('--mappability','-m', help='Reference Sequence')
 parser.add_argument('--min_dp', default=10, type=int, help='Reference Sequence')
+parser.add_argument('--keep_samples', default=None,help='Reference Sequence')
 parser.add_argument('--fmiss', default=0.1,type=float,help='Reference Sequence')
 parser.add_argument('--miss_cut', default=0.15,type=float,help='Reference Sequence')
 parser.add_argument('--mix_cut',default=0.15,type=float, help='Reference Sequence')
