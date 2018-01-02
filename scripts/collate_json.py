@@ -14,4 +14,4 @@ for s in samples:
 
 print "\t".join(keys)
 for s in samples:
-	print "\t".join([str(results[s][k]) if k in results[s] else "-" for k in keys])
+	print "%s\t%s" % ("\t".join([str(results[s][k]) if k in results[s] else "-" for k in keys]))
