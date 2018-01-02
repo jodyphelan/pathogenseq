@@ -8,3 +8,4 @@ if len(sys.argv)!=3:
 snps_file = sys.argv[1]
 prefix = sys.argv[2]
 phylo = ps.phylo(snps_file,prefix)
+phylo.examl()
