@@ -8,11 +8,11 @@ class phylo:
 
 	Args:
 		fa_file(str): Fasta file containing the aligned whole genomes or SNPs
-
+		prefix(str): Prefix for your results
 	Returns:
 		phylo: A phylo class object
 	"""
-	
+
 	params = {}
 	def __init__(self,fa_file,prefix,threads=4):
 		if filecheck(fa_file):
