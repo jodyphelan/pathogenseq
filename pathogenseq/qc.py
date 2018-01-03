@@ -11,7 +11,8 @@ plt.ioff()
 import json
 import re
 from fasta import *
-from map_call_snps import *
+from fastq import *
+from bam import *
 ################################
 ########## Functions ###########
 ################################
