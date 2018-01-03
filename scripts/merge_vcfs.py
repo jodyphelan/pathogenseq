@@ -22,7 +22,7 @@ parser.add_argument('--threads','-t', type=int, default=1, help='Number of threa
 parser.add_argument('--mappability','-m', help='Reference Sequence')
 parser.add_argument('--min_dp', default=10, type=int, help='Reference Sequence')
 parser.add_argument('--keep_samples', default=None,help='Reference Sequence')
-parser.add_argument('--fmiss', default=0.1,type=float,help='Reference Sequence')
+parser.add_argument('--fmiss', default=0.1,type=float,help='The maximum fraction of missing data to keep SNP position')
 parser.add_argument('--miss_cut', default=0.15,type=float,help='Reference Sequence')
 parser.add_argument('--mix_cut',default=0.15,type=float, help='Reference Sequence')
 parser.add_argument('--low_cov', default=False,help='Reference Sequence')
