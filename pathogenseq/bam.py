@@ -2,6 +2,7 @@ from __future__ import division
 from files import *
 from collections import defaultdict
 import re
+import numpy as np
 
 indelre = re.compile("(\w)[\+\-](\d+)(\w+)")
 def recode_indels(indels):
@@ -215,7 +216,7 @@ class bam:
 			if arr[1]=="42062":
 				print call
 				print ref
-				print adjusted_allele_frac 
+				print adjusted_allele_frac
 			if len(max_allele)>1 or len(ref)>1: #INDELS!!!!
 				ref_run_end_pos = arr[1]
 				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
