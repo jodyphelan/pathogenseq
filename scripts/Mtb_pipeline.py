@@ -32,7 +32,7 @@ bam_file = "%s.bam" % prefix
 bam = ps.bam(bam_file,prefix,ref)
 bam.call_snps()
 
-bamqc = mapper.get_bam_qc()
+bamqc = bam.get_bam_qc()
 cov_plot = "%s.cov.png" % (prefix)
 bamqc.plot_cov("Chromosome",cov_plot)
 stats["bam_pct_reads_mapped"] = bamqc.pct_reads_mapped
