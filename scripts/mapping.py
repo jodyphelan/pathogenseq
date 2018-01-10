@@ -24,7 +24,7 @@ parser.add_argument('--r2','-2', help='Second read file')
 parser.add_argument('--ref','-r', help='Reference Sequence')
 parser.add_argument('--threads','-t', type=int, default=1, help='Number of threads')
 parser.add_argument('--prefix','-p', help='Prefix for files')
-parser.add_argument('--mapper','-m', type=str,options=["bwa","minimap2","bowtie2"],help='Prefix for files')
+parser.add_argument('--mapper','-m', type=str,choices=["bwa","minimap2","bowtie2"],help='Prefix for files')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
