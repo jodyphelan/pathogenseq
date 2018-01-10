@@ -4,7 +4,7 @@ from files import *
 import os
 import numpy as np
 from qc import *
-
+from bam import *
 class fastq:
 	"""
 	Class for performing mapping to reference.

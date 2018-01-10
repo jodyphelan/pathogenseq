@@ -12,7 +12,7 @@ import json
 import re
 from fasta import *
 from fastq import *
-from bam import *
+
 ################################
 ########## Functions ###########
 ################################
@@ -145,17 +145,6 @@ class qc_fastq:
 			O1.close()
 			O2.close()
 			self.run_kraken = True
-		def get_mapper_from_kraken(self,ref):
-			"""
-			Get a mapping class from the kraken filtered fastQ files
-
-			Returns:
-				mapping: A mapping class object
-			"""
-			if self.kraken_run==False:
-				print "Please run kraken filtering first...exiting"
-				quit()
-			return mapping(self.params["kr_filt_fq_1"],self.params["kr_filt_fq_2"],ref,self.prefix,threads=20,platform="Illumina",call_method="optimise",mapper="bwa")
 
 
 
