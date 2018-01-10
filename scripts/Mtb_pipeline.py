@@ -29,7 +29,7 @@ fastq.illumina()
 
 bam_file = "%s.bam" % prefix
 
-bam = ps.bam(bam_file,prefix,ref_file)
+bam = ps.bam(bam_file,prefix,ref)
 bam.call_snps()
 
 bamqc = mapper.get_bam_qc()
