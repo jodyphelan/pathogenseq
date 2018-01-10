@@ -24,10 +24,8 @@ newfastqqc = ps.qc_fastq(prefix,fr1,fr2)
 stats["kraken_pct_filt"] = newfastqqc.read_num/fastqqc.read_num*100
 
 fastq = ps.fastq(prefix,ref,fr1,fr2,threads=threads)
-print "Trimming reads"
-fastq.trim()
-print "Mapping data"
-fastq.map()
+
+fastq.illumina()
 
 bam_file = "%s.bam" % prefix
 
