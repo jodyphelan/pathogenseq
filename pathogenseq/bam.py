@@ -1,7 +1,9 @@
+from __future__ import division
 from files import *
 from collections import defaultdict
+import re
 
-
+indelre = re.compile("(\w)[\+\-](\d+)(\w+)")
 def recode_indels(indels):
 	#["C+5CGGGG","G-1C"]
 	sorted_indels = sorted([x for x in indels],key=lambda y:len(y))
@@ -38,19 +40,20 @@ class bam:
 		bam_file(str): The BAM file [required]
 		prefix(str): A prefix for output files [required]
 		ref_file(ref_file): A reference (needed by some methods)
-
+		platform(str): Can be either ``Illumina`` or ``minION``
 	Returns:
 		bam: A bam class object
 	"""
 	params = {}
-	def __init__(self,bam_file,prefix,ref_file=None,platform="Illumina"):
+	def __init__(self,bam_file,prefix,ref_file=None,platform="Illumina",threads=20):
 		if filecheck(bam_file): self.params["bam_file"] = bam_file
 		self.params["prefix"] = prefix
 		if ref_file:
 			if filecheck(ref_file): self.params["ref_file"] = ref_file
 		else:
 			self.params["ref_file"] = ref_file
-
+		self.params["platform"] = platform
+		self.params["threads"] = threads
 	def call_snps(self,ref_file=None,call_method="optimise",min_dp=10):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
@@ -114,18 +117,20 @@ class bam:
 		else:
 			cmd = "htsbox pileup -f %(ref_file)s -Q 8 %(bam_file)s > %(temp_pileup)s" % self.params
 		run_cmd(cmd)
-	def htsbox_calls(self,bed_file):
-		bed_pos = set()
-		for l in open(bed_file):
-			arr = l.rstrip().split()
-			for i in range(int(arr[1]),int(arr[2])+1):
-				bed_pos.add((arr[0],str(i)))
+	def htsbox_calls(self,bed_file=None):
 		self.do_pileup(bed_file=bed_file)
+		if bed_file:
+			bed_pos = set()
+			for l in open(bed_file):
+				arr = l.rstrip().split()
+				for i in range(int(arr[1]),int(arr[2])+1):
+					bed_pos.add((arr[0],str(i)))
+
 		final_calls = defaultdict(lambda :defaultdict(list))
 		if self.params["platform"] == "Illumina":
 			for l in open(self.params["temp_pileup"]):
 				arr = l.rstrip().split()
-				if (arr[0],arr[1]) not in bed_pos: continue
+				if bed_file and (arr[0],arr[1]) not in bed_pos: continue
 				calls = arr[3].split(",")
 				cov = [int(x) for x in arr[4].split(":")[1].split(",")]
 				tot = sum(cov)
@@ -135,15 +140,15 @@ class bam:
 			for l in open(self.params["temp_pileup"]):
 				#Chromosome	  23	  G	   G,G-1C,G+3AAA   0/1:49,1,1
 				arr = l.rstrip().split()
-				if (arr[0],arr[1]) not in bed_pos: continue
+				if bed_file and (arr[0],arr[1]) not in bed_pos: continue
 				alleles = arr[3].split(",")
 				depth = [int(x) for x in arr[4].split(":")[1].split(",")]
 				max_allele_dp = max(depth)
 				max_allele = alleles[depth.index(max_allele_dp)]
-				max_allele_frac = max_allele_dp/sum(depth)
+				max_allele_frac = max_allele_dp/tot_dp
 				if len(max_allele)>1:
 					max_allele = recode_indels([arr[1],max_allele])[1][0]
-				if sum(depth)<min_dp:
+				if tot_dp<min_dp:
 					call = "N"
 				if max_allele_frac<min_frac:
 					call = "N"
@@ -151,3 +156,94 @@ class bam:
 					call = max_allele
 				final_calls[arr[0]][arr[1]].append((call,1,max_allele_dp))
 		return final_calls
+	def pileup2vcf(self,min_het_frac=0.3,min_hom_frac=0.7,min_dp=10,bed_file=None):
+
+
+		header = """##fileformat=VCFv4.1
+##source=htsbox-pileup-r340
+##reference=/home/jody/refgenome/MTB-h37rv_asm19595v2-eg18.fa
+##contig=<ID=Chromosome,length=4411532>
+##INFO=<ID=DP4,Number=4,Type=Integer,Description="Number of high-quality ref-forward , ref-reverse, alt-forward and alt-reverse bases">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Raw Depth">
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%(prefix)s
+""" % self.params
+		self.params["temp_pileup"] = "%s.temp.pileup" % self.params["prefix"]
+		if bed_file:
+			self.do_pileup(bed_file)
+			bed_pos = set()
+			for l in open(bed_file):
+				arr = l.rstrip().split()
+				for i in range(int(arr[1]),int(arr[2])):
+					bed_pos.add(str(i))
+		else:
+#			self.do_pileup()
+			pass
+		self.params["vcf_file"] = "%s.vcf" % self.params["prefix"]
+		OUT = open("%(vcf_file)s" % self.params,"w")
+		OUT.write(header)
+		ref_run_start_pos = -1
+		ref_run_start_ref = "X"
+		ref_run_min_dp = 0
+		for l in open(self.params["temp_pileup"]):
+			#Chromosome	  23	  G	   G,G-1C,G+3AAA   0/1:49,1,1
+			arr = l.rstrip().split()
+			if bed_file:
+				if arr[1] not in bed_pos:
+					continue
+			alleles = arr[3].split(",")
+			depth = [int(x) for x in arr[4].split(":")[1].split(",")]
+			tot_dp = sum(depth)
+			ref = arr[2]
+			if ref_run_start_pos==-1:
+				ref_run_start_pos = arr[1]
+				ref_run_start_ref = ref
+				ref_run_min_dp = tot_dp
+			max_allele_dp = max(depth)
+			max_allele = alleles[depth.index(max_allele_dp)]
+			max_allele_frac = max_allele_dp/tot_dp
+			adjusted_allele_frac = max_allele_dp/(max_allele_dp+sorted(depth)[-2]) if len(depth)>1 else max_allele_frac
+			ref_depth = depth[alleles.index(ref)] if ref in alleles else 0
+			if len(max_allele)>1:
+				indel = recode_indels([max_allele])
+				max_allele = indel[1][0]
+				ref = indel[0]
+
+			DP4 = "0,%s,0,%s" % (ref_depth,tot_dp-ref_depth)
+
+			call = max_allele
+			if arr[1]=="42062":
+				print call
+				print ref
+				print adjusted_allele_frac 
+			if len(max_allele)>1 or len(ref)>1: #INDELS!!!!
+				ref_run_end_pos = arr[1]
+				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
+			elif tot_dp>min_dp and adjusted_allele_frac>min_hom_frac and call==ref:
+				ref_run_end_pos = arr[1]
+				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
+			elif tot_dp>min_dp and adjusted_allele_frac<=min_hom_frac and adjusted_allele_frac>min_het_frac:
+				if call==ref:
+					call=alleles[depth.index(sorted(depth)[-2])]
+				gt="0/1"
+				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
+				OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=%s\tGT:DP\t0/0:%s\n" % (arr[0],ref_run_start_pos,ref_run_start_ref,int(arr[1])-1,ref_run_min_dp,ref_run_min_dp))
+				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\tDP4=%s\tGT:DP\t%s:%s\n" % (arr[0],arr[1],ref,call,DP4,gt,tot_dp))
+				ref_run_start_pos = -1
+			else:
+#				print tot_dp>min_dp
+#				print adjusted_allele_frac>min_frac
+#				print call==ref
+#				print arr[1]
+				if call==ref:
+					call="."
+					gt="0/0"
+				else:
+					gt="1/1"
+
+				#Chromosome	132662	.	C	.	.	.	END=132666;MinDP=10	GT:DP	0/0:10
+				#Chromosome	7	.	G	A	8	.	.	GT:AD	0/1:914,8
+				OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=%s\tGT:DP\t0/0:%s\n" % (arr[0],ref_run_start_pos,ref_run_start_ref,int(arr[1])-1,ref_run_min_dp,ref_run_min_dp))
+				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\tDP4=%s\tGT:DP\t%s:%s\n" % (arr[0],arr[1],ref,call,DP4,gt,tot_dp))
+				ref_run_start_pos = -1
+		OUT.close()
