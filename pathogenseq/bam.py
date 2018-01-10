@@ -3,7 +3,7 @@ from files import *
 from collections import defaultdict
 import re
 import numpy as np
-
+from qc import *
 indelre = re.compile("(\w)[\+\-](\d+)(\w+)")
 def recode_indels(indels):
 	#["C+5CGGGG","G-1C"]
