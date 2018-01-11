@@ -32,7 +32,7 @@ def run_cmd(cmd,verbose=2):
 	"""
 	Wrapper to run a command using subprocess with 3 levels of verbosity and automatic exiting if command failed
 	"""
-	cmd = "set -o pipefail; " + cmd
+	cmd = "set -u pipefail; " + cmd
 	if verbose==2:
 		print "\nRunning command:\n%s" % cmd
 		stderr = open("/dev/stderr","w")
