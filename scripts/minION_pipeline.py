@@ -10,7 +10,7 @@ threads = sys.argv[4]
 
 cov_png = "%s.cov.png" % prefix
 stats_file = "%s.stats.json" % prefix
-gc_file = "%s.gc_skew.txt"
+gc_file = "%s.gc_skew.txt" % prefix
 stats = OrderedDict()
 fq = ps.fastq(prefix,ref,r1,threads=threads)
 fq_qc = fq.get_fastq_qc()
