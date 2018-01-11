@@ -28,7 +28,7 @@ def bwa_index(ref):
 	cmd = "bwa index %s" % ref
 	run_cmd(cmd)
 
-def run_cmd(cmd,verbose=2):
+def run_cmd(cmd,verbose=1):
 	"""
 	Wrapper to run a command using subprocess with 3 levels of verbosity and automatic exiting if command failed
 	"""
