@@ -262,3 +262,18 @@ class qc_bam:
 			name = key_re.search(l).group(1)
 			regions.append((arr[0],arr[3],arr[4],name))
 		return self.region_cov(regions)
+	def extract_gc_skew(self,filename,window=1000,step=500):
+		fa_dict = fasta(self.ref).fa_dict
+		gc = []
+		cov = []
+		hw = int(window/2)
+		for s in fa_dict:
+			for i in range(hw,len(fa_dict[s])-hw,step):
+				seq = fa_dict[s][i-hw:i+hw]
+				tmp = dict((c, seq.count(c)) for c in ["C","G"])
+				gc.append(int((tmp["G"]+tmp["C"])/(window)*100))
+				cov.append(int(np.median(self.ref_dp[s][i-hw:i+hw])))
+		O = open(filename,"w")
+		for i in range(len(gc)):
+			O.write("%s\t%s\n" % (gc[i],cov[i]))
+		O.close()

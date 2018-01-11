@@ -18,7 +18,6 @@ stats["mean_read_len"] = fq_qc.mean_read_len
 stats["median_read_len"] = fq_qc.median_read_len
 stats["read_num"] = fq_qc.read_num
 bam = fq.minION()
-bam = ps.bam(prefix+".bam",prefix,ref)
 bam_qc = bam.get_bam_qc(ref)
 stats["med_dp"] = bam_qc.med_dp
 stats["pct_reads_mapped"] = bam_qc.pct_reads_mapped
