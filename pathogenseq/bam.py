@@ -179,7 +179,7 @@ class bam:
 				for i in range(int(arr[1]),int(arr[2])):
 					bed_pos.add(str(i))
 		else:
-#			self.do_pileup()
+			self.do_pileup()
 			pass
 		variants = []
 		self.params["vcf_file"] = "%s.vcf" % self.params["prefix"]
