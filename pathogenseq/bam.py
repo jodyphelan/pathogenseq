@@ -168,6 +168,8 @@ class bam:
 ##INFO=<ID=DP4,Number=4,Type=Integer,Description="Number of high-quality ref-forward , ref-reverse, alt-forward and alt-reverse bases">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Raw Depth">
+##INFO=<ID=MinDP,Number=1,Type=Integer,Description="Minimum per-sample depth in this gVCF block">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant described in this record">
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%(prefix)s
 """ % self.params
 		self.params["temp_pileup"] = "%s.temp.pileup" % self.params["prefix"]
