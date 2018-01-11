@@ -22,11 +22,11 @@ class fastq:
 	Returns:
 		mapping: A mapping class object
 	"""
-	params = {}
+	params = {"r1":None,"r2":None}
 	paired = False
 	call_method = "high"
 	mapper = "bwa"
-	def __init__(self,prefix,ref_file,r1,r2=None,threads=20):
+	def __init__(self,prefix,ref_file,r1,r2=None,threads=20):	
 		if r1 and filecheck(r1):
 			self.params["r1"] = r1
 		else:
@@ -34,6 +34,7 @@ class fastq:
 		if r2 and filecheck(r2):
 			self.params["r2"] = r2
 			self.paired = True
+
 		self.params["prefix"] = prefix
 		self.params["threads"] = threads
 		if filecheck(ref_file):
@@ -69,6 +70,8 @@ class fastq:
 		psmapper = mapping(self.params["prefix"],self.params["ref_file"],unpaired=self.params["r1"],mapper=mapper,threads=self.params["threads"],platform="minION")
 		psmapper.map()
 		return psmapper.get_bam()
+	def get_fastq_qc(self):
+		return qc_fastq(self.params["prefix"],self.params["r1"],self.params["r2"])
 
 class mapping:
 	"""

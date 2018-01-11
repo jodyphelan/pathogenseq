@@ -8,7 +8,7 @@ samples = [l.rstrip() for l in open(sample_file).readlines()]
 results = {}
 keys = set()
 for s in samples:
-	results[s] = json.load(open("%s.%s" % (s,extension)))
+	results[s] = json.load(open("%s%s" % (s,extension)))
 	for x in results[s]:
 		keys.add(x)
 

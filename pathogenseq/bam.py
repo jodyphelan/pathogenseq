@@ -158,7 +158,7 @@ class bam:
 					call = max_allele
 				final_calls[arr[0]][arr[1]].append((call,1,max_allele_dp))
 		return final_calls
-	def pileup2vcf(self,min_het_frac=0.3,min_hom_frac=0.7,min_dp=10,bed_file=None):
+	def pileup2vcf(self,min_het_frac=0.3,min_hom_frac=0.6,min_dp=10,bed_file=None):
 
 
 		header = """##fileformat=VCFv4.1
@@ -181,6 +181,7 @@ class bam:
 		else:
 #			self.do_pileup()
 			pass
+		variants = []
 		self.params["vcf_file"] = "%s.vcf" % self.params["prefix"]
 		OUT = open("%(vcf_file)s" % self.params,"w")
 		OUT.write(header)
@@ -214,10 +215,6 @@ class bam:
 			DP4 = "0,%s,0,%s" % (ref_depth,tot_dp-ref_depth)
 
 			call = max_allele
-			if arr[1]=="42062":
-				print call
-				print ref
-				print adjusted_allele_frac
 			if len(max_allele)>1 or len(ref)>1: #INDELS!!!!
 				ref_run_end_pos = arr[1]
 				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
@@ -232,20 +229,16 @@ class bam:
 				OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=%s\tGT:DP\t0/0:%s\n" % (arr[0],ref_run_start_pos,ref_run_start_ref,int(arr[1])-1,ref_run_min_dp,ref_run_min_dp))
 				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\tDP4=%s\tGT:DP\t%s:%s\n" % (arr[0],arr[1],ref,call,DP4,gt,tot_dp))
 				ref_run_start_pos = -1
+				variants.append((arr[0],arr[1],ref,call,tot_dp,gt))
 			else:
-#				print tot_dp>min_dp
-#				print adjusted_allele_frac>min_frac
-#				print call==ref
-#				print arr[1]
 				if call==ref:
 					call="."
 					gt="0/0"
 				else:
 					gt="1/1"
-
-				#Chromosome	132662	.	C	.	.	.	END=132666;MinDP=10	GT:DP	0/0:10
-				#Chromosome	7	.	G	A	8	.	.	GT:AD	0/1:914,8
 				OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=%s\tGT:DP\t0/0:%s\n" % (arr[0],ref_run_start_pos,ref_run_start_ref,int(arr[1])-1,ref_run_min_dp,ref_run_min_dp))
 				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\tDP4=%s\tGT:DP\t%s:%s\n" % (arr[0],arr[1],ref,call,DP4,gt,tot_dp))
 				ref_run_start_pos = -1
+				variants.append((arr[0],arr[1],ref,call,tot_dp,gt))
 		OUT.close()
+		return variants
