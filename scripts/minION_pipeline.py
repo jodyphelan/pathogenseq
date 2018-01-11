@@ -10,7 +10,7 @@ threads = sys.argv[4]
 
 cov_png = "%s.cov.png" % prefix
 stats_file = "%s.stats.json" % prefix
-
+gc_file = "%s.gc_skew.txt"
 stats = OrderedDict()
 fq = ps.fastq(prefix,ref,r1,threads=threads)
 fq_qc = fq.get_fastq_qc()
@@ -24,6 +24,7 @@ stats["pct_reads_mapped"] = bam_qc.pct_reads_mapped
 stats["genome_cov_1"] = bam_qc.genome_cov[1]
 stats["genome_cov_10"] = bam_qc.genome_cov[10]
 bam_qc.plot_cov("Chromosome",cov_png)
+bam_qc.extract_gc_skew(gc_file)
 variants = bam.pileup2vcf()
 stats["hom_variants"] = len([x for x in variants if x[5]=="1/1"])
 stats["het_variants"] = len([x for x in variants if x[5]=="0/1"])
