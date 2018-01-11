@@ -217,13 +217,13 @@ class bam:
 			DP4 = "0,%s,0,%s" % (ref_depth,tot_dp-ref_depth)
 
 			call = max_allele
-			if len(max_allele)>1 or len(ref)>1: #INDELS!!!!
+#			if len(max_allele)>1 or len(ref)>1: #INDELS!!!!
+#				ref_run_end_pos = arr[1]
+#				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
+			if tot_dp>=min_dp and adjusted_allele_frac>min_hom_frac and call==ref:
 				ref_run_end_pos = arr[1]
 				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
-			elif tot_dp>min_dp and adjusted_allele_frac>min_hom_frac and call==ref:
-				ref_run_end_pos = arr[1]
-				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
-			elif tot_dp>min_dp and adjusted_allele_frac<=min_hom_frac and adjusted_allele_frac>min_het_frac:
+			elif tot_dp>=min_dp and adjusted_allele_frac<=min_hom_frac and adjusted_allele_frac>min_het_frac:
 				if call==ref:
 					call=alleles[depth.index(sorted(depth)[-2])]
 				gt="0/1"
