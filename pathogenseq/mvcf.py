@@ -31,7 +31,7 @@ class bcf:
 		run_cmd(cmd,verbose=v)
 	def vcf_to_fasta(self,filename):
 		"""Create a fasta file from the SNPs"""
-		cmd = "bcftools query -l %(mix_masked_bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools query -s {} -f '[%%IUPACGT]' %(mix_masked_bcf)s >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
+		cmd = "bcftools query -l %(bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools query -s {} -f '[%%IUPACGT]' %(bcf)s >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
 		run_cmd(cmd)
 		O = open(filename,"w")
 		for s in self.samples:
