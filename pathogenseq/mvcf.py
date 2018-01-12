@@ -29,3 +29,14 @@ class bcf:
 		O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
 		run_cmd(cmd,verbose=v)
+	def vcf_to_fasta(self,filename):
+		"""Create a fasta file from the SNPs"""
+		cmd = "bcftools query -l %(mix_masked_bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools query -s {} -f '[%%IUPACGT]' %(mix_masked_bcf)s >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
+		run_cmd(cmd)
+		O = open(filename,"w")
+		for s in self.samples:
+			fdict = fasta(s+".fa").fa_dict
+			fdict[s] = fdict[s].replace("./.","N")
+			O.write(">%s\n%s\n" % ( s,fdict[s]))
+			os.remove(s+".fa")
+		O.close()
