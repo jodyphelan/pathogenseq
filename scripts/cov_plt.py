@@ -8,8 +8,8 @@ start = sys.argv[4]
 end = sys.argv[5]
 out_file = sys.argv[6]
 
-if start=="-": start=None
-if end=="-": end=None
+start = int(start) if start!="-" else None
+end = int(end) if end!="-" else None
 
 x = ps.qc_bam(bam_file,ref_file)
 x.plot_cov(chrom,out_file,start=start,end=end)
