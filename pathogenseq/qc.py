@@ -206,7 +206,7 @@ class qc_bam:
 		for i in range(start+hw,end-hw,step):
 			print i
 			x.append(i/d)
-			y.append(int(np.median(self.ref_dp[chrom][i-hw:i+hw])))
+			y.append(int(np.median(self.ref_dp[chrom][i-hw:i+hw+1])))
 		fig = plt.figure()
 		plot = fig.add_subplot(111)
 		plot.plot(x,y)

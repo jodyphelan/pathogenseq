@@ -1,15 +1,25 @@
 import sys
 import pathogenseq as ps
+import argparse
 
-bam_file = sys.argv[1]
-ref_file = sys.argv[2]
-chrom = sys.argv[3]
-start = sys.argv[4]
-end = sys.argv[5]
-out_file = sys.argv[6]
+def main(args):
 
-start = int(start) if start!="-" else None
-end = int(end) if end!="-" else None
+	x = ps.qc_bam(args.bam,args.ref)
+	x.plot_cov(args.chrom,args.outfile,start=args.start,end=args.end,window=args.window,step=args.step,optimise=args.optimise)
 
-x = ps.qc_bam(bam_file,ref_file)
-x.plot_cov(chrom,out_file,start=start,end=end)
+
+
+parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('bam', help='BAM file')
+parser.add_argument('ref', help='Reference file')
+parser.add_argument('chrom', help='Chromosome')
+parser.add_argument('outfile', help='Chromosome')
+parser.add_argument('--start','-s', type=int, default=None, help='Number of threads')
+parser.add_argument('--end','-e', type=int, default=None, help='Prefix for files')
+parser.add_argument('--window','-w', type=int, default=10000, help='Prefix for files')
+parser.add_argument('--step','-x', type=int, default=5000, help='Prefix for files')
+parser.add_argument('--optimise', type=bool, default=False, help='Prefix for files')
+parser.set_defaults(func=main)
+
+args = parser.parse_args()
+args.func(args)
