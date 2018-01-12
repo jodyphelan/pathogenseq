@@ -167,7 +167,7 @@ class qc_bam:
 		if filecheck(ref): self.ref = ref
 		self.genome_cov,self.med_dp,self.ref_dp = get_genome_cov(bam,ref,cov_thresholds)
 		self.pct_reads_mapped = flagstat(bam)
-	def plot_cov(self,chrom,imgfile,window=10000,step=5000,optimise=True):
+	def plot_cov(self,chrom,imgfile,start=None,end=None,window=10000,step=5000,optimise=True):
 		"""
 		Plot coverage across chromosomes
 
@@ -178,23 +178,33 @@ class qc_bam:
 			step(int): Step size for the sliding window coverage calculation
 			optimise(bool): Optimise window and step size for chromosome len
 		"""
-		chrom_size = len(self.ref_dp[chrom])
-		if chrom_size<100000:
+		if start and end:
+			region_size = end-start
+		else:
+			region_size = len(self.ref_dp[chrom])
+			start = 0
+			end = region_size
+		if region_size<100000:
 			n,d = "K",1000
-		elif chrom_size>100000 and chrom_size<1000000000:
+		elif region_size>100000 and region_size<1000000000:
 			n,d = "M",1000000
 		else:
 			n,d = "G",1000000000
 		if optimise:
-			if chrom_size<100000:
+			if region_size<100000:
 				window,step=100,50
-			elif chrom_size>100000 and chrom_size<1000000:
+			elif region_size>100000 and region_size<1000000:
 				window,step=1000,500
-
+		if start and end:
+			window,step
+		print region_size
+		print start
+		print end
 		x = []
 		y = []
 		hw = int(window/2)
-		for i in range(hw,len(self.ref_dp[chrom])-hw,step):
+		for i in range(start+hw,end-hw,step):
+			print i
 			x.append(i/d)
 			y.append(int(np.median(self.ref_dp[chrom][i-hw:i+hw])))
 		fig = plt.figure()
