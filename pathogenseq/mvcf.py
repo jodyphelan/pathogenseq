@@ -62,6 +62,7 @@ class bcf:
 	def get_venn_diagram_data(self,samples):
 		samples = samples.split(",")
 		if len(samples)>4:
+			print samples
 			print "Can't handle more than 4 samples...Exiting!"
 			quit()
 		if nofile(self.params["vcf"]): self.bcf2vcf()
