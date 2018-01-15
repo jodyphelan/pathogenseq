@@ -61,6 +61,9 @@ class bcf:
 		return results
 	def get_venn_diagram_data(self,samples):
 		samples = samples.split(",")
+		if len(samples)>4:
+			print "Can't handle more than 4 samples...Exiting!"
+			quit()
 		if nofile(self.params["vcf"]): self.bcf2vcf()
 		vcf_reader = vcf.Reader(open(self.params["vcf"],"r"))
 		results = defaultdict(int)
@@ -84,6 +87,9 @@ class bcf:
 				data["overlap_"+tmp_str] += 1
 
 		for i,si in enumerate(samples):
+			if si not in self.samples:
+				print "Can't find %s in samples...Exiting" % si
+				quit()
 			data["id_%s"%i] = si
 			data["tot_snps_%s"%i] = tot_snps[si]
 		if len(samples)==2:
