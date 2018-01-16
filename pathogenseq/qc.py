@@ -214,7 +214,9 @@ class qc_bam:
 		print "Region End: %s" % new_end
 
 		for i in range(new_start+hw,new_end-hw,step):
-			print "Coverage from %s to %s is %s" % (i-hw,i+hw+1,int(np.median(self.ref_dp[chrom][i-hw:i+hw+1])))
+
+			print "Coverage from %s to %s" % (i-hw,i+hw+1)
+			print self.ref_dp[chrom][i-hw:i+hw+1]
 			x.append(i/d)
 			y.append(int(np.median(self.ref_dp[chrom][i-hw:i+hw+1])))
 		fig = plt.figure()
