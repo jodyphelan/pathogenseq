@@ -50,10 +50,11 @@ class vcf_merge:
 	Returns:
 		vcf_merge: A vcf_merge class object
 	"""
-	params = {}
-	samples = []
-	keep_samples = []
+
 	def __init__(self,sample_file,ref_file,prefix,mappability_file=None,vcf_dir=".",min_dp=10,keep_samples=None,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=None,bed_exclude=None,threads=20,vcf_ext="vcf.gz"):
+		self.params = {}
+		self.samples = []
+		self.keep_samples = []
 		self.params["sample_file"] = sample_file
 		self.params["ref_file"] = ref_file
 		self.params["threads"] = threads

@@ -11,7 +11,6 @@ class fasta:
 	Returns:
 		fasta: A fasta class object
 	"""
-	fa_dict = {}
 	def __init__(self,filename):
 		fa_dict = {}
 		seq_name = ""

@@ -13,9 +13,8 @@ class phylo:
 	Returns:
 		phylo: A phylo class object
 	"""
-
-	params = {}
 	def __init__(self,fa_file,prefix,threads=4):
+		self.params = {}
 		if filecheck(fa_file):
 			self.params["fa_file"] = fa_file
 			self.fasta = fasta(fa_file)

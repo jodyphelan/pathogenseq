@@ -73,12 +73,13 @@ class qc_fastq:
 	Returns:
 		qc_fastq: A qc_fastq class object
 	"""
-	params = {"fq1":"","fq2":""}
-	read_len = []
-	read_num = 0
-	paired = False
-	kraken_run = False
+
 	def __init__(self,prefix,fq1,fq2=None,optimise=True,threads=20):
+		self.params = {"fq1":"","fq2":""}
+		self.read_len = []
+		self.read_num = 0
+		self.paired = False
+		self.kraken_run = False
 		if filecheck(fq1):
 			self.params["fq1"] = fq1
 		if fq2 and filecheck(fq2):
@@ -160,14 +161,15 @@ class qc_bam:
 	Returns:
 		qc_bam: A qc_bam class object
 	"""
-	bam = None
-	ref = None
+
 	def __init__(self,bam,ref,cov_thresholds=[5,10,20]):
+		self.bam = None
+		self.ref = None
 		if filecheck(bam): self.bam = bam
 		if filecheck(ref): self.ref = ref
 		self.genome_cov,self.med_dp,self.ref_dp = get_genome_cov(bam,ref,cov_thresholds)
 		self.pct_reads_mapped = flagstat(bam)
-	def plot_cov(self,chrom,imgfile,start=None,end=None,window=10000,step=5000,optimise=True):
+	def plot_cov(self,chrom,imgfile,start=None,end=None,window=10000,step=5000,optimise=True,plot_median=True):
 		"""
 		Plot coverage across chromosomes
 
@@ -178,12 +180,20 @@ class qc_bam:
 			step(int): Step size for the sliding window coverage calculation
 			optimise(bool): Optimise window and step size for chromosome len
 		"""
+		if plot_median:
+			chrom_med_dp = np.median(self.ref_dp[chrom])
 		if start and end:
 			region_size = end-start
+			offset = int(region_size*0.05)
+			new_start = start-offset
+			new_end = end+offset
 		else:
+			offset=False
 			region_size = len(self.ref_dp[chrom])
 			start = 0
 			end = region_size
+			new_start = start
+			new_end = end
 		if region_size<100000:
 			n,d = "K",1000
 		elif region_size>100000 and region_size<1000000000:
@@ -195,16 +205,11 @@ class qc_bam:
 				window,step=100,50
 			elif region_size>100000 and region_size<1000000:
 				window,step=1000,500
-		if start and end:
-			window,step
-		print region_size
-		print start
-		print end
+
 		x = []
 		y = []
 		hw = int(window/2)
-		for i in range(start+hw,end-hw,step):
-			print i
+		for i in range(new_start+hw,new_end-hw,step):
 			x.append(i/d)
 			y.append(int(np.median(self.ref_dp[chrom][i-hw:i+hw+1])))
 		fig = plt.figure()
@@ -215,6 +220,11 @@ class qc_bam:
 			plot.set_yscale('symlog')
 		plot.set_xlabel("Genome Position (%sb)" % n)
 		plot.set_ylabel("Median Coverage (Window size:%s)" % window)
+		if plot_median:
+			plot.axhline(xmin=0,xmax=1,y=chrom_med_dp,color="orange",linestyle="dashed")
+		if offset:
+			plot.axvline(ymin=0,ymax=0.05,x=start/d,color="orange")
+			plot.axvline(ymin=0,ymax=0.05,x=end/d,color="orange")
 		fig.savefig(imgfile)
 	def save_cov(self,filename):
 		"""Save coverage to a json file"""

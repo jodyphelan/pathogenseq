@@ -8,9 +8,9 @@ import itertools
 
 v = True
 class bcf:
-	params = {}
-	samples = []
 	def __init__(self,filename,prefix=None):
+		self.params = {}
+		self.samples = []
 		self.params["bcf"] = filename
 		if prefix==None:
 			self.params["prefix"] = filename[:-4] if filename[-4:]==".bcf" else filename
@@ -18,11 +18,13 @@ class bcf:
 			self.params["prefix"] = prefix
 		self.params["temp_file"] = "%s.temp" % self.params["prefix"]
 		self.params["vcf"] = "%(prefix)s.vcf" % self.params
+		index_bcf(filename)
 		cmd = "bcftools query -l %(bcf)s > %(temp_file)s" % self.params
 		run_cmd(cmd,verbose=v)
 		for l in open(self.params["temp_file"]):
 			self.samples.append(l.rstrip())
 		os.remove(self.params["temp_file"])
+
 
 	def annotate(self,ref_file,gff_file):
 		self.params["ref_file"] = ref_file
@@ -34,12 +36,12 @@ class bcf:
 	def extract_matrix(self,matrix_file=None):
 		self.params["matrix_file"] = matrix_file if matrix_file==True else self.params["prefix"]+".mat"
 		O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
-		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
+		cmd = "bcftools view %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
 		run_cmd(cmd,verbose=v)
 	def vcf_to_fasta(self,filename,threads=20):
 		"""Create a fasta file from the SNPs"""
 		self.params["threads"] = threads
-		cmd = "bcftools query -l %(bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools query -s {} -f '[%%IUPACGT]' %(bcf)s >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
+		cmd = "bcftools query -l %(bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools view -v snps %(bcf)s | bcftools query -s {} -f '[%%IUPACGT]'  >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
 		run_cmd(cmd)
 		O = open(filename,"w")
 		for s in self.samples:
@@ -114,4 +116,20 @@ category = c("%(id_0)s","%(id_1)s","%(id_2)s","%(id_3)s"),fill=rainbow(4))
 
 """ % data
 		print rscript
-#
+
+	def merge_in_snps(self,bcf,outfile):
+		self.params["new_bcf"] = bcf
+		self.params["targets_file"] = "%(prefix)s.targets" % self.params
+		self.params["tmp_file"] = "%(prefix)s.temp.bcf" % self.params
+		self.params["tmp2_file"] = "%(prefix)s.temp2.bcf" % self.params
+		self.params["outfile"] = outfile
+		cmd = "bcftools view -v snps %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\n' | awk '{print $1\"\t\"$2-1\"\t\"$2}' > %(targets_file)s" % self.params
+		run_cmd(cmd)
+		cmd = "bcftools view -T %(targets_file)s %(new_bcf)s -Ob -o %(tmp_file)s" % self.params
+		run_cmd(cmd)
+		index_bcf(self.params["tmp_file"])
+		cmd = "bcftools view -T %(bcf)s -Ob -o %(tmp2_file)s" % self.params
+		run_cmd(cmd)
+		index_bcf(self.params["tmp2_file"])
+		cmd = "bcftools merge %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
+		run_cmd(cmd)

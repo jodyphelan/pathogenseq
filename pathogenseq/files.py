@@ -48,14 +48,21 @@ def run_cmd(cmd,verbose=1):
 		print "Command Failed! Please Check!"
 		quit()
 
-def index_bam(self):
+def index_bam(bamfile):
 	"""
 	Indexing a bam file
 	"""
-	if os.path.isfile("%(bamfile)s.bai" % self.params):
-		cmd = "%(samtools)s index %(bamfile)s" % self.params
+	if filecheck(bamfile) and nofile(bamfile+".bai"):
+		cmd = "samtools index %s" % bamfile
 		run_cmd(cmd)
 
+def index_bcf(bcf):
+	"""
+	Indexing a bcf file
+	"""
+	if filecheck(bcf) and  nofile(bcf+".csi"):
+		cmd = "bcftools index %s" % bcf
+		run_cmd(cmd)
 def verify_fq(filename):
 	"""
 	Return True if input is a valid fastQ file

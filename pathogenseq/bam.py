@@ -46,8 +46,8 @@ class bam:
 	Returns:
 		bam: A bam class object
 	"""
-	params = {}
 	def __init__(self,bam_file,prefix,ref_file=None,platform="Illumina",threads=20):
+		self.params = {}
 		if filecheck(bam_file): self.params["bam_file"] = bam_file
 		self.params["prefix"] = prefix
 		if ref_file:
