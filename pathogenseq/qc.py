@@ -182,6 +182,7 @@ class qc_bam:
 		"""
 		if plot_median:
 			chrom_med_dp = np.median(self.ref_dp[chrom])
+			print len(self.ref_dp[chrom])
 			print "Chromosome median cov: %s" % chrom_med_dp
 		if start and end:
 			region_size = end-start
