@@ -182,6 +182,7 @@ class qc_bam:
 		"""
 		if plot_median:
 			chrom_med_dp = np.median(self.ref_dp[chrom])
+			print "Chromosome median cov: %s" % chrom_med_dp
 		if start and end:
 			region_size = end-start
 			offset = int(region_size*0.05)
@@ -209,7 +210,11 @@ class qc_bam:
 		x = []
 		y = []
 		hw = int(window/2)
+		print "Region Start: %s" % new_start
+		print "Region End: %s" % new_end
+
 		for i in range(new_start+hw,new_end-hw,step):
+			print "Coverage from %s to %s is %s" % (i-hw,i+hw+1,int(np.median(self.ref_dp[chrom][i-hw:i+hw+1])))
 			x.append(i/d)
 			y.append(int(np.median(self.ref_dp[chrom][i-hw:i+hw+1])))
 		fig = plt.figure()
