@@ -128,7 +128,7 @@ category = c("%(id_0)s","%(id_1)s","%(id_2)s","%(id_3)s"),fill=rainbow(4))
 		cmd = "bcftools view -T %(targets_file)s %(new_bcf)s -Ob -o %(tmp_file)s" % self.params
 		run_cmd(cmd)
 		index_bcf(self.params["tmp_file"])
-		cmd = "bcftools view -T %(bcf)s -Ob -o %(tmp2_file)s" % self.params
+		cmd = "bcftools view -T %(targets_file) %(bcf)s -Ob -o %(tmp2_file)s" % self.params
 		run_cmd(cmd)
 		index_bcf(self.params["tmp2_file"])
 		cmd = "bcftools merge %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
