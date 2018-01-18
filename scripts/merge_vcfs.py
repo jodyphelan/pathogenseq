@@ -10,7 +10,8 @@ def main(args):
 	vcf.filt_non_uniq()
 	vcf.sample_filt()
 	vcf.mask_mixed()
-	vcf.generate_fasta()
+	bcf = vcf.get_bcf_obj()
+	bcf.vcf_to_fasta(prefix+".snps.fa",args.threads)
 
 
 
