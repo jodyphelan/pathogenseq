@@ -4,6 +4,7 @@ from collections import defaultdict
 import re
 import numpy as np
 from qc import *
+import vcf
 
 indelre = re.compile("(\w)[\+\-](\d+)(\w+)")
 def recode_indels(indels):
@@ -94,6 +95,13 @@ class bam:
 		else:
 			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		run_cmd(cmd)
+		variants = []
+		vcf_reader = vcf.Reader(open(self.params["vcf_file"]))
+		for r in vcf_reader:
+			s = r.samples[0]
+			variants.append((r.CHROM,r.POS,r.REF,s.gt_bases,s.data.DP,s.data.GT))
+		return variants
+
 	def get_bam_qc(self,ref_file,cov_thresholds=[1,5,10,20]):
 		"""
 		Get a qc_bam object
