@@ -5,6 +5,7 @@ import json
 import os
 from files import *
 from fasta import *
+from mvcf import *
 
 def create_mappability_file(ref_file,threads):
 	cmd = "gem-indexer -i %s -o genome" % ref_file
@@ -160,15 +161,5 @@ class vcf_merge:
 		"""Create a BCF file with mixed called masked as missing"""
 		cmd = "bcftools +setGT %(sample_filt_bcf)s -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(mix_masked_bcf)s" % self.params
 		run_cmd(cmd)
-
-	def generate_fasta(self):
-		"""Create a fasta file from the SNPs"""
-		cmd = "bcftools query -l %(mix_masked_bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools query -s {} -f '[%%IUPACGT]' %(mix_masked_bcf)s >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
-		run_cmd(cmd)
-		O = open(self.params["snp_fasta"],"w")
-		for s in self.hq_samples:
-			fdict = fasta(s+".fa").fa_dict
-			fdict[s] = fdict[s].replace("./.","N")
-			O.write(">%s\n%s\n" % ( s,fdict[s]))
-			os.remove(s+".fa")
-		O.close()
+	def get_bcf_obj(self):
+		return bcf(self.params["bcf"],self.params["ref"])
