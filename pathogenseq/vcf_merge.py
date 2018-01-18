@@ -162,4 +162,4 @@ class vcf_merge:
 		cmd = "bcftools +setGT %(sample_filt_bcf)s -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(mix_masked_bcf)s" % self.params
 		run_cmd(cmd)
 	def get_bcf_obj(self):
-		return bcf(self.params["mix_masked_bcf"],self.params["ref"])
+		return bcf(self.params["mix_masked_bcf"],self.params["ref_file"])
