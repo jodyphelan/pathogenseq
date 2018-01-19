@@ -51,7 +51,7 @@ def flagstat(bam_file):
 	for l in subprocess.Popen(samtools_cmd,shell=True,stdout=subprocess.PIPE).stdout:
 		arr = l.rstrip().split()
 		lines.append(arr)
-	return float(lines[4][4][1:-1])
+	return int(lines[4].split()[0]),float(lines[4][4][1:-1])
 
 
 ################################
@@ -168,7 +168,7 @@ class qc_bam:
 		if filecheck(bam): self.bam = bam
 		if filecheck(ref): self.ref = ref
 		self.genome_cov,self.med_dp,self.ref_dp = get_genome_cov(bam,ref,cov_thresholds)
-		self.pct_reads_mapped = flagstat(bam)
+		self.num_reads_mapped,self.pct_reads_mapped = flagstat(bam)
 	def plot_cov(self,chrom,imgfile,start=None,end=None,window=10000,step=5000,optimise=True,plot_median=True):
 		"""
 		Plot coverage across chromosomes
