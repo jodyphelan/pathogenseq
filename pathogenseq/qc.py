@@ -51,7 +51,7 @@ def flagstat(bam_file):
 	for l in subprocess.Popen(samtools_cmd,shell=True,stdout=subprocess.PIPE).stdout:
 		arr = l.rstrip().split()
 		lines.append(arr)
-	return int(lines[4].split()[0]),float(lines[4][4][1:-1])
+	return int(lines[4][0]),float(lines[4][4][1:-1])
 
 
 ################################
