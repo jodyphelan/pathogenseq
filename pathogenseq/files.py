@@ -100,3 +100,16 @@ def gz_file_len(filename):
 	for l in subprocess.Popen("gunzip -c %s |wc -l" % filename,shell=True,stdout=subprocess.PIPE).stdout:
 		res = l.rstrip().split()[0]
 	return int(res)
+
+def download_from_ena(acc):
+	if len(acc)==9:
+		dir1 = acc[:6]
+		cmd = "wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/%s/%s/%s*" % (dir1,acc,acc)
+	elif len(acc)==10:
+		dir1 = acc[:6]
+		dir2 = "00"+acc[-1]
+		cmd = "wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/%s/%s/%s/%s*" % (dir1,dir2,acc,acc)
+	else:
+		print "Check Accession: %s" % acc
+		quit()
+	run_cmd(cmd)
