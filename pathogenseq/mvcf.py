@@ -101,25 +101,32 @@ class bcf:
 		if len(samples)==2:
 			rscript = """
 library(VennDiagram)
+pdf("%(outfile)s")
 draw.pairwise.venn(area1=%(tot_snps_0)s, area2=%(tot_snps_1)s, cross.area=%(overlap_0_1)s, category = c("%(id_0)s","%(id_1)s"),fill=rainbow(2))
+dev.off()
 """ % data
 		elif len(samples)==3:
 			rscript = """
 library(VennDiagram)
+pdf("%(outfile)s")
 draw.triple.venn(area1=%(tot_snps_0)s, area2=%(tot_snps_1)s, area3=%(tot_snps_2)s, n12=%(overlap_0_1)s, n23=%(overlap_1_2)s, n13=%(overlap_0_2)s, n123=%(overlap_0_1_2)s, category = c("%(id_0)s","%(id_1)s","%(id_2)s"),fill=rainbow(3))
+dev.off()
 """ % data
 		elif len(samples)==4:
 			rscript="""
 library(VennDiagram)
+pdf("%(outfile)s")
 draw.quad.venn(area1=%(tot_snps_0)s, area2=%(tot_snps_1)s, area3=%(tot_snps_2)s, area4=%(tot_snps_3)s,
 n12=%(overlap_0_1)s, n13=%(overlap_0_2)s, n14=%(overlap_0_3)s, n23=%(overlap_1_2)s, n24=%(overlap_1_3)s, n34=%(overlap_2_3)s,
 n123=%(overlap_0_1_2)s, n124=%(overlap_0_1_3)s, n134=%(overlap_0_2_3)s, n234=%(overlap_1_2_3)s,
 n1234=%(overlap_0_1_2_3)s,
 category = c("%(id_0)s","%(id_1)s","%(id_2)s","%(id_3)s"),fill=rainbow(4))
-
+dev.off()
 """ % data
-		open(outfile,"w").write(rscript)
-
+		temp_r_script = "%s.temp.R" % self.params["prefix"]
+		open(temp_r_script,"w").write(rscript)
+		cmd = "Rscript %s" % temp_r_script
+		rm_files([temp_r_script])
 	def merge_in_snps(self,bcf,outfile):
 		self.params["new_bcf"] = bcf
 		self.params["targets_file"] = "%(prefix)s.targets" % self.params
