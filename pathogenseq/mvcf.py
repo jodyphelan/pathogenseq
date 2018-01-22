@@ -76,6 +76,7 @@ class bcf:
 		results = defaultdict(int)
 		tot_snps = defaultdict(int)
 		data = defaultdict(int)
+
 		for record in vcf_reader:
 			tmp = []
 			for s in record.samples:
@@ -98,6 +99,7 @@ class bcf:
 				quit()
 			data["id_%s"%i] = si
 			data["tot_snps_%s"%i] = tot_snps[si]
+		data["outfile"] = outfile
 		if len(samples)==2:
 			rscript = """
 library(VennDiagram)
@@ -127,7 +129,7 @@ dev.off()
 		open(temp_r_script,"w").write(rscript)
 		cmd = "Rscript %s" % temp_r_script
 		run_cmd(cmd)
-#		rm_files([temp_r_script])
+		rm_files([temp_r_script])
 	def merge_in_snps(self,bcf,outfile):
 		self.params["new_bcf"] = bcf
 		self.params["targets_file"] = "%(prefix)s.targets" % self.params
