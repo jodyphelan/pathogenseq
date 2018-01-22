@@ -8,7 +8,7 @@ def filecheck(filename):
 	"""
 	if not os.path.isfile(filename):
 		print "Can't find %s" % filename
-		quit()
+		exit(1)
 	else:
 		return True
 
@@ -46,7 +46,7 @@ def run_cmd(cmd,verbose=1):
 	stderr.close()
 	if res!=0:
 		print "Command Failed! Please Check!"
-		quit()
+		exit(1)
 
 def index_bam(bamfile,threads=4):
 	"""
@@ -71,7 +71,7 @@ def verify_fq(filename):
 	l1 = FQ.readline()
 	if l1[0]!="@":
 		print "First character is not \"@\"\nPlease make sure this is fastq format\nExiting..."
-		quit()
+		exit(1)
 	else:
 		return True
 
@@ -111,5 +111,5 @@ def download_from_ena(acc):
 		cmd = "wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/%s/%s/%s/%s*" % (dir1,dir2,acc,acc)
 	else:
 		print "Check Accession: %s" % acc
-		quit()
+		exit(1)
 	run_cmd(cmd)

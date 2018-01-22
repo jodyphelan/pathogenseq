@@ -18,7 +18,7 @@ parser.add_argument('--start','-s', type=int, default=None, help='Number of thre
 parser.add_argument('--end','-e', type=int, default=None, help='Prefix for files')
 parser.add_argument('--window','-w', type=int, default=10000, help='Prefix for files')
 parser.add_argument('--step','-x', type=int, default=5000, help='Prefix for files')
-parser.add_argument('--optimise', type=bool, default=False, help='Prefix for files')
+parser.add_argument('--optimise', action="store_true", help='Prefix for files')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
