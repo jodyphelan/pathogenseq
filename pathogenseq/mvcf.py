@@ -127,7 +127,7 @@ dev.off()
 		open(temp_r_script,"w").write(rscript)
 		cmd = "Rscript %s" % temp_r_script
 		run_cmd(cmd)
-		rm_files([temp_r_script])
+#		rm_files([temp_r_script])
 	def merge_in_snps(self,bcf,outfile):
 		self.params["new_bcf"] = bcf
 		self.params["targets_file"] = "%(prefix)s.targets" % self.params
