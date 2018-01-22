@@ -48,20 +48,20 @@ def run_cmd(cmd,verbose=1):
 		print "Command Failed! Please Check!"
 		quit()
 
-def index_bam(bamfile):
+def index_bam(bamfile,threads=4):
 	"""
 	Indexing a bam file
 	"""
 	if filecheck(bamfile) and nofile(bamfile+".bai"):
-		cmd = "samtools index %s" % bamfile
+		cmd = "samtools index -@ %s %s" % (threads,bamfile)
 		run_cmd(cmd)
 
-def index_bcf(bcf):
+def index_bcf(bcf,threads=4):
 	"""
 	Indexing a bcf file
 	"""
 	if filecheck(bcf) and  nofile(bcf+".csi"):
-		cmd = "bcftools index %s" % bcf
+		cmd = "bcftools index --threads -%s %s" % (threads,bcf)
 		run_cmd(cmd)
 def verify_fq(filename):
 	"""
