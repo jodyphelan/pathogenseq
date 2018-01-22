@@ -126,6 +126,7 @@ dev.off()
 		temp_r_script = "%s.temp.R" % self.params["prefix"]
 		open(temp_r_script,"w").write(rscript)
 		cmd = "Rscript %s" % temp_r_script
+		run_cmd(cmd)
 		rm_files([temp_r_script])
 	def merge_in_snps(self,bcf,outfile):
 		self.params["new_bcf"] = bcf
