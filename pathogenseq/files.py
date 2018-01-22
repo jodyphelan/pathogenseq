@@ -61,7 +61,7 @@ def index_bcf(bcf,threads=4):
 	Indexing a bcf file
 	"""
 	if filecheck(bcf) and  nofile(bcf+".csi"):
-		cmd = "bcftools index --threads -%s %s" % (threads,bcf)
+		cmd = "bcftools index --threads %s %s" % (threads,bcf)
 		run_cmd(cmd)
 def verify_fq(filename):
 	"""
