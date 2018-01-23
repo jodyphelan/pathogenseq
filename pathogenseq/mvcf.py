@@ -5,6 +5,7 @@ from fasta import *
 import vcf
 from collections import defaultdict
 import itertools
+import json
 
 v = True
 class bcf:
@@ -53,8 +54,9 @@ class bcf:
 		O.close()
 
 	def bcf2vcf(self):
-		cmd = "bcftools view %(bcf)s -Ov -o %(vcf)s" % self.params
-		run_cmd(cmd)
+		if nofile(self.params["vcf"]):
+			cmd = "bcftools view %(bcf)s -Ov -o %(vcf)s" % self.params
+			run_cmd(cmd)
 
 	def get_variants(self):
 		if nofile(self.params["vcf"]): self.bcf2vcf()
@@ -152,7 +154,7 @@ dev.off()
 		temp_vcf = "%s.temp.vcf" % self.params["prefix"]
 		cmd = "awk '{print $1\"\t\"$2-1\"\t\"$2}' %s > %s" % (bed_file,temp_bed)
 		run_cmd(cmd)
-		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],temp_vcf)
+#		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],temp_vcf)
 		run_cmd(cmd)
 		bed_dict = defaultdict(dict)
 		for l in open(bed_file):
@@ -163,8 +165,20 @@ dev.off()
 		results = defaultdict(list)
 		for record in vcf_reader:
 			for s in record.samples:
+				if s.gt_bases==None: continue
 				nuc = s.gt_bases.split("/")[0]
 				if nuc==bed_dict[record.CHROM][record.POS][0]:
 					results[s.sample].append(bed_dict[record.CHROM][record.POS][1])
 		for s in self.samples:
 			print "%s\t%s" % (s,";".join(sorted(list(set(results[s])))))
+	def extract_compressed_json(self,outfile):
+		self.bcf2vcf()
+		vcf_reader = vcf.Reader(open(self.params["vcf"]))
+		results = defaultdict(lambda: defaultdict(dict))
+		for record in vcf_reader:
+			for s in record.samples:
+				if s.gt_bases==None:
+					results[record.CHROM][record.POS][s.sample] = "N"
+				elif s.gt_bases=="1/1":
+					results[record.CHROM][record.POS][s.sample] = s.gt_bases.split("/")[0]
+		json.dump({"variants":results,"samples":self.samples},open(outfile,"w"))
