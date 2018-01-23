@@ -6,7 +6,7 @@ import vcf
 from collections import defaultdict
 import itertools
 import json
-import tqdm
+from tqdm import tqdm
 
 v = True
 class bcf:
