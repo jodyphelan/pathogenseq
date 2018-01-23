@@ -6,6 +6,7 @@ import vcf
 from collections import defaultdict
 import itertools
 import json
+import tqdm
 
 v = True
 class bcf:
@@ -175,7 +176,7 @@ dev.off()
 		self.bcf2vcf()
 		vcf_reader = vcf.Reader(open(self.params["vcf"]))
 		results = defaultdict(lambda: defaultdict(dict))
-		for record in vcf_reader:
+		for record in tqdm(vcf_reader):
 			for s in record.samples:
 				if s.gt_bases==None:
 					results[record.CHROM][record.POS][s.sample] = "N"
