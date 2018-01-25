@@ -155,7 +155,7 @@ dev.off()
 		temp_vcf = "%s.temp.vcf" % self.params["prefix"]
 		cmd = "awk '{print $1\"\t\"$2-1\"\t\"$2}' %s > %s" % (bed_file,temp_bed)
 		run_cmd(cmd)
-#		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],temp_vcf)
+		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],temp_vcf)
 		run_cmd(cmd)
 		bed_dict = defaultdict(dict)
 		for l in open(bed_file):
@@ -177,9 +177,12 @@ dev.off()
 		vcf_reader = vcf.Reader(open(self.params["vcf"]))
 		results = defaultdict(lambda: defaultdict(dict))
 		for record in tqdm(vcf_reader):
+			tmp = defaultdict(list)
 			for s in record.samples:
 				if s.gt_bases==None:
-					results[record.CHROM][record.POS][s.sample] = "N"
-				elif s.gt_bases=="1/1":
-					results[record.CHROM][record.POS][s.sample] = s.gt_bases.split("/")[0]
+					tmp["N"].append(self.samples.index(s.sample))
+				elif s.gt_nums=="1/1":
+					tmp[s.gt_bases.split("/")[0]].append(self.samples.index(s.sample))
+
+			results[record.CHROM][record.POS] = tmp
 		json.dump({"variants":results,"samples":self.samples},open(outfile,"w"))
