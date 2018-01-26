@@ -1,6 +1,14 @@
 import gzip
 import os.path
 import subprocess
+import csv
+
+def load_tsv(filename):
+	for row in csv.DictReader(open(meta_file),delimiter="\t"):
+		"sample" not in row:
+			print "No sample column...Exiting"
+			quit(1)
+		meta[row["sample"]] =
 
 def filecheck(filename):
 	"""

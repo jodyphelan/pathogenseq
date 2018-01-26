@@ -151,12 +151,8 @@ dev.off()
 		run_cmd(cmd)
 
 	def annotate_from_bed(self,bed_file):
-		temp_bed = "%s.temp.bed" % self.params["prefix"]
 		temp_vcf = "%s.temp.vcf" % self.params["prefix"]
-		cmd = "awk '{print $1\"\t\"$2-1\"\t\"$2}' %s > %s" % (bed_file,temp_bed)
-		run_cmd(cmd)
-		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],temp_vcf)
-		run_cmd(cmd)
+		self.vcf_from_bed(bed_file,temp_vcf)
 		bed_dict = defaultdict(dict)
 		for l in open(bed_file):
 			#chrom pos pos allele data
@@ -172,6 +168,7 @@ dev.off()
 					results[s.sample].append(bed_dict[record.CHROM][record.POS][1])
 		for s in self.samples:
 			print "%s\t%s" % (s,";".join(sorted(list(set(results[s])))))
+		return results
 	def extract_compressed_json(self,outfile):
 		self.bcf2vcf()
 		vcf_reader = vcf.Reader(open(self.params["vcf"]))
@@ -186,3 +183,10 @@ dev.off()
 
 			results[record.CHROM][record.POS] = tmp
 		json.dump({"variants":results,"samples":self.samples},open(outfile,"w"))
+	def vcf_from_bed(self,bed_file,vcf_file):
+		temp_bed = "%s.temp.bed" % self.params["prefix"]
+		cmd = "awk '{print $1\"\t\"$2-1\"\t\"$2}' %s > %s" % (bed_file,temp_bed)
+		run_cmd(cmd)
+		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],vcf_file)
+		run_cmd(cmd)
+	def odds_ratio(self,bed_file):
