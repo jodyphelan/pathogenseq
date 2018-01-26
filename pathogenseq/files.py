@@ -2,13 +2,26 @@ import gzip
 import os.path
 import subprocess
 import csv
+from collections import defaultdict
 
 def load_tsv(filename):
-	for row in csv.DictReader(open(meta_file),delimiter="\t"):
-		"sample" not in row:
+	for row in csv.DictReader(open(filename),delimiter="\t"):
+		meta = {}
+		if "sample" not in row:
 			print "No sample column...Exiting"
 			quit(1)
-		meta[row["sample"]] =
+		meta[row["sample"]] = {}
+		for c in row:
+			meta[row["sample"]][c] = row[c]
+		return meta
+
+def load_bed(filename,columns):
+	results = defaultdict(lambda: defaultdict(tuple))
+	for l in open(filename):
+		row = l.rstrip().split()
+		results[row[0]][row[1]] = tuple([row[int(x)-1] for x in columns])
+	return results
+
 
 def filecheck(filename):
 	"""

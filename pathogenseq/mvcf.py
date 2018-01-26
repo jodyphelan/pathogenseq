@@ -189,4 +189,11 @@ dev.off()
 		run_cmd(cmd)
 		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],vcf_file)
 		run_cmd(cmd)
-	def odds_ratio(self,bed_file):
+	def odds_ratio(self,bed_file,meta_file):
+		meta = load_tsv(meta_file)
+		self.vcf_from_bed(bed_file,self.params["vcf"])
+		bed_dict = load_bed(bed_file,[4])
+		print bed_dict
+		vcf_reader = vcf.Reader(open(self.params["vcf"]))
+#		for record in tqdm(vcf_reader):
+#			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
