@@ -40,7 +40,7 @@ def get_genome_cov(bam_file,ref_file,min_dp):
 		all_genome+=ref_cov[s]
 	genome_cov = {}
 	for dp in min_dp:
-		genome_cov[dp] = len([1 for d in all_genome if d>dp])/len(all_genome)
+		genome_cov[dp] = len([1 for d in all_genome if d>=dp])/len(all_genome)
 
 	med = int(np.median(all_genome))
 	return genome_cov,med,ref_cov
@@ -162,9 +162,10 @@ class qc_bam:
 		qc_bam: A qc_bam class object
 	"""
 
-	def __init__(self,bam,ref,cov_thresholds=[5,10,20]):
+	def __init__(self,bam,ref,cov_thresholds=[1,5,10],threads=20):
 		self.bam = None
 		self.ref = None
+		self.threads = threads
 		if filecheck(bam): self.bam = bam
 		if filecheck(ref): self.ref = ref
 		self.genome_cov,self.med_dp,self.ref_dp = get_genome_cov(bam,ref,cov_thresholds)
@@ -297,3 +298,6 @@ class qc_bam:
 		for i in range(len(gc)):
 			O.write("%s\t%s\n" % (gc[i],cov[i]))
 		O.close()
+	def sambamba_depth(self,outfile):
+		cmd = "sambamba depth base -q 20 -z -t %s %s > %s" % (self.threads,self.bam,outfile)
+		run_cmd(cmd)
