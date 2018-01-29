@@ -299,5 +299,6 @@ class qc_bam:
 			O.write("%s\t%s\n" % (gc[i],cov[i]))
 		O.close()
 	def sambamba_depth(self,outfile):
+		index_bam(self.bam)
 		cmd = "sambamba depth base -q 20 -z -t %s %s > %s" % (self.threads,self.bam,outfile)
 		run_cmd(cmd)
