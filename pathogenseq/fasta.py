@@ -14,6 +14,7 @@ class fasta:
 	def __init__(self,filename):
 		fa_dict = {}
 		seq_name = ""
+		self.fa_file = filename
 		for l in open(filename):
 			line = l.rstrip()
 			if line[0] == ">":
@@ -74,6 +75,11 @@ class fasta:
 		for s in fa_dict:
 			O.write("%s\t%s\n" % (s,fa_dict[s]))
 		O.close()
+	def get_VCF(self,ref_file,prefix):
+		params = {"fa_file":self.fa_file,"ref_file":ref_file,"prefix":prefix}
+		cmd = "dnadiff %(ref_file)s %(fa_file)s -p %(prefix)s" % params
+		run_cmd(cmd)
+
 
 def revcom(s):
 	"""Return reverse complement of a sequence"""
