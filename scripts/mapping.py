@@ -1,22 +1,10 @@
+#! /usr/bin/env python
 import pathogenseq
 import argparse
-
-
-
-
-
-
-
-
 
 def main(args):
 	x= pathogenseq.fastq(args.prefix,args.ref,args.r1,args.r2,threads=args.threads)
 	x.illumina(mapper=args.mapper)
-
-
-
-
-
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--r1','-1', help='First read file')

@@ -4,35 +4,8 @@ from collections import defaultdict
 import re
 import numpy as np
 from qc import *
+from utils import *
 import vcf
-
-indelre = re.compile("(\w)[\+\-](\d+)(\w+)")
-def recode_indels(indels):
-	#["C+5CGGGG","G-1C"]
-	sorted_indels = sorted([x for x in indels],key=lambda y:len(y))
-	largest_del = sorted([x for x in indels if "-" in x],key=lambda y:len(y))
-
-	if len(largest_del)==0:
-		leftseq = indelre.search(sorted_indels[-1]).group(1)
-		rightseq = ""
-	else:
-		leftseq = indelre.search(largest_del[-1]).group(1)
-		rightseq = indelre.search(largest_del[-1]).group(3)
-	refseq = leftseq+rightseq
-	recoded_indels = []
-	for i in indels:
-		if "-" in i:
-			indel_len = int(indelre.search(i).group(2))
-			iseq = leftseq+rightseq[:-(len(rightseq)-indel_len)]
-		elif "+" in i:
-			iseq = leftseq+indelre.search(i).group(3)+rightseq
-		else:
-			iseq = i+rightseq
-		recoded_indels.append(iseq)
-	return (refseq,recoded_indels)
-
-
-
 
 
 class bam:
@@ -47,7 +20,7 @@ class bam:
 	Returns:
 		bam: A bam class object
 	"""
-	def __init__(self,bam_file,prefix,ref_file=None,platform="Illumina",threads=20):
+	def __init__(self,bam_file,prefix,ref_file=None,platform="Illumina",threads=4):
 		self.params = {}
 		if filecheck(bam_file): self.params["bam_file"] = bam_file
 		self.params["prefix"] = prefix
@@ -57,7 +30,7 @@ class bam:
 			self.params["ref_file"] = ref_file
 		self.params["platform"] = platform
 		self.params["threads"] = threads
-	def call_snps(self,ref_file=None,call_method="optimise",min_dp=10):
+	def call_snps(self,ref_file=None,call_method="optimise",min_dp=10,threads=4):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -66,6 +39,8 @@ class bam:
 			call_method(str): optimise variant calling based on high or low depth. Options: high|low|optimise
 			min_dp(int): Minimum depth required to group site into reference-block
 		"""
+		if not self.params["threads"]:
+			self.params["threads"] = threads
 		self.params["min_dp"] = min_dp
 		self.params["vcf_file"] = "%s.vcf.gz" % self.params["prefix"]
 		if ref_file:
@@ -91,9 +66,20 @@ class bam:
 				call_method = "high"
 
 		if call_method=="high":
-			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
+			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -t DP,AD -r {} | bcftools call -mg %(min_dp)s -V indels -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
+#			run_cmd(cmd)
+			cmd = "bcftools concat -Oz -o %(vcf_file)s `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
+			run_cmd(cmd)
+			cmd = "rm `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
+
+#			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		else:
-			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
+			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s -V indels -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
+			run_cmd(cmd)
+			cmd = "bcftools concat -Oz -o %(vcf_file)s `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
+			run_cmd(cmd)
+			cmd = "rm `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
+#			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		run_cmd(cmd)
 		variants = []
 		vcf_reader = vcf.Reader(open(self.params["vcf_file"]))
@@ -252,3 +238,32 @@ class bam:
 				variants.append((arr[0],arr[1],ref,call,tot_dp,gt))
 		OUT.close()
 		return variants
+	def sambamba_depth(self,outfile,ref_file=None,zero_start=False):
+		if ref_file:
+			self.params["ref_file"] = ref_file
+		if not self.params["ref_file"] and not ref_file:
+			print "Need a reference...Exiting"
+			quit(1)
+		index_bam(self.params["bam_file"])
+		fdict = fasta(self.params["ref_file"]).fa_dict
+		cov = {}
+		self.params["tmp"] = "%s.tmp" % self.params["prefix"]
+		for s in fdict:
+			cov[s] = ["%s\t%s\t0\t0\t0\t0\t0\t0\t0\t%s" % (s,i+1,self.params["prefix"]) for i in range(len(fdict[s]))]
+
+		cmd = "sambamba depth base -q 20 -z -t %(threads)s %(bam_file)s > %(tmp)s" % self.params
+		run_cmd(cmd)
+		for l in open(self.params["tmp"]):
+			row = l.rstrip().split()
+			if row[0]=="REF": continue
+			if zero_start:
+				cov[row[0]][int(row[1])] = "\t".join(row)
+			else:
+				row[1] = str(int(row[1])+1)
+				cov[row[0]][int(row[1])-1] = "\t".join(row)
+
+		O = open(outfile,"w")
+		for s in fdict:
+			for i in range(len(fdict[s])):
+					O.write("%s\n" % cov[s][i])
+		O.close()

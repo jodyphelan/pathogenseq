@@ -41,7 +41,7 @@ class bcf:
 		cmd = "bcftools view %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
 		run_cmd(cmd,verbose=v)
 
-	def vcf_to_fasta(self,filename,threads=20):
+	def vcf_to_fasta(self,filename,threads=4):
 		"""Create a fasta file from the SNPs"""
 		self.params["threads"] = threads
 		cmd = "bcftools query -l %(bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools view -v snps %(bcf)s | bcftools query -s {} -f '[%%IUPACGT]'  >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params

@@ -23,7 +23,7 @@ class fastq:
 		mapping: A mapping class object
 	"""
 
-	def __init__(self,prefix,ref_file,r1,r2=None,threads=20):
+	def __init__(self,prefix,ref_file,r1,r2=None,threads=4):
 		self.params = {"r1":None,"r2":None}
 		self.paired = False
 		self.call_method = "high"
@@ -91,7 +91,7 @@ class mapping:
 		mapping: A mapping class object
 	"""
 
-	def __init__(self,prefix,ref_file,paired1=None,paired2=None,unpaired=None,threads=20,mapper="bwa",platform="Illumina"):
+	def __init__(self,prefix,ref_file,paired1=None,paired2=None,unpaired=None,threads=4,mapper="bwa",platform="Illumina"):
 		self.params = {}
 		if (paired1 and not paired2) or (paired2 and not paired1):
 			print "Please provide two paired end reads...Exiting"

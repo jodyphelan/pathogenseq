@@ -76,7 +76,7 @@ class qc_fastq:
 		qc_fastq: A qc_fastq class object
 	"""
 
-	def __init__(self,prefix,fq1,fq2=None,optimise=True,threads=20):
+	def __init__(self,prefix,fq1,fq2=None,optimise=True,threads=4):
 		self.params = {"fq1":"","fq2":""}
 		self.read_len = []
 		self.read_num = 0
@@ -164,7 +164,7 @@ class qc_bam:
 		qc_bam: A qc_bam class object
 	"""
 
-	def __init__(self,bam,ref,cov_thresholds=[1,5,10],threads=20):
+	def __init__(self,bam,ref,cov_thresholds=[1,5,10],threads=4):
 		self.bam = None
 		self.ref = None
 		self.threads = threads
@@ -300,7 +300,3 @@ class qc_bam:
 		for i in range(len(gc)):
 			O.write("%s\t%s\n" % (gc[i],cov[i]))
 		O.close()
-	def sambamba_depth(self,outfile):
-		index_bam(self.bam)
-		cmd = "sambamba depth base -q 20 -z -t %s %s > %s" % (self.threads,self.bam,outfile)
-		run_cmd(cmd)

@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import sys
 import pathogenseq as ps
 infile = sys.argv[1]

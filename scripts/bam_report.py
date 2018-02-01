@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import pathogenseq as ps
 import argparse
 import json

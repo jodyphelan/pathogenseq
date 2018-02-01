@@ -89,7 +89,7 @@ Performing mapping
 We can use the ``mapping`` class to access basic methods involved with QC, mapping and variant detections.
 
 >>> import pathogenseq as ps
->>> mapper = ps.fastq("/path/to/read_1.fq.gz","/path/to/read_2.fq.gz","/path/to/reference.fasta","prefix",threads=20)
+>>> mapper = ps.fastq("/path/to/read_1.fq.gz","/path/to/read_2.fq.gz","/path/to/reference.fasta","prefix",threads=4)
 >>> # perform basic trimming
 >>> mapper.trim()
 >>> # perform mapping with BWA (bowtie available too)
