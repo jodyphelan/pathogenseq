@@ -10,7 +10,7 @@ from mvcf import *
 def create_mappability_file(ref_file,threads):
 	cmd = "gem-indexer -i %s -o genome" % ref_file
 	run_cmd(cmd)
-	cmd = "gem-mappability -I genome.gem -o genome -l 75 -T %s" % threads
+	cmd = "gem-mappability -I genome.gem -o genome -l 51 -T %s" % threads
 	run_cmd(cmd)
 	cmd = "gem-2-wig -I genome.gem -i genome.mappability -o genome"
 	run_cmd(cmd)

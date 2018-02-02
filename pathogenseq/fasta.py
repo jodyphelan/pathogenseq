@@ -198,7 +198,7 @@ class fasta:
 					if pos!=npos+1:
 						OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=20\tGT:DP\t0/0:20\n" % (nchrom,npos+1,ref_dict.get_seq(chrom,npos),pos-1))
 				var = variants[chrom][pos]
-				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\t.\tGT:DP\t%s:%s\n" % (chrom,pos,var[0],var[1],1/1,20))
+				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\t.\tGT:DP\t%s:%s\n" % (chrom,pos,var[0],var[1],"1/1",20))
 				npos = pos
 				nchrom = chrom
 		OUT.close()
