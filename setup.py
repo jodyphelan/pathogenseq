@@ -21,5 +21,6 @@ setup(
 		 'scripts/sambamba_depth.py',
 		 'scripts/splitchr.py',
 		 'scripts/venn_diagram.py',
+		 'scripts/fasta2vcf.py'
 		]
 )

@@ -67,7 +67,7 @@ class bam:
 
 		if call_method=="high":
 			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -t DP,AD -r {} | bcftools call -mg %(min_dp)s -V indels -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
-#			run_cmd(cmd)
+			run_cmd(cmd)
 			cmd = "bcftools concat -Oz -o %(vcf_file)s `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
 			run_cmd(cmd)
 			cmd = "rm `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
