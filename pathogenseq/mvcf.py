@@ -213,7 +213,14 @@ dev.off()
 
 	def load_csq(self):
 		self.bcf2vcf()
-		nuc_variants = load_variants(self.params["vcf"])
+#		nuc_variants = load_variants(self.params["vcf"])
+		variants = defaultdict(lambda:defaultdict(dict))
+		pos2codon_num = defaultdict(dict)
+		vcf_reader = vcf.Reader(open(self.params["vcf"]))
+		for rec in tqdm(vcf_reader):
+			if rec
+			for s in rec.samples:
+				variants[rec.CHROM][rec.POS][s.sample] = s.gt_bases.split("/")[0] if s["GT"]!="./." else "N"
 		prot_variants = defaultdict(dict)
 		prot_dict = defaultdict(lambda:defaultdict(dict))
 		cmd = "bcftools query -f '%%CHROM\t%%POS[\t%%SAMPLE\t%%TBCSQ]\n' %s" % self.params["vcf"]
