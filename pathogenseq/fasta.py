@@ -88,7 +88,15 @@ class fasta:
 		vcf_file = "%s.vcf" % prefix
 		cmd = "dnadiff %(ref_file)s %(fa_file)s -p %(prefix)s" % params
 		run_cmd(cmd)
+		cmd = "show-coords -rTH %(prefix)s.1delta > %(prefix)s.coords" % params
+		run_cmd(cmd)
 		snps_file = "%s.snps" % prefix
+		coords_file = "%s.coords" % prefix
+		good_dp = 20
+
+
+
+
 		del_lines = []
 		ins_lines = []
 		indel_line_set = set()
@@ -148,7 +156,7 @@ class fasta:
 					switch=False
 			alt_seq = ref_dict.get_seq(chrom,start_pos)
 			ref_seq = alt_seq+"".join(bases)
-			variants[chrom][start_pos] = (ref_seq,alt_seq)
+#			variants[chrom][start_pos] = (ref_seq,alt_seq,"1/1",good_dp)
 		for indel_pos in ins_lines:
 			positions = [lines[i][0] for i in indel_pos]
 			first_pos = int(positions[0])
@@ -166,13 +174,29 @@ class fasta:
 					switch=False
 			ref_seq = ref_dict.get_seq(chrom,start_pos)
 			alt_seq = ref_seq+"".join(bases)
-			variants[chrom][start_pos] = (ref_seq,alt_seq)
+#			variants[chrom][start_pos] = (ref_seq,alt_seq,"1/1",good_dp)
 
 		for i in set(range(len(lines)))-indel_line_set:
 			row = lines[i]
 			pos,ref_seq,alt_seq = row[:3]
 			chrom = row[10]
-			variants[chrom][int(pos)] = (ref_seq,alt_seq)
+			variants[chrom][int(pos)] = (ref_seq,alt_seq,"1/1",good_dp)
+
+		coords_cov = defaultdict(lambda: defaultdict(int))
+		for l in open(coords_file):
+			row = l.rstrip().split()
+			for i in range(int(row[0]),int(row[1])):
+				pos = i+1
+				coords_cov[row[7]][pos]+=1
+		for chrom in ref_dict.fa_dict:
+			for i in range(len(ref_dict.fa_dict[chrom])):
+				pos = i+1
+				if pos not in coords_cov[chrom] or coords_cov[chrom][i]>1:
+					ref_seq = ref_dict.get_seq(chrom,pos)
+					variants[chrom][pos] = (ref_seq,".","./.",0)
+
+
+
 		OUT = open(vcf_file,"w")
 		OUT.write("""##fileformat=VCFv4.1
 ##reference=/home/jody/refgenome/MTB-h37rv_asm19595v2-eg18.fa
@@ -191,16 +215,18 @@ class fasta:
 				if nchrom!=chrom:
 					if pos!=1:
 						npos=1
-						OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=20\tGT:DP\t0/0:20\n" % (chrom,npos,ref_dict.get_seq(chrom,npos),pos-1))
+						OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=20\tGT:DP\t0/0:%s\n" % (chrom,npos,ref_dict.get_seq(chrom,npos),pos-1,good_dp))
 					else:
 						pass
 				else:
 					if pos!=npos+1:
-						OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=20\tGT:DP\t0/0:20\n" % (nchrom,npos+1,ref_dict.get_seq(chrom,npos),pos-1))
+						OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=20\tGT:DP\t0/0:%s\n" % (nchrom,npos+1,ref_dict.get_seq(chrom,npos),pos-1,good_dp))
 				var = variants[chrom][pos]
-				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\t.\tGT:DP\t%s:%s\n" % (chrom,pos,var[0],var[1],"1/1",20))
+				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\t.\tGT:DP\t%s:%s\n" % (chrom,pos,var[0],var[1],var[2],var[3]))
 				npos = pos
 				nchrom = chrom
+
+
 		OUT.close()
 
 	def splitchr(self,size):

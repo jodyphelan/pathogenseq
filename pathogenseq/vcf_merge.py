@@ -105,7 +105,7 @@ class vcf_merge:
 
 	def extract_variants(self):
 		"""Extract all variant positions"""
-		cmd = "bcftools +setGT %(merged_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view -i 'AC>=0 && F_MISSING<%(miss_cut)s' -o %(prefilt_bcf)s -O b" % self.params
+		cmd = "bcftools +setGT %(merged_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(prefilt_bcf)s -O b" % self.params
 		run_cmd(cmd)
 
 	def filt_non_uniq(self):
