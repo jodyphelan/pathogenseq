@@ -213,14 +213,19 @@ dev.off()
 
 	def load_csq(self):
 		self.bcf2vcf()
-#		nuc_variants = load_variants(self.params["vcf"])
-		variants = defaultdict(lambda:defaultdict(dict))
-		pos2codon_num = defaultdict(dict)
-		vcf_reader = vcf.Reader(open(self.params["vcf"]))
-		for rec in tqdm(vcf_reader):
-			if rec
-			for s in rec.samples:
-				variants[rec.CHROM][rec.POS][s.sample] = s.gt_bases.split("/")[0] if s["GT"]!="./." else "N"
+		re_ref_aa = re.compile("([0-9]+)([A-Z\*]+)")
+		re_alt_aa = re.compile("[0-9]+([A-Z\*]+)")
+		nuc_variants = load_variants(self.params["vcf"])
+#		variants = defaultdict(lambda:defaultdict(dict))
+#		pos2codon_num = defaultdict(dict)
+#		vcf_reader = vcf.Reader(open(self.params["vcf"]))
+#		for rec in tqdm(vcf_reader):
+#			if "BCSQ" in rec.INFO:
+#				print rec.INFO["BCSQ"][0]
+#				if rec.INFO["BCSQ"][0][0]!="@" and rec.INFO:
+#					pos2codon_num[rec.CHROM][rec.POS] = re_ref_aa.search(rec.INFO["BCSQ"][0]).group(1)
+#			for s in rec.samples:
+#				variants[rec.CHROM][rec.POS][s.sample] = s.gt_bases.split("/")[0] if s["GT"]!="./." else "N"
 		prot_variants = defaultdict(dict)
 		prot_dict = defaultdict(lambda:defaultdict(dict))
 		cmd = "bcftools query -f '%%CHROM\t%%POS[\t%%SAMPLE\t%%TBCSQ]\n' %s" % self.params["vcf"]
@@ -236,13 +241,12 @@ dev.off()
 				info = row[i+1].split("|")
 				if row[i+1][0]=="@": continue
 				if info[-1]=="pseudogene": continue
-
 				sample = row[i]
 				tmp_samples.add(sample)
 				gene = info[1]
 				tmp = info[5].split(">")
 				aa_changed = True if len(tmp)>1 else False
-				re_obj = re.search("([0-9]+)([A-Z\*]+)",tmp[0])
+				re_obj = re_ref_aa.search(tmp[0])
 				codon_num = re_obj.group(1)
 				ref_aa = re_obj.group(2)
 				if aa_changed:
@@ -250,7 +254,11 @@ dev.off()
 				prot_variants[gene][row[i]] = info[5]
 				prot_dict[gene][codon_num][sample] = alt_aa
 			for s in set(self.samples)-tmp_samples:
-				pass
+				print row[0]
+				print row[1]
+				print nuc_variants[row[0]][int(row[1])]
+#				if nuc_variants[row[0]][row[1]][s]=="N":
+#					prot_dict[gene][codon_num] = "?"
 		print prot_variants["Rv0667"]
 		print prot_dict["Rv0667"]
 		return prot_variants
