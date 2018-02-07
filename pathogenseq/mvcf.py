@@ -11,37 +11,12 @@ from tqdm import tqdm
 def load_variants(filename):
 	variants = defaultdict(lambda:defaultdict(dict))
 	vcf_reader = vcf.Reader(open(filename))
-	for rec in vcf_reader:
+	for rec in tqdm(vcf_reader):
 		for s in rec.samples:
 			variants[rec.CHROM][rec.POS][s.sample] = s.gt_bases.split("/")[0] if s["GT"]!="./." else "N"
 	return variants
 
-def load_csq(filename):
-	nuc_variants = load_variants(filename)
-	prot_variants = {}
-	nchrom = None
-	npos = None
-	samples = set()
-	cmd = "bcftools query -f '%%CHROM\t%%POS[\t%%SAMPLE\t%%TBCSQ]\n' %s" % filename
-	print cmd
-	for line in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
-		print line
-		row = line.rstrip().split()
-		if len(row)==2: continue
-		if len(row)==4: continue
-		info = row[3].split("|")
-		chrom = row[0]
-		pos = row[1]
-		for i in range(2,len(row)-3,3):
-			print row[i]
-#		if npos != pos:
-#			prot_variants[info[1]] = {}
-#
-#		sample = row[2]
-#		samples.add(sample)#
-#
-#		prot_variants[info[1]][sample] = info[5]
-	print prot_variants
+
 
 
 
@@ -234,3 +209,41 @@ dev.off()
 		vcf_reader = vcf.Reader(open(self.params["vcf"]))
 #		for record in tqdm(vcf_reader):
 #			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
+
+
+	def load_csq(self):
+		self.bcf2vcf()
+		nuc_variants = load_variants(self.params["vcf"])
+		prot_variants = defaultdict(dict)
+		prot_dict = defaultdict(lambda:defaultdict(dict))
+		cmd = "bcftools query -f '%%CHROM\t%%POS[\t%%SAMPLE\t%%TBCSQ]\n' %s" % self.params["vcf"]
+		print cmd
+		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
+			row = line.rstrip().split()
+			if len(row)==2: continue
+			if len(row)==4: continue
+			chrom = row[0]
+			pos = row[1]
+			tmp_samples = set()
+			for i in range(2,len(row)-3,3):
+				info = row[i+1].split("|")
+				if row[i+1][0]=="@": continue
+				if info[-1]=="pseudogene": continue
+
+				sample = row[i]
+				tmp_samples.add(sample)
+				gene = info[1]
+				tmp = info[5].split(">")
+				aa_changed = True if len(tmp)>1 else False
+				re_obj = re.search("([0-9]+)([A-Z\*]+)",tmp[0])
+				codon_num = re_obj.group(1)
+				ref_aa = re_obj.group(2)
+				if aa_changed:
+					alt_aa = re.search("[0-9]+([A-Z\*]+)",tmp[1]).group(1)
+				prot_variants[gene][row[i]] = info[5]
+				prot_dict[gene][codon_num][sample] = alt_aa
+			for s in set(self.samples)-tmp_samples:
+				pass
+		print prot_variants["Rv0667"]
+		print prot_dict["Rv0667"]
+		return prot_variants
