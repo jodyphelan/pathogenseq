@@ -1,3 +1,4 @@
+from __future__ import division
 import sys
 import subprocess
 from files import *
@@ -7,6 +8,10 @@ from collections import defaultdict
 import itertools
 import json
 from tqdm import tqdm
+
+re_ref_aa = re.compile("([0-9]+)([A-Z\*]+)")
+re_alt_aa = re.compile("[0-9]+([A-Z\*]+)")
+
 
 def load_variants(filename):
 	variants = defaultdict(lambda:defaultdict(dict))
@@ -83,8 +88,8 @@ class bcf:
 	def get_venn_diagram_data(self,samples,outfile):
 		samples = samples.split(",")
 		if len(samples)>4:
-			print samples
-			print "Can't handle more than 4 samples...Exiting!"
+			print(samples)
+			print("Can't handle more than 4 samples...Exiting!")
 			quit()
 		if nofile(self.params["vcf"]): self.bcf2vcf()
 		vcf_reader = vcf.Reader(open(self.params["vcf"],"r"))
@@ -110,7 +115,7 @@ class bcf:
 				data["overlap_"+tmp_str] += 1
 		for i,si in enumerate(samples):
 			if si not in self.samples:
-				print "Can't find %s in samples...Exiting" % si
+				print("Can't find %s in samples...Exiting" % si)
 				quit()
 			data["id_%s"%i] = si
 			data["tot_snps_%s"%i] = tot_snps[si]
@@ -179,7 +184,7 @@ dev.off()
 				if nuc==bed_dict[record.CHROM][record.POS][0]:
 					results[s.sample].append(bed_dict[record.CHROM][record.POS][1])
 		for s in self.samples:
-			print "%s\t%s" % (s,";".join(sorted(list(set(results[s])))))
+			print("%s\t%s" % (s,";".join(sorted(list(set(results[s]))))))
 		return results
 	def extract_compressed_json(self,outfile):
 		self.bcf2vcf()
@@ -197,68 +202,81 @@ dev.off()
 		json.dump({"variants":results,"samples":self.samples},open(outfile,"w"))
 	def vcf_from_bed(self,bed_file,vcf_file):
 		temp_bed = "%s.temp.bed" % self.params["prefix"]
-		cmd = "awk '{print $1\"\t\"$2-1\"\t\"$2}' %s > %s" % (bed_file,temp_bed)
+		cmd = "awk '{print $1\"\t\"$2-1\"\t\"$3}' %s > %s" % (bed_file,temp_bed)
 		run_cmd(cmd)
 		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],vcf_file)
 		run_cmd(cmd)
 	def odds_ratio(self,bed_file,meta_file):
-		meta = load_tsv(meta_file)
+		drugs,meta = load_tsv(meta_file)
+		print meta
 		self.vcf_from_bed(bed_file,self.params["vcf"])
-		bed_dict = load_bed(bed_file,[4])
-		print bed_dict
+		bed_dict = load_bed(bed_file,columns=[5,6],key1=4)
 		vcf_reader = vcf.Reader(open(self.params["vcf"]))
+		variants = self.load_csq()
+		for gene in bed_dict:
+			for var in bed_dict[gene][1].split(";"):
+				for drug in bed_dict[gene][0].split(";"):
+					print("Looking at mutation %s in %s for drug %s" % (var,gene,drug))
+					if drug not in drugs: continue
+
+					tbl = [[0.5,0.5],[0.5,0.5]]
+					codon_num = re_ref_aa.search(var).group(1)
+					tbl[0][0] += len([s for s in meta.keys() if s in variants[gene][codon_num] and variants[gene][codon_num][s]==var and meta[s][drug]=="1"])
+					tbl[1][0] += len([s for s in meta.keys() if s in variants[gene][codon_num] and variants[gene][codon_num][s]==var and meta[s][drug]=="0"])
+					tbl[0][1] += len([s for s in meta.keys() if s not in variants[gene][codon_num] and meta[s][drug]=="1"])
+					tbl[1][1] += len([s for s in meta.keys() if s not in variants[gene][codon_num] and meta[s][drug]=="0"])
+					print(tbl)
+					print((tbl[0][0]/tbl[0][1])/(tbl[1][0]/tbl[1][1]))
 #		for record in tqdm(vcf_reader):
 #			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
 
 
 	def load_csq(self):
+
 		self.bcf2vcf()
-		re_ref_aa = re.compile("([0-9]+)([A-Z\*]+)")
-		re_alt_aa = re.compile("[0-9]+([A-Z\*]+)")
 		nuc_variants = load_variants(self.params["vcf"])
-#		variants = defaultdict(lambda:defaultdict(dict))
-#		pos2codon_num = defaultdict(dict)
-#		vcf_reader = vcf.Reader(open(self.params["vcf"]))
-#		for rec in tqdm(vcf_reader):
-#			if "BCSQ" in rec.INFO:
-#				print rec.INFO["BCSQ"][0]
-#				if rec.INFO["BCSQ"][0][0]!="@" and rec.INFO:
-#					pos2codon_num[rec.CHROM][rec.POS] = re_ref_aa.search(rec.INFO["BCSQ"][0]).group(1)
-#			for s in rec.samples:
-#				variants[rec.CHROM][rec.POS][s.sample] = s.gt_bases.split("/")[0] if s["GT"]!="./." else "N"
-		prot_variants = defaultdict(dict)
-		prot_dict = defaultdict(lambda:defaultdict(dict))
+
+		prot_variants = defaultdict(lambda:defaultdict(dict))
+		codon_num2pos = defaultdict(lambda:defaultdict(set))
+		ref_codons = defaultdict(lambda:defaultdict(dict))
 		cmd = "bcftools query -f '%%CHROM\t%%POS[\t%%SAMPLE\t%%TBCSQ]\n' %s" % self.params["vcf"]
-		print cmd
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = line.rstrip().split()
 			if len(row)==2: continue
 			if len(row)==4: continue
 			chrom = row[0]
-			pos = row[1]
-			tmp_samples = set()
+			pos = int(row[1])
 			for i in range(2,len(row)-3,3):
 				info = row[i+1].split("|")
 				if row[i+1][0]=="@": continue
 				if info[-1]=="pseudogene": continue
 				sample = row[i]
-				tmp_samples.add(sample)
 				gene = info[1]
 				tmp = info[5].split(">")
 				aa_changed = True if len(tmp)>1 else False
 				re_obj = re_ref_aa.search(tmp[0])
 				codon_num = re_obj.group(1)
+				codon_num2pos[gene][codon_num].add((chrom,pos))
 				ref_aa = re_obj.group(2)
+				ref_codons[gene][codon_num] = ref_aa
 				if aa_changed:
 					alt_aa = re.search("[0-9]+([A-Z\*]+)",tmp[1]).group(1)
-				prot_variants[gene][row[i]] = info[5]
-				prot_dict[gene][codon_num][sample] = alt_aa
-			for s in set(self.samples)-tmp_samples:
-				print row[0]
-				print row[1]
-				print nuc_variants[row[0]][int(row[1])]
+				prot_variants[gene][codon_num][row[i]] = info[5]
+
+
+		for gene in prot_variants:
+			for codon_num in prot_variants[gene]:
+				for s in set(self.samples)-set(prot_variants[gene][codon_num].keys()):
+					if "N" in  [nuc_variants[chrom][pos][s] for chrom,pos in codon_num2pos[gene][codon_num]]:
+						prot_variants[gene][codon_num][s] = "?"
+					else:
+						#prot_dict[gene][codon_num][s] = ref_codons[gene][codon_num]
+						pass
+
+
+#				print nuc_variants[row[0]][int(row[1])]
 #				if nuc_variants[row[0]][row[1]][s]=="N":
 #					prot_dict[gene][codon_num] = "?"
-		print prot_variants["Rv0667"]
-		print prot_dict["Rv0667"]
+
+#		print prot_dict["Rv0667"]
 		return prot_variants

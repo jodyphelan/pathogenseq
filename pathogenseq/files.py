@@ -5,21 +5,31 @@ import csv
 from collections import defaultdict
 
 def load_tsv(filename):
+	meta = {}
 	for row in csv.DictReader(open(filename),delimiter="\t"):
-		meta = {}
 		if "sample" not in row:
-			print "No sample column...Exiting"
+			print("No sample column...Exiting")
 			quit(1)
 		meta[row["sample"]] = {}
-		for c in row:
+		columns = set(row)-set(["sample"])
+		for c in columns:
 			meta[row["sample"]][c] = row[c]
-		return meta
+	return columns,meta
 
-def load_bed(filename,columns):
+def load_bed(filename,columns,key1,key2=None):
 	results = defaultdict(lambda: defaultdict(tuple))
 	for l in open(filename):
 		row = l.rstrip().split()
-		results[row[0]][row[1]] = tuple([row[int(x)-1] for x in columns])
+		if key2:
+			if max(columns+[key1,key2])>len(row):
+				print "Can't access a column in BED file. The largest column specified is too big"
+				quit(1)
+			results[row[key1-1]][row[key2-1]] = tuple([row[int(x)-1] for x in columns])
+		else:
+			if max(columns+[key1])>len(row):
+				print "Can't access a column in BED file. The largest column specified is too big"
+				quit(1)
+			results[row[key1-1]]= tuple([row[int(x)-1] for x in columns])
 	return results
 
 
@@ -28,7 +38,7 @@ def filecheck(filename):
 	Check if file is there and quit if it isn't
 	"""
 	if not os.path.isfile(filename):
-		print "Can't find %s" % filename
+		print("Can't find %s" % filename)
 		exit(1)
 	else:
 		return True
@@ -55,10 +65,10 @@ def run_cmd(cmd,verbose=1):
 	"""
 	cmd = "set -u pipefail; " + cmd
 	if verbose==2:
-		print "\nRunning command:\n%s" % cmd
+		print("\nRunning command:\n%s" % cmd)
 		stderr = open("/dev/stderr","w")
 	elif verbose==1:
-		print "\nRunning command:\n%s" % cmd
+		print("\nRunning command:\n%s" % cmd)
 		stderr = open("/dev/null","w")
 	else:
 		stderr = open("/dev/null","w")
@@ -66,7 +76,7 @@ def run_cmd(cmd,verbose=1):
 	res = subprocess.call(cmd,shell=True,stderr = stderr)
 	stderr.close()
 	if res!=0:
-		print "Command Failed! Please Check!"
+		print("Command Failed! Please Check!")
 		exit(1)
 
 def index_bam(bamfile,threads=4):
@@ -91,7 +101,7 @@ def verify_fq(filename):
 	FQ = open(filename) if filename[-3:]!=".gz" else gzip.open(filename)
 	l1 = FQ.readline()
 	if l1[0]!="@":
-		print "First character is not \"@\"\nPlease make sure this is fastq format\nExiting..."
+		print("First character is not \"@\"\nPlease make sure this is fastq format\nExiting...")
 		exit(1)
 	else:
 		return True
@@ -101,7 +111,7 @@ def rm_files(x,verbose=True):
 	Remove a files in a list format
 	"""
 	for f in x:
-		if verbose: print "Removing %s" % f
+		if verbose: print("Removing %s" % f)
 		os.remove(f)
 
 def file_len(filename):
@@ -131,6 +141,6 @@ def download_from_ena(acc):
 		dir2 = "00"+acc[-1]
 		cmd = "wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/%s/%s/%s/%s*" % (dir1,dir2,acc,acc)
 	else:
-		print "Check Accession: %s" % acc
+		print("Check Accession: %s" % acc)
 		exit(1)
 	run_cmd(cmd)
