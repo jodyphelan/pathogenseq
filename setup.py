@@ -9,7 +9,7 @@ setup(
 	scripts=
 		['scripts/bam_report.py',
 		 'scripts/bcf2fasta.py',
-		 'scripts/call_snps.py',
+		 'scripts/bam2vcf.py',
 		 'scripts/collate_json.py',
 		 'scripts/cov_plt.py',
 		 'scripts/examl.py',
