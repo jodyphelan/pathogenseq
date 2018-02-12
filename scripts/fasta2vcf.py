@@ -2,8 +2,9 @@
 import sys
 import pathogenseq as ps
 
-infile = sys.argv[1]
-ref_file = sys.argv[2]
+ref_file = sys.argv[1]
+query_file = sys.argv[2]
 prefix = sys.argv[3]
-fasta = ps.fasta(infile)
-fasta.get_VCF(ref_file,prefix)
+ps.mauve_call_variants(ref_file,query_file,prefix)
+cmd = "bgzip -f %s.vcf" % prefix
+ps.run_cmd(cmd)

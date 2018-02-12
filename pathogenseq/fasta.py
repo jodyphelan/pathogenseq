@@ -1,7 +1,6 @@
 import sys
 import re
 from files import *
-from utils import *
 from collections import OrderedDict
 class fasta:
 	"""
@@ -25,10 +24,18 @@ class fasta:
 			else:
 				fa_dict[seq_name].append(line)
 		result = {}
+		counter = 0
+		sum_length = {}
 		for seq in fa_dict:
 			result[seq] = "".join(fa_dict[seq])
 			result[seq] = result[seq].upper()
+			sum_length[(counter+1,counter+len(result[seq]))] = seq
+			counter = counter+len(result[seq])
+		self.sum_length = sum_length
 		self.fa_dict = result
+	def get_chrom_by_pos(self,pos):
+		res = [self.sum_length[(x,y)] for x,y in self.sum_length if pos>=x and pos<=y]
+		return res[0]
 	def n50(self):
 		"""Return n50"""
 		numlist = [len(self.fa_dict[x]) for x in self.fa_dict.keys()]
@@ -79,7 +86,7 @@ class fasta:
 		O.close()
 	def get_seq(self,chrom,start,end=None):
 		if end:
-			return self.fa_dict[chrom][start-1:end-1]
+			return self.fa_dict[chrom][start-1:end]
 		else:
 			return self.fa_dict[chrom][start-1]
 	def get_VCF(self,ref_file,prefix):
@@ -93,7 +100,8 @@ class fasta:
 		snps_file = "%s.snps" % prefix
 		coords_file = "%s.coords" % prefix
 		good_dp = 20
-
+	def loop_pos(self,chrom):
+		return range(len(self.fa_dict[chrom]))
 
 
 

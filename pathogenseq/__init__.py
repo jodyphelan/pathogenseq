@@ -6,3 +6,4 @@ from .qc import *
 from .fasta import *
 from .mvcf import *
 from .phylo import *
+from .mfa import *
