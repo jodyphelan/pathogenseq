@@ -217,7 +217,6 @@ dev.off()
 			if nested:
 				switch = True
 				tmp = sorted(list(set(results[s])))
-				print tmp
 				for i in range(len(tmp)-1):
 					if tmp[i] not in tmp[i+1]: switch = False
 			else:
