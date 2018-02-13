@@ -120,6 +120,7 @@ class vcf_merge:
 			tmp_bcfs.append(self.params["tmp_bcf"])
 		X.close()
 		tmp_threads = 1 if self.params["threads"]==1 else int(self.params["threads"]/2)
+		if tmp_threads>8: tmp_threads = 8 #Stop the max number of files being hit... assuming 1000 files is limit
 		cmd = "cat %s | xargs -i -P %s sh -c \"{}\"" % (self.params["tmp_file"],tmp_threads)
 		run_cmd(cmd)
 		if len(tmp_bcfs)>2:
