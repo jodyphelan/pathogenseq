@@ -75,7 +75,7 @@ class bcf:
 		"""Create a fasta file from the SNPs"""
 		self.params["threads"] = threads
 		self.params["tmp_file"] = "%s.tmp.txt" % self.params["prefix"]
-		cmd = "bcftools query -f '%%POS[\\t%%TGT]\\n' %(bcf)s |  datamash transpose > %(tmp_file)s" % self.params
+		cmd = "bcftools query -f '%%POS[\\t%%IUPACGT]\\n' %(bcf)s |  datamash transpose > %(tmp_file)s" % self.params
 		run_cmd(cmd)
 		O = open(filename,"w")
 		for i,l in enumerate(open(self.params["tmp_file"])):

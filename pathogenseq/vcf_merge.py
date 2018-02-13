@@ -162,7 +162,6 @@ class vcf_merge:
 			row = l.rstrip().split()
 			s = row[2]
 			miss[s] = (num_calls-sum([int(row[i]) for i in [3,4,5]]))/num_calls
-			print miss[s]
 			mix[s] = int(row[5])/num_calls
 			QF.write("%s\t%s\t%s\n" % (s,mix[s],miss[s]))
 			if s in self.keep_samples:
