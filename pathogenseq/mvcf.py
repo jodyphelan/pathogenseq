@@ -218,8 +218,8 @@ dev.off()
 				switch = True
 				tmp = sorted(list(set(results[s])))
 				print tmp
-				for i in range(1,len(tmp)):
-					if tmp[i] not in tmp[i-1]: switch = False
+				for i in range(len(tmp)-1):
+					if tmp[i] not in tmp[i+1]: switch = False
 			else:
 				switch = False
 			meta = tmp[-1] if switch else ";".join(sorted(list(set(results[s]))))
