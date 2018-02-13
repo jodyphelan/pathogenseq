@@ -106,8 +106,8 @@ class vcf_merge:
 		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % self.params
 		run_cmd(cmd)
 		tmp_bcfs = []
-		for i,tmp_samples in enumerate(list(chunks(self.samples,500))):
-			self.params["tmp_bcf"] = "%s.%s.tmp.bcf" % (prefix,i)
+		for i,tmp_samples in enumerate(list(chunks(self.samples,100))):
+			self.params["tmp_bcf"] = "%s.%s.tmp.bcf" % (self.prefix,i)
 			self.params["vcf_files"] = " ".join(["%s/%s.%s" % (self.params["vcf_dir"],x,self.params["vcf_ext"]) for x in tmp_samples])
 			cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s" % self.params
 			run_cmd(cmd)
