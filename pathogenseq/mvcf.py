@@ -195,7 +195,7 @@ dev.off()
 		cmd = "bcftools merge --threads %(threads)s %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
 		run_cmd(cmd)
 
-	def annotate_from_bed(self,bed_file,nested=False):
+	def annotate_from_bed(self,bed_file,outfile=None,nested=False):
 		temp_vcf = "%s.temp.vcf" % self.params["prefix"]
 		self.vcf_from_bed(bed_file,temp_vcf)
 		bed_dict = defaultdict(dict)
@@ -211,6 +211,8 @@ dev.off()
 				nuc = s.gt_bases.split("/")[0]
 				if nuc==bed_dict[record.CHROM][record.POS][0]:
 					results[s.sample].append(bed_dict[record.CHROM][record.POS][1])
+		if outfile:
+			O = open(outfile,"w")
 		for s in self.samples:
 			if nested:
 				switch = True
@@ -220,7 +222,11 @@ dev.off()
 			else:
 				switch = False
 			meta = tmp[-1] if switch else ";".join(sorted(list(set(results[s]))))
-			print("%s\t%s" % (s,meta))
+#			print("%s\t%s" % (s,meta))
+			if outfile:
+				O.write("%s\t%s\n" % (s,meta))
+		if outfile:
+			O.close()
 		return results
 	def extract_compressed_json(self,outfile):
 		self.bcf2vcf()
