@@ -111,6 +111,8 @@ class vcf_merge:
 			self.params["vcf_files"] = " ".join(["%s/%s.%s" % (self.params["vcf_dir"],x,self.params["vcf_ext"]) for x in tmp_samples])
 			cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s" % self.params
 			run_cmd(cmd)
+			cmd = "bcftools index --threads %(threads)s %(tmp_bcf)s" % self.params
+			run_cmd(cmd)
 			tmp_bcfs.append(self.params["tmp_bcf"])
 		self.params["vcf_files"] = " ".join(tmp_bcfs)
 		cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(merged_bcf)s -O b %(vcf_files)s" % self.params
