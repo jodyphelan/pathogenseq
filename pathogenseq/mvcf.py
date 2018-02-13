@@ -45,6 +45,19 @@ class bcf:
 			self.samples.append(l.rstrip())
 		os.remove(self.params["temp_file"])
 
+	def split_on_metadata(self,meta_file):
+		meta = defaultdict(list)
+		for l in open(meta_file):
+			#sample	data
+			row = l.rstrip().split()
+			meta[row[1]].append(row[0])
+		for m in meta:
+			self.params["tmp_file"] = "%s.tmp.txt" % self.params["prefix"]
+			open(self.params["tmp_file"],"w").write("\n".join(meta[m]))
+			self.params["tmp_bcf"] = "%s.%s.bcf" % (self.params["prefix"],m)
+			cmd = "bcftools view -S %(tmp_file)s %(bcf)s -Ob -o %(tmp_bcf)s" % self.params
+			run_cmd(cmd)
+
 	def annotate(self,ref_file,gff_file):
 		self.params["ref_file"] = ref_file
 		self.params["gff_file"] = gff_file
@@ -182,7 +195,7 @@ dev.off()
 		cmd = "bcftools merge --threads %(threads)s %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
 		run_cmd(cmd)
 
-	def annotate_from_bed(self,bed_file):
+	def annotate_from_bed(self,bed_file,nested=False):
 		temp_vcf = "%s.temp.vcf" % self.params["prefix"]
 		self.vcf_from_bed(bed_file,temp_vcf)
 		bed_dict = defaultdict(dict)
@@ -192,14 +205,22 @@ dev.off()
 			bed_dict[row[0]][int(row[1])] = (row[3],row[4])
 		vcf_reader = vcf.Reader(open(temp_vcf))
 		results = defaultdict(list)
-		for record in vcf_reader:
+		for record in tqdm(vcf_reader):
 			for s in record.samples:
 				if s.gt_bases==None: continue
 				nuc = s.gt_bases.split("/")[0]
 				if nuc==bed_dict[record.CHROM][record.POS][0]:
 					results[s.sample].append(bed_dict[record.CHROM][record.POS][1])
 		for s in self.samples:
-			print("%s\t%s" % (s,";".join(sorted(list(set(results[s]))))))
+			if nested:
+				switch = True
+				tmp = sorted(list(set(results[s])))
+				for i in range(1,len(tmp)):
+					if tmp[i] not in tmp[i-1]: switch = False
+			else:
+				switch = False
+			meta = tmp[-1] if switch else ";".join(sorted(list(set(results[s]))))
+			print("%s\t%s" % (s,meta))
 		return results
 	def extract_compressed_json(self,outfile):
 		self.bcf2vcf()
