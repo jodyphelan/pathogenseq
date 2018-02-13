@@ -8,7 +8,7 @@ from fasta import *
 from mvcf import *
 
 
-def chunks(l, n):
+def split_list(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
         yield l[i:i + n]
@@ -106,18 +106,29 @@ class vcf_merge:
 		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % self.params
 		run_cmd(cmd)
 		tmp_bcfs = []
-		for i,tmp_samples in enumerate(list(chunks(self.samples,100))):
+		self.params["tmp_file"] = "%s.cmd.xargs.txt" % self.params["prefix"]
+		X = open(self.params["tmp_file"],"w")
+		chunk_size = 100
+		chunks = list(split_list(self.samples,chunk_size))
+		if len(chunks[-1])==1:
+			chunks[0] = chunks[0] + chunks.pop()
+		for i,tmp_samples in enumerate(chunks):
 			self.params["tmp_bcf"] = "%s.%s.tmp.bcf" % (self.params["prefix"],i)
 			self.params["vcf_files"] = " ".join(["%s/%s.%s" % (self.params["vcf_dir"],x,self.params["vcf_ext"]) for x in tmp_samples])
-			cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s" % self.params
-			run_cmd(cmd)
-			cmd = "bcftools index --threads %(threads)s %(tmp_bcf)s" % self.params
-			run_cmd(cmd)
+			cmd = "bcftools merge --threads 2 -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s" % self.params
+			X.write("%s\n"%cmd)
+			cmd = "bcftools index --threads 2 %(tmp_bcf)s" % self.params
+			X.write("%s\n"%cmd)
 			tmp_bcfs.append(self.params["tmp_bcf"])
+		X.close()
+		tmp_threads = 1 if self.params["threads"]==1 else int(self.params["threads"]/2)
+		cmd = "cat %s | xargs -i -P %s sh -c \"{}\"" % (self.params["tmp_file"],tmp_threads)
+		run_cmd(cmd)
 		if len(tmp_bcfs)>2:
 			self.params["vcf_files"] = " ".join(tmp_bcfs)
 			cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(merged_bcf)s -O b %(vcf_files)s" % self.params
 			run_cmd(cmd)
+			rm_files(tmp_bcfs)
 		else:
 			cmd = "mv %(tmp_bcf)s %(merged_bcf)s" % self.params
 			run_cmd(cmd)
