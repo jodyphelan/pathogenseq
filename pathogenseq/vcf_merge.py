@@ -115,9 +115,7 @@ class vcf_merge:
 		for i,tmp_samples in enumerate(chunks):
 			self.params["tmp_bcf"] = "%s.%s.tmp.bcf" % (self.params["prefix"],i)
 			self.params["vcf_files"] = " ".join(["%s/%s.%s" % (self.params["vcf_dir"],x,self.params["vcf_ext"]) for x in tmp_samples])
-			cmd = "bcftools merge --threads 2 -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s" % self.params
-			X.write("%s\n"%cmd)
-			cmd = "bcftools index --threads 2 %(tmp_bcf)s" % self.params
+			cmd = "bcftools merge --threads 2 -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s && bcftools index --threads 2 %(tmp_bcf)s" % self.params
 			X.write("%s\n"%cmd)
 			tmp_bcfs.append(self.params["tmp_bcf"])
 		X.close()
