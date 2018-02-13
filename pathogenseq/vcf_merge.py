@@ -114,9 +114,13 @@ class vcf_merge:
 			cmd = "bcftools index --threads %(threads)s %(tmp_bcf)s" % self.params
 			run_cmd(cmd)
 			tmp_bcfs.append(self.params["tmp_bcf"])
-		self.params["vcf_files"] = " ".join(tmp_bcfs)
-		cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(merged_bcf)s -O b %(vcf_files)s" % self.params
-		run_cmd(cmd)
+		if len(tmp_bcfs)>2:
+			self.params["vcf_files"] = " ".join(tmp_bcfs)
+			cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(merged_bcf)s -O b %(vcf_files)s" % self.params
+			run_cmd(cmd)
+		else:
+			cmd = "mv %(tmp_bcf)s %(merged_bcf)s" % self.params
+			run_cmd(cmd)
 
 
 	def extract_variants(self):
@@ -139,11 +143,9 @@ class vcf_merge:
 
 	def sample_filt(self):
 		"""Filter out low quality samples"""
+
 		num_calls = int(subprocess.Popen("bcftools view %(uniq_filt_bcf)s -H | wc -l" % self.params,shell=True,stdout=subprocess.PIPE).communicate()[0].rstrip())
-		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"bcftools view -s {} %(uniq_filt_bcf)s | bcftools view -g miss -H | wc -l > {}.miss\"" % self.params
-		run_cmd(cmd)
-		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"bcftools view -s {} %(uniq_filt_bcf)s | bcftools view -g het -H | wc -l > {}.mix\"" % self.params
-		run_cmd(cmd)
+
 		miss = {}
 		mix = {}
 		self.lq_samples = []
@@ -152,12 +154,17 @@ class vcf_merge:
 		LQ = open(self.params["lq_sample_file"],"w")
 		QF = open(self.params["qual_file"],"w")
 		QF.write("sample\tmix\tmiss\n")
-		for s in self.samples:
-			miss[s] = int(open("%s.miss" % s).readline().rstrip())/num_calls
-			mix[s] = int(open("%s.mix" % s).readline().rstrip())/num_calls
+
+		self.params["bcftools_stats_file"] = "%s.bcftools_stats.txt" % self.params["prefix"]
+		cmd =  "bcftools stats  %(uniq_filt_bcf)s -s - | grep ^PSC > %(bcftools_stats_file)s" % self.params
+		run_cmd(cmd)
+		for l in open(self.params["bcftools_stats_file"]):
+			row = l.rstrip().split()
+			s = row[2]
+			miss[s] = (num_calls-sum([int(row[i]) for i in [3,4,5]]))/num_calls
+			print miss[s]
+			mix[s] = int(row[5])/num_calls
 			QF.write("%s\t%s\t%s\n" % (s,mix[s],miss[s]))
-			os.remove("%s.miss" % (s))
-			os.remove("%s.mix" % (s))
 			if s in self.keep_samples:
 				self.hq_samples.append(s)
 				HQ.write("%s\n" % s)

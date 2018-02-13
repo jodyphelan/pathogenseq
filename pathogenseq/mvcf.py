@@ -58,7 +58,7 @@ class bcf:
 		cmd = "bcftools view %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
 		run_cmd(cmd,verbose=v)
 
-	def vcf_to_fasta(self,filename,threads=4):
+	def vcf_to_fasta_alt(self,filename,threads=4):
 		"""Create a fasta file from the SNPs"""
 		self.params["threads"] = threads
 		cmd = "bcftools query -l %(bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools view -v snps %(bcf)s | bcftools query -s {} -f '[%%IUPACGT]'  >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
@@ -69,6 +69,21 @@ class bcf:
 			fdict[s] = fdict[s].replace("./.","N")
 			O.write(">%s\n%s\n" % ( s,fdict[s]))
 			os.remove(s+".fa")
+		O.close()
+
+	def vcf_to_fasta(self,filename,threads=4):
+		"""Create a fasta file from the SNPs"""
+		self.params["threads"] = threads
+		self.params["tmp_file"] = "%s.tmp.txt" % self.params["prefix"]
+		cmd = "bcftools query -f '%%POS[\\t%%TGT]\\n' %(bcf)s |  datamash transpose > %(tmp_file)s" % self.params
+		run_cmd(cmd)
+		O = open(filename,"w")
+		for i,l in enumerate(open(self.params["tmp_file"])):
+			row = l.rstrip().split()
+			if i==0: continue
+			s = self.samples[i-1]
+			seq = "".join(row).replace("./.","N")
+			O.write(">%s\n%s\n" % ( s,seq))
 		O.close()
 
 	def bcf2vcf(self):
