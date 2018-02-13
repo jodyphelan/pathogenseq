@@ -7,6 +7,12 @@ from files import *
 from fasta import *
 from mvcf import *
 
+
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
 def create_mappability_file(ref_file,threads):
 	cmd = "gem-indexer -i %s -o genome" % ref_file
 	run_cmd(cmd)
@@ -97,11 +103,19 @@ class vcf_merge:
 
 	def merge(self):
 		"""Merge gVCF files"""
-		cmd = "cat %(sample_file)s | xargs -i sh -c \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % self.params
+		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % self.params
 		run_cmd(cmd)
-		self.params["vcf_files"] = " ".join(["%s/%s.%s" % (self.params["vcf_dir"],x,self.params["vcf_ext"]) for x in self.samples])
-		cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(merged_bcf)s -O b %(vcf_files)s" % self.params
+		tmp_bcfs = []
+		for i,tmp_samples in enumerate(list(chunks(self.samples,500))):
+			self.params["tmp_bcf"] = "%s.%s.tmp.bcf"
+			self.params["vcf_files"] = " ".join(["%s/%s.%s" % (self.params["vcf_dir"],x,self.params["vcf_ext"]) for x in tmp_samples])
+			cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s" % self.params
+			run_cmd(cmd)
+			tmp_bcfs.append(self.params["tmp_bcf"])
+		self.params["vcf_files"] = " ".join(tmp_bcfs)
+		cmd = "bcftools merge --threads %(threads)s -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s" % self.params
 		run_cmd(cmd)
+
 
 	def extract_variants(self):
 		"""Extract all variant positions"""
