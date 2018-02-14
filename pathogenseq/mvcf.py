@@ -8,6 +8,8 @@ from collections import defaultdict
 import itertools
 import json
 from tqdm import tqdm
+from bokeh.plotting import figure, output_file, show
+from bokeh.layouts import column
 
 re_ref_aa = re.compile("([0-9]+)([A-Z\*]+)")
 re_alt_aa = re.compile("[0-9]+([A-Z\*]+)")
@@ -44,6 +46,42 @@ class bcf:
 		for l in open(self.params["temp_file"]):
 			self.samples.append(l.rstrip())
 		os.remove(self.params["temp_file"])
+	def load_stats(self):
+		self.params["stats_file"] = "%s.stats.txt" % self.params["bcf"]
+		cmd = "bcftools stats -s - %(bcf)s > %(stats_file)s" % self.params
+		run_cmd(cmd)
+		results = defaultdict(lambda:defaultdict(dict))
+		for l in open(self.params["stats_file"]):
+			row = l.rstrip().split("\t")
+			if l[0]=="#": continue
+			if row[0]=="SN":
+				results["SN"][row[2][:-1]] = int(row[3])
+			elif row[0]=="AF":
+				results["AF"]["SNP"][float(row[2])] = int(row[3])
+				results["AF"]["INDEL"][float(row[2])] = int(row[6])
+			elif row[0]=="QUAL":
+				results["QUAL"]["SNP"][int(row[2])] = int(row[3])
+				results["QUAL"]["INDEL"][int(row[2])] = int(row[6])
+			elif row[0]=="IDD":
+				results["IDD"][int(row[2])] = int(row[3])
+			elif row[0]=="ST":
+				results["ST"][row[2]] = int(row[3])
+			elif row[0]=="DP":
+				if row[2][0]==">": continue
+				results["DP"][int(row[2])] = int(row[3])
+			elif row[0]=="PSC":
+				results["PSC"][row[2]]["nRefHom"] = int(row[3])
+				results["PSC"][row[2]]["nNonRefHom"] = int(row[4])
+				results["PSC"][row[2]]["nHets"] = int(row[5])
+		return results
+	def plot_stats(self,outfile):
+		stats =  self.load_stats()
+		output_file(outfile)
+
+		sn = figure(title="Summary stats", x_range=stats["SN"].keys(),toolbar_location=None, tools="")
+		sn.vbar(x=stats["SN"].keys(),top=stats["SN"].values(),width=0.9)
+		# show the results
+		show(sn)
 
 	def split_on_metadata(self,meta_file):
 		meta = defaultdict(list)
