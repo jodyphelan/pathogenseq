@@ -7,7 +7,7 @@ import json
 default_conf = {
 	"raxmlHPC":"raxmlHPC",
 	"examl":"examl",
-	"parse-examl":"parse-examl",
+	"parse_examl":"parse-examl",
 	"bwa":"bwa",
 	"bowtie2":"bowtie2",
 	"bowtie2-build":"bowtie2-build",

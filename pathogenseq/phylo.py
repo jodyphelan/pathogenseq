@@ -14,7 +14,7 @@ class phylo:
 		phylo: A phylo class object
 	"""
 	def __init__(self,fa_file,prefix,threads=4):
-		self.params = {}
+		self.params = init_params()
 		if filecheck(fa_file):
 			self.params["fa_file"] = fa_file
 			self.fasta = fasta(fa_file)
@@ -26,11 +26,11 @@ class phylo:
 		self.params["phylip_file"] = "%s.phylip" % self.params["prefix"]
 		self.fasta.write_philip(self.params["phylip_file"])
 		print "Creating starting tree"
-		cmd = "raxmlHPC -y -m GTRCAT -p 12345 -s %(fa_file)s  -n StartingTree -T %(threads)s" % self.params
+		cmd = "%(raxmlHPC)s -y -m GTRCAT -p 12345 -s %(fa_file)s  -n StartingTree -T %(threads)s" % self.params
 		run_cmd(cmd)
 		print "Creating binary file"
-		cmd = "parse-examl -s %(phylip_file)s -n %(prefix)s -m DNA" % self.params
+		cmd = "%(parse_examl)s -s %(phylip_file)s -n %(prefix)s -m DNA" % self.params
 		run_cmd(cmd)
 		print "Running EXaML"
-		cmd = "examl -s %(prefix)s.binary -n examl -m PSR -D -t RAxML_parsimonyTree.StartingTree" % self.params
+		cmd = "%(examl)s -s %(prefix)s.binary -n examl -m PSR -D -t RAxML_parsimonyTree.StartingTree" % self.params
 		run_cmd(cmd)
