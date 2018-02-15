@@ -1,8 +1,14 @@
+import sys
 import gzip
 import os.path
 import subprocess
 import csv
 from collections import defaultdict
+import json
+
+def init_params():
+	conf = json.load(open("%s/%s" % (sys.prefix,"pathogenseq.conf")))
+	return conf
 
 def load_tsv(filename):
 	meta = {}

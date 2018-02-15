@@ -1,7 +1,58 @@
-from distutils.core import setup
+from distutils.core import setup, Command
+import sys
+import os
+import subprocess
+import json
+
+default_conf = {
+	"raxmlHPC":"raxmlHPC",
+	"examl":"examl",
+	"parse-examl":"parse-examl",
+	"bwa":"bwa",
+	"bowtie2":"bowtie2",
+	"bowtie2-build":"bowtie2-build",
+	"minimap2":"minimap2",
+	"tabix":"tabix",
+	"bgzip":"bgzip",
+	"bcftools":"bcftools",
+	"samtools":"samtools",
+	"htsbox":"htsbox"
+}
+
+class InstallCommand(Command):
+    description = "Installs the foo."
+    user_options = [
+        ('arch=', "a", 'Specify the arch'),
+    ]
+    def initialize_options(self):
+        self.arch = "Linux"
+    def finalize_options(self):
+        assert self.arch in ('Linux', 'osX'), 'Invalid Arch!'
+    def run(self):
+		subprocess.call("bash install_prerequisites.sh",shell=True)
+		cwd = os.path.dirname(os.path.realpath(__file__))
+		new_conf = default_conf
+		for d in new_conf:
+			new_conf[d] = "%s/bin/%s" % (cwd,default_conf[d])
+		json.dump(new_conf,open("pathogenseq.conf","w"))
+
+class init_conf(Command):
+    description = "Installs the foo."
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+		json.dump(default_conf,open("pathogenseq.conf","w"))
 
 setup(
+
 	name="pathogenseq",
+	cmdclass={
+		"install_prerequisites": InstallCommand,
+		"init_conf": init_conf
+	},
 	version="0.1dev",
 	packages=["pathogenseq",],
 	license="MIT",
@@ -22,5 +73,7 @@ setup(
 		 'scripts/splitchr.py',
 		 'scripts/venn_diagram.py',
 		 'scripts/fasta2vcf.py'
-		]
+		],
+	data_files = [(sys.prefix,["pathogenseq.conf"])],
+
 )
