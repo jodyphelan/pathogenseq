@@ -2,3 +2,5 @@ numpy
 PyVcf
 tqdm
 ete3
+biopython
+bokeh

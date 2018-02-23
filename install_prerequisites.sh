@@ -55,3 +55,7 @@ git clone https://github.com/stamatak/standard-RAxML.git \
 && cd standard-RAxML/ \
 && (make -f Makefile.AVX2.PTHREADS.gcc && cp raxmlHPC-PTHREADS-AVX2 ../bin/raxmlHPC) || (make -f Makefile.AVX2.PTHREADS.gcc && cp raxmlHPC-PTHREADS-AVX ../bin/raxmlHPC) || (make -f Makefile.SSE3.PTHREADS.gcc && cp raxmlHPC-PTHREADS-SSE3 ../bin/raxmlHPC) \
 && cd ../
+
+pip install -r requirements.txt
+
+echo "echo \"export PATH=$PWD:$PATH\" >> ~/.bashrc"
