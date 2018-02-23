@@ -18,6 +18,7 @@ class fasta:
 		self.fa_file = filename
 		for l in open(filename):
 			line = l.rstrip()
+			if line=="": continue
 			if line[0] == ">":
 				seq_name = line[1:].split()[0]
 				fa_dict[seq_name] = []
