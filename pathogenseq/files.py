@@ -19,7 +19,8 @@ def load_tsv(filename):
 		meta[row["sample"]] = {}
 		columns = set(row)-set(["sample"])
 		for c in columns:
-			meta[row["sample"]][c] = row[c]
+			meta[row["sample"]][c.upper()] = row[c]
+	columns = [c.upper() for c in set(row)-set(["sample"])]
 	return columns,meta
 
 def load_bed(filename,columns,key1,key2=None):
@@ -71,10 +72,10 @@ def run_cmd(cmd,verbose=1):
 	"""
 	cmd = "set -u pipefail; " + cmd
 	if verbose==2:
-		print("\nRunning command:\n%s" % cmd)
+		sys.stderr.write("\nRunning command:\n%s\n" % cmd)
 		stderr = open("/dev/stderr","w")
 	elif verbose==1:
-		print("\nRunning command:\n%s" % cmd)
+		sys.stderr.write("\nRunning command:\n%s\n" % cmd)
 		stderr = open("/dev/null","w")
 	else:
 		stderr = open("/dev/null","w")

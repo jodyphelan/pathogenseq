@@ -22,6 +22,7 @@ class bam:
 	"""
 	def __init__(self,bam_file,prefix,ref_file=None,platform="Illumina",threads=4):
 		self.params = {}
+		index_bam(bam_file,threads=threads)
 		if filecheck(bam_file): self.params["bam_file"] = bam_file
 		self.params["prefix"] = prefix
 		if ref_file:

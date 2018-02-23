@@ -10,9 +10,21 @@ import json
 from tqdm import tqdm
 from bokeh.plotting import figure, output_file, show
 from bokeh.layouts import column
+from ete3 import Tree
 
-re_ref_aa = re.compile("([0-9]+)([A-Z\*]+)")
-re_alt_aa = re.compile("[0-9]+([A-Z\*]+)")
+re_seq = re.compile("([0-9]*)([A-Z\*]+)")
+re_I = re.compile("([A-Z\*]+)")
+number_re = re.compile("[0-9]+")
+
+def parse_mutation(x):
+	tmp = x.split(">")
+	aa_changed = True if len(tmp)>1 else False
+	re_obj = re_seq.search(tmp[0])
+	codon_num = re_obj.group(1)
+	ref_aa = re_obj.group(2)
+	alt_aa = re_seq.search(tmp[1]).group(2) if aa_changed else None
+	return codon_num,ref_aa,alt_aa
+
 
 
 def load_variants(filename):
@@ -46,6 +58,18 @@ class bcf:
 		for l in open(self.params["temp_file"]):
 			self.samples.append(l.rstrip())
 		os.remove(self.params["temp_file"])
+	def load_variants_alt(self):
+		variants = defaultdict(lambda:defaultdict(dict))
+		raw_variants = defaultdict(lambda:defaultdict(dict))
+		for l in tqdm(subprocess.Popen("bcftools query -f '%%CHROM\t%%POS[\t%%IUPACGT]\n' %s  | sed 's/\.\/\./N/g'" % self.params["bcf"], shell=True, stdout=subprocess.PIPE).stdout):
+			row = l.rstrip().split()
+			for i in range(len(self.samples)):
+				raw_variants[row[0]][row[1]][self.samples[i]] = row[i+2]
+		for chrom in raw_variants:
+			for pos in raw_variants[chrom]:
+				variants[chrom][int(pos)] = raw_variants[chrom][pos]
+		return variants
+
 	def load_stats(self):
 		self.params["stats_file"] = "%s.stats.txt" % self.params["bcf"]
 		cmd = "bcftools stats -s - %(bcf)s > %(stats_file)s" % self.params
@@ -108,19 +132,6 @@ class bcf:
 		O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
 		cmd = "bcftools view %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
 		run_cmd(cmd,verbose=v)
-
-	def vcf_to_fasta_alt(self,filename,threads=4):
-		"""Create a fasta file from the SNPs"""
-		self.params["threads"] = threads
-		cmd = "bcftools query -l %(bcf)s | parallel -j %(threads)s \"(printf '>'{}'\\n' > {}.fa; bcftools view -v snps %(bcf)s | bcftools query -s {} -f '[%%IUPACGT]'  >> {}.fa; printf '\\n' >> {}.fa)\"" % self.params
-		run_cmd(cmd)
-		O = open(filename,"w")
-		for s in self.samples:
-			fdict = fasta(s+".fa").fa_dict
-			fdict[s] = fdict[s].replace("./.","N")
-			O.write(">%s\n%s\n" % ( s,fdict[s]))
-			os.remove(s+".fa")
-		O.close()
 
 	def vcf_to_fasta(self,filename,threads=4):
 		"""Create a fasta file from the SNPs"""
@@ -280,33 +291,50 @@ dev.off()
 
 			results[record.CHROM][record.POS] = tmp
 		json.dump({"variants":results,"samples":self.samples},open(outfile,"w"))
-	def vcf_from_bed(self,bed_file,vcf_file):
+	def bed_subset(self,bed_file,out_file,vcf=False):
 		temp_bed = "%s.temp.bed" % self.params["prefix"]
-		cmd = "awk '{print $1\"\t\"$2-1\"\t\"$3}' %s > %s" % (bed_file,temp_bed)
+		cmd = "awk '{print $1\"\\t\"$2-1\"\\t\"$3}' %s > %s" % (bed_file,temp_bed)
 		run_cmd(cmd)
-		cmd = "bcftools view -T %s %s -o %s " % (temp_bed,self.params["bcf"],vcf_file)
+		if vcf:
+			cmd = "bcftools view -R %s %s -o %s " % (temp_bed,self.params["bcf"],out_file)
+		else:
+			cmd = "bcftools view -R %s %s -Ob -o %s " % (temp_bed,self.params["bcf"],out_file)
 		run_cmd(cmd)
+		if not vcf:
+			return bcf(out_file)
 	def odds_ratio(self,bed_file,meta_file):
 		drugs,meta = load_tsv(meta_file)
-		print meta
-		self.vcf_from_bed(bed_file,self.params["vcf"])
-		bed_dict = load_bed(bed_file,columns=[5,6],key1=4)
-		vcf_reader = vcf.Reader(open(self.params["vcf"]))
-		variants = self.load_csq()
-		for gene in bed_dict:
-			for var in bed_dict[gene][1].split(";"):
-				for drug in bed_dict[gene][0].split(";"):
-					print("Looking at mutation %s in %s for drug %s" % (var,gene,drug))
-					if drug not in drugs: continue
+		bed_dict = load_bed(bed_file,columns=[5,6],key1=4,key2=5)
+		subset_bcf_name = "%s.subset.bcf" % self.params["prefix"]
+		subset_bcf = self.bed_subset(bed_file,subset_bcf_name)
+		variants = subset_bcf.load_csq()
 
-					tbl = [[0.5,0.5],[0.5,0.5]]
-					codon_num = re_ref_aa.search(var).group(1)
-					tbl[0][0] += len([s for s in meta.keys() if s in variants[gene][codon_num] and variants[gene][codon_num][s]==var and meta[s][drug]=="1"])
-					tbl[1][0] += len([s for s in meta.keys() if s in variants[gene][codon_num] and variants[gene][codon_num][s]==var and meta[s][drug]=="0"])
-					tbl[0][1] += len([s for s in meta.keys() if s not in variants[gene][codon_num] and meta[s][drug]=="1"])
-					tbl[1][1] += len([s for s in meta.keys() if s not in variants[gene][codon_num] and meta[s][drug]=="0"])
-					print(tbl)
-					print((tbl[0][0]/tbl[0][1])/(tbl[1][0]/tbl[1][1]))
+		for gene in bed_dict:
+
+			for drug_combo in bed_dict[gene]:
+				for var in bed_dict[gene][drug_combo][1].split(";"):
+					for drug in bed_dict[gene][drug_combo][0].split(";"):
+						if drug not in drugs: continue
+						print("Looking at mutation %s in %s for drug %s" % (var,gene,drug))
+
+						tbl = [[0.5,0.5],[0.5,0.5]]
+						codon_num,ref_aa,alt_aa = parse_mutation(var)
+
+						if gene not in variants: continue
+						if codon_num not in variants[gene]: continue
+						try:
+							tbl[0][0] += len([s for s in meta.keys() if variants[gene][codon_num][s]==alt_aa and meta[s][drug]=="1"])
+							tbl[1][0] += len([s for s in meta.keys() if variants[gene][codon_num][s]==alt_aa and meta[s][drug]=="0"])
+							tbl[0][1] += len([s for s in meta.keys() if variants[gene][codon_num][s]==ref_aa and meta[s][drug]=="1"])
+							tbl[1][1] += len([s for s in meta.keys() if variants[gene][codon_num][s]==ref_aa and meta[s][drug]=="0"])
+						except:
+							print gene
+							print codon_num
+							print variants[gene][codon_num]
+							import pdb; pdb.set_trace()
+						if tbl[0][0]+tbl[1][0]==1: continue
+						OR = (tbl[0][0]/tbl[0][1])/(tbl[1][0]/tbl[1][1])
+						print "%s\t%s\t%s\t%s\t%s" % (var,gene,drug,OR,tbl)
 #		for record in tqdm(vcf_reader):
 #			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
 
@@ -314,8 +342,8 @@ dev.off()
 	def load_csq(self):
 
 		self.bcf2vcf()
-		nuc_variants = load_variants(self.params["vcf"])
-
+		nuc_variants = self.load_variants_alt()
+		prot_dict = defaultdict(lambda:defaultdict(dict))
 		prot_variants = defaultdict(lambda:defaultdict(dict))
 		codon_num2pos = defaultdict(lambda:defaultdict(set))
 		ref_codons = defaultdict(lambda:defaultdict(dict))
@@ -330,18 +358,17 @@ dev.off()
 				info = row[i+1].split("|")
 				if row[i+1][0]=="@": continue
 				if info[-1]=="pseudogene": continue
+				if info[-1]=="rRNA": continue
 				sample = row[i]
 				gene = info[1]
-				tmp = info[5].split(">")
-				aa_changed = True if len(tmp)>1 else False
-				re_obj = re_ref_aa.search(tmp[0])
-				codon_num = re_obj.group(1)
+				codon_num,ref_aa,alt_aa = parse_mutation(info[5])
 				codon_num2pos[gene][codon_num].add((chrom,pos))
-				ref_aa = re_obj.group(2)
 				ref_codons[gene][codon_num] = ref_aa
-				if aa_changed:
-					alt_aa = re.search("[0-9]+([A-Z\*]+)",tmp[1]).group(1)
 				prot_variants[gene][codon_num][row[i]] = info[5]
+				if alt_aa:
+					prot_dict[gene][codon_num][sample] = alt_aa
+				else:
+					prot_dict[gene][codon_num][sample] = ref_aa
 
 
 		for gene in prot_variants:
@@ -349,14 +376,62 @@ dev.off()
 				for s in set(self.samples)-set(prot_variants[gene][codon_num].keys()):
 					if "N" in  [nuc_variants[chrom][pos][s] for chrom,pos in codon_num2pos[gene][codon_num]]:
 						prot_variants[gene][codon_num][s] = "?"
+						prot_dict[gene][codon_num][s] = "?"
 					else:
-						#prot_dict[gene][codon_num][s] = ref_codons[gene][codon_num]
 						pass
-
-
-#				print nuc_variants[row[0]][int(row[1])]
-#				if nuc_variants[row[0]][row[1]][s]=="N":
+						prot_dict[gene][codon_num][s] = ref_codons[gene][codon_num]
+#			if nuc_variants[row[0]][int(row[1])][s]=="N":
 #					prot_dict[gene][codon_num] = "?"
 
-#		print prot_dict["Rv0667"]
-		return prot_variants
+
+
+		return prot_dict
+
+	def ancestral_reconstruct(self):
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(bcf)s" % self.params
+		variants = {}
+		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
+			row = l.rstrip().split()
+			variants[i] = (row[0],row[1])
+		self.params["reduced_bcf"] = "%(prefix)s.reduced.bcf" % self.params
+		cmd = "bcftools view -c 3 %(bcf)s -Ob -o %(reduced_bcf)s" % self.params
+		run_cmd(cmd)
+		reduced = {}
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(reduced_bcf)s" % self.params
+		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
+			row = l.rstrip().split()
+			reduced[i] = (row[0],row[1])
+		new_bcf = bcf(self.params["reduced_bcf"])
+		self.params["fasta_file"] = "%(prefix)s.reduced.snps.fa" % self.params
+		new_bcf.vcf_to_fasta(self.params["fasta_file"])
+
+		self.params["tree_file"] = "%s.newick.txt" % self.params["prefix"]
+		self.params["reconstructed_fasta"] = "%s.reconstructed.fasta" % self.params["prefix"]
+		cmd = "fastml -s %(fasta_file)s -x %(tree_file)s -j %(reconstructed_fasta)s -qf -mn" % self.params
+#		run_cmd(cmd,verbose=2)
+
+		fdict = fasta(self.params["reconstructed_fasta"]).fa_dict
+		t = Tree(self.params["tree_file"], format=1)
+
+		for i in range(len(fdict.values()[0])):
+			num_transitions = 0
+			for node in t.traverse("postorder"):
+				if len(node.get_ancestors())==0: continue
+				anc = node.get_ancestors()[0]
+				nuc1 = fdict[anc.name][i]
+				nuc2 = fdict[node.name][i]
+				if nuc1!="?" and nuc2!="?" and nuc1!="N" and nuc2!="N":
+					if nuc1!=nuc2:
+						num_transitions+=1
+						print "%s>%s" % (nuc1,nuc2)
+			if num_transitions>1:
+				print "Site: %s" % i
+				print "Number of transitions: %s" % num_transitions
+				print "Location: %s" % (reduced[i][1])
+				for node in t.traverse("postorder"):
+					nuc = fdict[node.name][i]
+					node.add_features(nuc=nuc)
+					#p = probs[node.name][i][nuc] if node.name in probs else 1.0
+					#node.add_features(prob=p)
+				print t.get_ascii(attributes=["name", "nuc"], show_internal=True)
+#	def itol_from_bcf(self,chrom,pos):
