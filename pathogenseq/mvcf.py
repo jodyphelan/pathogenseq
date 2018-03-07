@@ -91,12 +91,17 @@ class bcf:
 		OUT = open(self.params["del_bed"],"w")
 		cmd = "bcftools view -v indels %(bcf)s | bcftools query -f '%%CHROM\t%%POS\t%%REF\t%%ALT\n' | awk 'length($3)>1'" % self.params
 		print cmd
+		j = 0
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
+			j+=1
 			row = l.rstrip().split()
 			start_pos = int(row[1])+1
 			for i in range(start_pos,start_pos+len(row[2])-1):
 				OUT.write("%s\t%s\t%s\n" % (row[0],i-1,i))
+		if j==0:
+			OUT.write("dummy\t1\t1\n")
 		OUT.close()
+
 		return self.params["del_bed"]
 
 
