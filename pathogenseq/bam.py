@@ -84,7 +84,7 @@ class bam:
 			variants.append((r.CHROM,r.POS,r.REF,s.gt_bases,s.data.DP,s.data.GT))
 		return variants
 
-	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=40,threads=4):
+	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4):
 		self.params["min_dp"] = min_dp
 		self.params["bcf_file"] = "%s.bcf" % self.prefix
 		self.params["bed_file"] = bed_file

@@ -90,6 +90,7 @@ class bcf:
 		self.params["del_bed"] = "%s.del_pos.bed" % self.prefix
 		OUT = open(self.params["del_bed"],"w")
 		cmd = "bcftools view -v indels %(bcf)s | bcftools query -f '%%CHROM\t%%POS\t%%REF\t%%ALT\n' | awk 'length($3)>1'" % self.params
+		print cmd
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
 			row = l.rstrip().split()
 			start_pos = int(row[1])+1
@@ -431,7 +432,7 @@ dev.off()
 					prot_dict[gene][change_num][sample] = alt_aa
 
 				elif info[0]=="frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
-					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6]) 
+					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6])
 					change_num2pos[gene][change_num].add((chrom,pos))
 					ref_codons[gene][change_num] = ref_nuc
 					change = "%s%s>%s" % (ann_pos,ref_nuc,alt_nuc) if ann_pos else None
