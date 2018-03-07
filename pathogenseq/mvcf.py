@@ -36,30 +36,12 @@ def load_variants(filename):
 	return variants
 
 
-def get_missing_positions(bcf_file,ref_file,gff_file,ann_file):
-	tmp_file = "%s.temp.vcf" % bcf_file
-	tmp2_file = "%s.temp.bcf" % bcf_file
-	O = open(tmp_file,"w")
-	cmd = "bcftools view -h %s" % bcf_file
+def get_missing_positions(bcf_file):
+	cmd = "bcftools query -f '%%CHROM\\t%%POS\\n' %s" % bcf_file
+	results = []
 	for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
-		O.write(l)
-	cmd = "bcftools query -f '%%CHROM\t%%POS\t%%REF\t%%ALT\t[%%DP]\n' %s" % bcf_file
-	for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
-		chrom,pos,ref,alt,dp = l.rstrip().split()
-		tmp = ["A","C","G","T"]
-		fake_allele = tmp.pop()
-		if fake_allele==ref: fake_allele = tmp.pop()
-		O.write("%s\t%s\t.\t%s\t%s\t255\t.\t.\tGT\t1\n" % (chrom,pos,ref,fake_allele))
-	O.close()
-	cmd = "bcftools csq -f %s -g %s %s -Ob -o %s" % (ref_file,gff_file,tmp_file,tmp2_file)
-	run_cmd(cmd)
-	tmp_csq = bcf(tmp2_file).load_csq(ann_file=ann_file,changes=True,use_genomic=False)
-	results = defaultdict(lambda:defaultdict(list))
-	for gene in tmp_csq:
-		for variant in tmp_csq[gene]:
-			for sample in variant:
-				change_num,ref,alt = parse_mutation(variant[sample])
-				results[gene][change_num].append(sample)
+		row = l.rstrip().split()
+		results.append((row[0],row[1]))
 	return results
 
 
@@ -172,7 +154,7 @@ class bcf:
 		self.params["ref_file"] = ref_file
 		self.params["gff_file"] = gff_file
 		self.params["ann_file"] = "%s.ann.bcf" % self.params["prefix"]
-		cmd = "bcftools csq -f %(ref_file)s -g %(gff_file)s %(bcf)s -o %(ann_file)s" % self.params
+		cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf)s -o %(ann_file)s" % self.params
 		run_cmd(cmd,verbose=v)
 
 	def extract_matrix(self,matrix_file=None):
@@ -403,7 +385,8 @@ dev.off()
 		prot_variants = defaultdict(lambda:defaultdict(dict))
 		change_num2pos = defaultdict(lambda:defaultdict(set))
 		ref_codons = defaultdict(lambda:defaultdict(dict))
-		cmd = "bcftools query -f '%%CHROM\t%%POS\t%%REF\t%%ALT[\t%%SAMPLE\t%%TBCSQ]\n' %s" % self.params["bcf"]
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n' %s" % self.params["bcf"]
+		print cmd
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = line.rstrip().split()
 			chrom = row[0]
@@ -425,10 +408,14 @@ dev.off()
 
 			for i in range(4,len(row)-2,3):
 				sample = row[i]
-				info = row[i+1].split("|")
+				info = row[i+1].split("|") if row[i+1]!="." else row[i+2].split("|")
 				if row[i+1][0]=="@": continue
 				if info[-1]=="pseudogene": continue
-				gene = info[1]
+				try:
+					gene = info[1]
+				except:
+					print line
+					quit()
 				if info[0]=="missense" or info[0]=="*missense" or info[0]=="start_lost" or info[0]=="*start_lost" or info[0]=="*stop_lost" or info[0]=="stop_lost" or info[0]=="stop_gained" or info[0]=="*stop_gained":
 					change_num,ref_aa,alt_aa = parse_mutation(info[5])
 					change_num2pos[gene][change_num].add((chrom,pos))
@@ -436,7 +423,7 @@ dev.off()
 					prot_variants[gene][change_num][row[i]] = info[5]
 					prot_dict[gene][change_num][sample] = alt_aa
 
-				elif info[0]=="frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
+				elif info[0]=="inframe_deletion" or info[0]=="frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
 					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6])
 					change_num2pos[gene][change_num].add((chrom,pos))
 					ref_codons[gene][change_num] = ref_nuc
@@ -458,6 +445,7 @@ dev.off()
 						prot_dict[gene][gene_pos][sample] = alt
 						ref_codons[gene][gene_pos] = ref
 				else:
+					print line
 					print "Unknown variant type...Exiting!"
 					quit(1)
 

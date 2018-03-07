@@ -97,20 +97,17 @@ class bam:
 
 		if call_method=="high":
 			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
-			run_cmd(cmd)
-			cmd = "bcftools concat -Ob -o %(gbcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
-			run_cmd(cmd)
-			cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
-			run_cmd(cmd)
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		else:
 			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
-			run_cmd(cmd)
-			cmd = "bcftools concat -Ob -o %(gbcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
-			run_cmd(cmd)
-			cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
-			run_cmd(cmd)
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
+		run_cmd(cmd)
+		cmd = "%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
+		run_cmd(cmd)
+		cmd = "bcftools concat -aD -Ob -o %(gbcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
+		run_cmd(cmd)
+		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf*\"}'`" % self.params
+		run_cmd(cmd)
 		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()
 		cmd = "bcftools view %(gbcf_file)s -T ^%(del_bed)s -g miss -O b -o %(low_dp_bcf_file)s" % self.params
 		run_cmd(cmd)
@@ -120,7 +117,7 @@ class bam:
 		if gff_file and filecheck(gff_file):
 			self.params["gff_file"] = gff_file
 			self.params["ann_bcf_file"] = "%(prefix)s.csq.vcf.gz" % self.params
-			cmd = "bcftools csq -p a -f %(ref_file)s -g %(gff_file)s %(bcf_file)s -Ob -o %(ann_bcf_file)s" % self.params
+			cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf_file)s -Ob -o %(ann_bcf_file)s" % self.params
 			run_cmd(cmd)
 			final_bcf = self.params["ann_bcf_file"]
 
@@ -151,7 +148,7 @@ class bam:
 			OUT.write("Chromosome\t%s\t.\t%s\t%s\t255\t.\t.\tGT\t1\n" % (row[1],ref,fake_allele))
 		OUT.close()
 		self.params["ann_bcf_file"] = "%(prefix)s.low_cov.bcf" % self.params
-		cmd = "bcftools csq  %(dp_vcf_file)s -f %(ref_file)s -g %(gff_file)s -Ob -o %(ann_bcf_file)s" % self.params
+		cmd = "bcftools csq -p m %(dp_vcf_file)s -f %(ref_file)s -g %(gff_file)s -Ob -o %(ann_bcf_file)s" % self.params
 		run_cmd(cmd)
 		return bcf(self.params["ann_bcf_file"])
 
