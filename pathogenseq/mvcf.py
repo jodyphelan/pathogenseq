@@ -71,8 +71,8 @@ class bcf:
 	def del_pos2bed(self):
 		self.params["del_bed"] = "%s.del_pos.bed" % self.prefix
 		OUT = open(self.params["del_bed"],"w")
-		cmd = "bcftools view -v indels %(bcf)s | bcftools query -f '%%CHROM\t%%POS\t%%REF\t%%ALT\n' | awk 'length($3)>1'" % self.params
-		print cmd
+		cmd = "bcftools view -v indels %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % self.params
+		sys.stderr.write(cmd)
 		j = 0
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
 			j+=1
@@ -411,11 +411,7 @@ dev.off()
 				info = row[i+1].split("|") if row[i+1]!="." else row[i+2].split("|")
 				if row[i+1][0]=="@": continue
 				if info[-1]=="pseudogene": continue
-				try:
-					gene = info[1]
-				except:
-					print line
-					quit()
+				gene = info[1]
 				if info[0]=="missense" or info[0]=="*missense" or info[0]=="start_lost" or info[0]=="*start_lost" or info[0]=="*stop_lost" or info[0]=="stop_lost" or info[0]=="stop_gained" or info[0]=="*stop_gained":
 					change_num,ref_aa,alt_aa = parse_mutation(info[5])
 					change_num2pos[gene][change_num].add((chrom,pos))
@@ -445,8 +441,8 @@ dev.off()
 						prot_dict[gene][gene_pos][sample] = alt
 						ref_codons[gene][gene_pos] = ref
 				else:
-					print line
-					print "Unknown variant type...Exiting!"
+					sys.stderr.write(line)
+					sys.stderr.write("Unknown variant type...Exiting!\n")
 					quit(1)
 
 
