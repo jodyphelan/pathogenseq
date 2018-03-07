@@ -1,6 +1,20 @@
 #! /usr/bin/env python
 import sys
 import pathogenseq as ps
+import argparse
 
-fasta = ps.fasta(sys.argv[1])
-fasta.splitchr(int(sys.argv[2]))
+def main(args):
+	if args.bed:
+		ps.split_bed(args.bed,args.size)
+	else:
+		fasta = ps.fasta(args.fasta)
+		fasta.splitchr(args.size)
+
+parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('fasta', help='Fasta file')
+parser.add_argument('size', type=int,help='Chunk Size')
+parser.add_argument('--bed', default=None, help='Bed file')
+parser.set_defaults(func=main)
+
+args = parser.parse_args()
+args.func(args)

@@ -103,9 +103,6 @@ class fasta:
 		good_dp = 20
 	def loop_pos(self,chrom):
 		return range(len(self.fa_dict[chrom]))
-
-
-
 		del_lines = []
 		ins_lines = []
 		indel_line_set = set()

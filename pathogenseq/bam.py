@@ -5,6 +5,7 @@ import re
 import numpy as np
 from qc import *
 from utils import *
+from mvcf import *
 import vcf
 
 
@@ -20,18 +21,31 @@ class bam:
 	Returns:
 		bam: A bam class object
 	"""
-	def __init__(self,bam_file,prefix,ref_file=None,platform="Illumina",threads=4):
+	def __init__(self,bam_file,prefix,ref_file,platform="Illumina",threads=4):
 		self.params = {}
 		index_bam(bam_file,threads=threads)
 		if filecheck(bam_file): self.params["bam_file"] = bam_file
 		self.params["prefix"] = prefix
-		if ref_file:
-			if filecheck(ref_file): self.params["ref_file"] = ref_file
-		else:
-			self.params["ref_file"] = ref_file
+		self.prefix = prefix
+		if filecheck(ref_file): self.params["ref_file"] = ref_file
 		self.params["platform"] = platform
 		self.params["threads"] = threads
-	def call_snps(self,ref_file=None,call_method="optimise",min_dp=10,threads=4):
+	def get_calling_params(self):
+		dp = []
+		cmd = "samtools depth %(bam_file)s" % self.params
+		print "Optimising call method"
+		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
+			arr = l.rstrip().split()
+			dp.append(int(arr[2]))
+		med_dp = np.median(dp)
+		print "Median depth: %s" % med_dp
+		if med_dp<30:
+			print "Using low depth approach"
+			return "low"
+		else:
+			print "Using high depth approach"
+			return "high"
+	def gvcf(self,call_method="optimise",min_dp=10,threads=4):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -40,31 +54,11 @@ class bam:
 			call_method(str): optimise variant calling based on high or low depth. Options: high|low|optimise
 			min_dp(int): Minimum depth required to group site into reference-block
 		"""
-		if not self.params["threads"]:
-			self.params["threads"] = threads
 		self.params["min_dp"] = min_dp
-		self.params["vcf_file"] = "%s.vcf.gz" % self.params["prefix"]
-		if ref_file:
-			if filecheck(ref_file): self.params["ref_file"] = ref_file
-		else:
-			if self.params["ref_file"]==None and ref_file==None:
-				print "Please provide a reference fasta file...Exiting"
-				quit()
+		self.params["vcf_file"] = "%s.gvcf.gz" % self.prefix
+
 		if call_method=="optimise":
-			dp = []
-			cmd = "samtools depth %(bam_file)s" % self.params
-			print "Optimising call method"
-			for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
-				arr = l.rstrip().split()
-				dp.append(int(arr[2]))
-			med_dp = np.median(dp)
-			print "Median depth: %s" % med_dp
-			if med_dp<30:
-				print "Using low depth approach"
-				call_method = "low"
-			else:
-				print "Using high depth approach"
-				call_method = "high"
+			call_method = self.get_calling_params()
 
 		if call_method=="high":
 			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -t DP,AD -r {} | bcftools call -mg %(min_dp)s -V indels -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
@@ -72,7 +66,7 @@ class bam:
 			cmd = "bcftools concat -Oz -o %(vcf_file)s `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
 			run_cmd(cmd)
 			cmd = "rm `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
-
+			run_cmd(cmd)
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		else:
 			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s -V indels -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
@@ -80,8 +74,9 @@ class bam:
 			cmd = "bcftools concat -Oz -o %(vcf_file)s `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
 			run_cmd(cmd)
 			cmd = "rm `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
+			run_cmd(cmd)
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
-		run_cmd(cmd)
+
 		variants = []
 		vcf_reader = vcf.Reader(open(self.params["vcf_file"]))
 		for r in vcf_reader:
@@ -89,7 +84,79 @@ class bam:
 			variants.append((r.CHROM,r.POS,r.REF,s.gt_bases,s.data.DP,s.data.GT))
 		return variants
 
-	def get_bam_qc(self,ref_file,cov_thresholds=[1,5,10,20]):
+	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=40,threads=4):
+		self.params["min_dp"] = min_dp
+		self.params["bcf_file"] = "%s.bcf" % self.prefix
+		self.params["bed_file"] = bed_file
+		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
+		self.params["gbcf_file"] = "%s.bcf" % self.prefix
+		self.params["low_dp_bcf_file"] = "%s.low_dp.bcf" % self.prefix
+
+		if call_method=="optimise":
+			call_method = self.get_calling_params()
+
+		if call_method=="high":
+			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			run_cmd(cmd)
+			cmd = "bcftools concat -Ob -o %(gbcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
+			run_cmd(cmd)
+			cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
+			run_cmd(cmd)
+#			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
+		else:
+			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			run_cmd(cmd)
+			cmd = "bcftools concat -Ob -o %(gbcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
+			run_cmd(cmd)
+			cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
+			run_cmd(cmd)
+#			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
+		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()
+		cmd = "bcftools view %(gbcf_file)s -T ^%(del_bed)s -g miss -O b -o %(low_dp_bcf_file)s" % self.params
+		run_cmd(cmd)
+		cmd = "bcftools view %(gbcf_file)s -g ^miss -c 1 -O b -o %(bcf_file)s" % self.params
+		run_cmd(cmd)
+		final_bcf = self.params["bcf_file"]
+		if gff_file and filecheck(gff_file):
+			self.params["gff_file"] = gff_file
+			self.params["ann_bcf_file"] = "%(prefix)s.csq.vcf.gz" % self.params
+			cmd = "bcftools csq -f %(ref_file)s -g %(gff_file)s %(bcf_file)s -Ob -o %(ann_bcf_file)s" % self.params
+			run_cmd(cmd)
+			final_bcf = self.params["ann_bcf_file"]
+
+		return bcf(final_bcf,prefix=self.prefix)
+	def create_dummy_low_dp_bcf(self,gff_file,min_dp=10,bed_file=None):
+		self.params["gff_file"] = gff_file
+		header = """##fileformat=VCFv4.1
+##source=htsbox-pileup-r340
+##reference=/home/jody/refgenome/MTB-h37rv_asm19595v2-eg18.fa
+##contig=<ID=Chromosome,length=4411532>
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE
+"""
+		self.params["dp_vcf_file"] = "%(prefix)s.low_cov.vcf" % self.params
+		OUT = open(self.params["dp_vcf_file"],"w")
+		OUT.write(header)
+		self.do_pileup(bed_file)
+		for l in open(self.params["temp_pileup"]):
+			row = l.rstrip().split()
+			ref = row[2]
+			alleles = row[3].split(",")
+			depth = [int(x) for x in row[4].split(":")[1].split(",")]
+			tot_dp = sum(depth)
+			if tot_dp>min_dp: continue
+			tmp = ["A","C","G","T"]
+			fake_allele = tmp.pop()
+			if fake_allele==ref: fake_allele = tmp.pop()
+			OUT.write("Chromosome\t%s\t.\t%s\t%s\t255\t.\t.\tGT\t1\n" % (row[1],ref,fake_allele))
+		OUT.close()
+		self.params["ann_bcf_file"] = "%(prefix)s.low_cov.bcf" % self.params
+		cmd = "bcftools csq  %(dp_vcf_file)s -f %(ref_file)s -g %(gff_file)s -Ob -o %(ann_bcf_file)s" % self.params
+		run_cmd(cmd)
+		return bcf(self.params["ann_bcf_file"])
+
+
+	def get_bam_qc(self,cov_thresholds=[1,5,10,20]):
 		"""
 		Get a qc_bam object
 
@@ -98,19 +165,14 @@ class bam:
 		Returns:
 			qc_bam: A qc_bam object
 		"""
-		if ref_file:
-			if filecheck(ref_file): self.params["ref_file"] = ref_file
-		else:
-			if ref_file==None:
-				print "Please provide a reference fasta file...Exiting"
-				quit()
 		return qc_bam(self.params["bam_file"],self.params["ref_file"],cov_thresholds)
 
 	def do_pileup(self,bed_file=None):
 		self.params["temp"] = bed_file
 		self.params["temp_pileup"] = "%(prefix)s.temp.pileup" % self.params
+		self.params["temp_bam"] = "%(prefix)s.temp.bam" % self.params
 		if bed_file:
-			cmd = "samtools view -@ %(threads)s -bL %(temp)s %(bam_file)s  > %(temp_bam)s && htsbox pileup -f %(ref_file)s -Q 8 %(temp_bam)s > %(temp_pileup)s" % self.params
+			cmd = "htsbox pileup -b %(temp)s -f %(ref_file)s -Q 8 %(bam_file)s > %(temp_pileup)s" % self.params
 		else:
 			cmd = "htsbox pileup -f %(ref_file)s -Q 8 %(bam_file)s > %(temp_pileup)s" % self.params
 		run_cmd(cmd)
@@ -167,7 +229,7 @@ class bam:
 ##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant described in this record">
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%(prefix)s
 """ % self.params
-		self.params["temp_pileup"] = "%s.temp.pileup" % self.params["prefix"]
+		self.params["temp_pileup"] = "%s.temp.pileup" % self.prefix
 		if bed_file:
 			self.do_pileup(bed_file)
 			bed_pos = set()
@@ -179,7 +241,7 @@ class bam:
 			self.do_pileup()
 			pass
 		variants = []
-		self.params["vcf_file"] = "%s.vcf" % self.params["prefix"]
+		self.params["vcf_file"] = "%s.vcf" % self.prefix
 		OUT = open("%(vcf_file)s" % self.params,"w")
 		OUT.write(header)
 		ref_run_start_pos = -1
@@ -239,18 +301,14 @@ class bam:
 				variants.append((arr[0],arr[1],ref,call,tot_dp,gt))
 		OUT.close()
 		return variants
-	def sambamba_depth(self,outfile,ref_file=None,zero_start=False):
-		if ref_file:
-			self.params["ref_file"] = ref_file
-		if not self.params["ref_file"] and not ref_file:
-			print "Need a reference...Exiting"
-			quit(1)
+	def sambamba_depth(self,outfile,zero_start=False):
+
 		index_bam(self.params["bam_file"])
 		fdict = fasta(self.params["ref_file"]).fa_dict
 		cov = {}
-		self.params["tmp"] = "%s.tmp" % self.params["prefix"]
+		self.params["tmp"] = "%s.tmp" % self.prefix
 		for s in fdict:
-			cov[s] = ["%s\t%s\t0\t0\t0\t0\t0\t0\t0\t%s" % (s,i+1,self.params["prefix"]) for i in range(len(fdict[s]))]
+			cov[s] = ["%s\t%s\t0\t0\t0\t0\t0\t0\t0\t%s" % (s,i+1,self.prefix) for i in range(len(fdict[s]))]
 
 		cmd = "sambamba depth base -q 20 -z -t %(threads)s %(bam_file)s > %(tmp)s" % self.params
 		run_cmd(cmd)

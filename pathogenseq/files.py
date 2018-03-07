@@ -39,6 +39,22 @@ def load_bed(filename,columns,key1,key2=None):
 			results[row[key1-1]]= tuple([row[int(x)-1] for x in columns])
 	return results
 
+def split_bed(bed_file,size):
+	bed_regions = {}
+	for l in open(filecheck(bed_file)):
+		row = l.rstrip().split()
+		chrom,start,end = row[0],int(row[1]),int(row[2])
+		if end-start>size:
+			tmps = start
+			tmpe = start
+			while tmpe<end:
+				tmpe+=size
+				if tmpe>end:
+					tmpe=end
+				print "%s:%s-%s" % (chrom,tmps,tmpe)
+				tmps=tmpe+1
+		else:
+			print "%s:%s-%s" % (chrom,start,end)
 
 def filecheck(filename):
 	"""
@@ -48,7 +64,7 @@ def filecheck(filename):
 		print("Can't find %s" % filename)
 		exit(1)
 	else:
-		return True
+		return filename
 
 def nofile(filename):
 	"""
