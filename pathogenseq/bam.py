@@ -89,7 +89,7 @@ class bam:
 		self.params["bcf_file"] = "%s.bcf" % self.prefix
 		self.params["bed_file"] = bed_file
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
-		self.params["gbcf_file"] = "%s.bcf" % self.prefix
+		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
 		self.params["low_dp_bcf_file"] = "%s.low_dp.bcf" % self.prefix
 
 		if call_method=="optimise":
