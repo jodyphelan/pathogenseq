@@ -384,7 +384,7 @@ dev.off()
 #			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
 
 
-	def load_csq(self,ann_file=None,changes=False,use_genomic=True):
+	def load_csq(self,ann_file=None,changes=False,use_genomic=True,use_gene=True):
 		ann = defaultdict(dict)
 		if ann_file:
 			for l in tqdm(open(ann_file)):
@@ -404,14 +404,17 @@ dev.off()
 			pos = int(row[1])
 			ref = row[2]
 			alt = row[3]
+			if chrom in ann and pos in ann[chrom]:
+				ann_pos = int(ann[chrom][pos][1])
+				ann_gene = ann[chrom][pos][0]
+			else:
+				ann_pos = None
 			if len(row)==4:
 				if chrom in ann and pos in ann[chrom]:
 					for sample in self.samples:
-						gene = ann[chrom][pos][0]
-						gene_pos = ann[chrom][pos][1]
-						prot_variants[gene][gene_pos][sample] = "%s%s>%s" % (gene_pos,ref,alt)
-						prot_dict[gene][gene_pos][sample] = nuc_variants[chrom][pos][sample]
-						ref_codons[gene][gene_pos] = ref
+						prot_variants[ann_gene][ann_pos][sample] = "%s%s>%s" % (ann_pos,ref,alt)
+						prot_dict[ann_gene][ann_pos][sample] = nuc_variants[chrom][pos][sample]
+						ref_codons[ann_gene][ann_pos] = ref
 				continue
 
 			for i in range(4,len(row)-2,3):
@@ -425,18 +428,21 @@ dev.off()
 					change_num2pos[gene][change_num].add((chrom,pos))
 					ref_codons[gene][change_num] = ref_aa
 					prot_variants[gene][change_num][row[i]] = info[5]
-					if alt_aa:
-						prot_dict[gene][change_num][sample] = alt_aa
-					else:
-						print sample
-						print pos
-						quit() ###### Check if we can remove this
-						prot_dict[gene][change_num][sample] = ref_aa
+					prot_dict[gene][change_num][sample] = alt_aa
+
 				elif info[0]=="frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
-					change_num,ref_nuc,alt_nuc = parse_mutation(info[5])
+					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6]) 
 					change_num2pos[gene][change_num].add((chrom,pos))
 					ref_codons[gene][change_num] = ref_nuc
-					prot_variants[gene][change_num][row[i]] = info[6] if use_genomic else info[5]
+					change = "%s%s>%s" % (ann_pos,ref_nuc,alt_nuc) if ann_pos else None
+					if use_genomic and use_gene and change:
+						prot_variants[gene][change_num][row[i]] = change
+					elif use_genomic:
+						prot_variants[gene][change_num][row[i]] = info[6]
+					elif use_gene and change:
+						prot_variants[gene][change_num][row[i]] = change
+					else:
+						prot_variants[gene][change_num][row[i]] = info[5]
 					prot_dict[gene][change_num][sample] = alt_nuc
 				elif info[0]=="non_coding":
 					if chrom in ann and pos in ann[chrom]:
