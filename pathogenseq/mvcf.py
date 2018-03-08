@@ -419,7 +419,7 @@ dev.off()
 					prot_variants[gene][change_num][row[i]] = info[5]
 					prot_dict[gene][change_num][sample] = alt_aa
 
-				elif info[0]=="inframe_insertion" or info[0]=="*inframe_insertion" or info[0]=="inframe_deletion" or info[0]=="*inframe_deletion" or info[0]=="frameshift" or info[0]=="*frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
+				elif info[0]=="stop_lost&frameshift" or info[0]=="inframe_insertion" or info[0]=="*inframe_insertion" or info[0]=="inframe_deletion" or info[0]=="*inframe_deletion" or info[0]=="frameshift" or info[0]=="*frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
 					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6])
 					change_num2pos[gene][change_num].add((chrom,pos))
 					ref_codons[gene][change_num] = ref_nuc
