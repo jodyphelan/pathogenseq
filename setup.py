@@ -72,7 +72,7 @@ setup(
 		 'scripts/sambamba_depth.py',
 		 'scripts/splitchr.py',
 		 'scripts/venn_diagram.py',
-		 'scripts/fasta2vcf.py'
+		 'scripts/fasta2vcf.py',
 		 'scripts/pathogen-profiler.py'
 		],
 	data_files = [(sys.prefix,["pathogenseq.conf"])],
