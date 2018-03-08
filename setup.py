@@ -73,6 +73,7 @@ setup(
 		 'scripts/splitchr.py',
 		 'scripts/venn_diagram.py',
 		 'scripts/fasta2vcf.py'
+		 'scripts/pathogen-profiler.py'
 		],
 	data_files = [(sys.prefix,["pathogenseq.conf"])],
 
