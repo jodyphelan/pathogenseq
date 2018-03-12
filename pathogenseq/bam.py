@@ -81,12 +81,7 @@ class bam:
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
 
-		variants = []
-		vcf_reader = vcf.Reader(open(self.params["vcf_file"]))
-		for r in vcf_reader:
-			s = r.samples[0]
-			variants.append((r.CHROM,r.POS,r.REF,s.gt_bases,s.data.DP,s.data.GT))
-		return variants
+		return bcf(final_bcf,prefix=self.prefix)
 
 	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
 		self.params["min_dp"] = min_dp
