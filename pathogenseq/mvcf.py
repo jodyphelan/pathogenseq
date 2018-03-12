@@ -392,6 +392,7 @@ dev.off()
 		cmd = "%s %s %s" % (view_cmd,mixed_cmd,query_cmd)
 		print cmd
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
+			print line
 			row = line.rstrip().split()
 			chrom = row[0]
 			pos = int(row[1])
