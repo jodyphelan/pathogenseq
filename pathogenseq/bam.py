@@ -97,7 +97,7 @@ class bam:
 		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()
 		view_cmd = "bcftools view %(gbcf_file)s |" % self.params
 		mix_cmd = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
-		out_cmd = "bcftools view %(gbcf_file)s -T ^%(del_bed)s -g miss -O b -o %(low_dp_bcf_file)s" % self.params
+		out_cmd = "bcftools view %(gbcf_file)s -T ^%(del_bed)s -g miss -O b -o %(missing_bcf_file)s" % self.params
 		cmd = "%s %s %s" % (view_cmd,mix_cmd,out_cmd)
 		run_cmd(cmd)
 
