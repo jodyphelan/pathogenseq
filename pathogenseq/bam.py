@@ -45,7 +45,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gvcf(self,call_method="optimise",min_dp=10,threads=4):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="SNPs"):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -55,27 +55,29 @@ class bam:
 			min_dp(int): Minimum depth required to group site into reference-block
 		"""
 		self.params["min_dp"] = min_dp
-		self.params["vcf_file"] = "%s.gvcf.gz" % self.prefix
+		self.params["bcf_file"] = "%s.gbcf.gz" % self.prefix
+
+		if vtype=="snps": self.params["vtype"] = "-V indels"
+		elif vtype=="indels": self.params["vtype"] = "-V snps"
+		elif vtype=="both":	self.params["vtype"] = ""
+		else: sys.stderr.write("Please provide valid vtype: [snps|indels|both]...Exiting!"); quit(1)
 
 		if call_method=="optimise":
 			call_method = self.get_calling_params()
 
 		if call_method=="high":
-			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -t DP,AD -r {} | bcftools call -mg %(min_dp)s -V indels -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
-			run_cmd(cmd)
-			cmd = "bcftools concat -Oz -o %(vcf_file)s `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
-			run_cmd(cmd)
-			cmd = "rm `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
-			run_cmd(cmd)
+			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -t DP,AD -r {} | bcftools call -mg %(min_dp)s %(vtype)s -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		else:
-			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s -V indels -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
-			run_cmd(cmd)
-			cmd = "bcftools concat -Oz -o %(vcf_file)s `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
-			run_cmd(cmd)
-			cmd = "rm `splitchr.py %(ref_file)s 50000  | awk '{print \"%(prefix)s_\"$1\".vcf.gz\"}'`" % self.params
-			run_cmd(cmd)
-#			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
+			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s %(vtype)s -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
+			#cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
+		run_cmd(cmd)
+		cmd = "%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
+		run_cmd(cmd)
+		cmd = "bcftools concat -aD -Ob -o %(gbcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
+		run_cmd(cmd)
+		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf*\"}'`" % self.params
+		run_cmd(cmd)
 
 		variants = []
 		vcf_reader = vcf.Reader(open(self.params["vcf_file"]))
@@ -92,26 +94,15 @@ class bam:
 		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
 		self.params["low_dp_bcf_file"] = "%s.low_dp.bcf" % self.prefix
 		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
-		if call_method=="optimise":
-			call_method = self.get_calling_params()
+		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both")
 
-		if call_method=="high":
-			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | %(mixed_cmd)s bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
-#			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
-		else:
-			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s | %(mixed_cmd)s bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
-#			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
-		run_cmd(cmd)
-		cmd = "%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
-		run_cmd(cmd)
-		cmd = "bcftools concat -aD -Ob -o %(gbcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
-		run_cmd(cmd)
-		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf*\"}'`" % self.params
-		run_cmd(cmd)
 		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()
 		cmd = "bcftools view %(gbcf_file)s -T ^%(del_bed)s -g miss -O b -o %(low_dp_bcf_file)s" % self.params
 		run_cmd(cmd)
-		cmd = "bcftools view %(gbcf_file)s -g ^miss -c 1 -O b -o %(bcf_file)s" % self.params
+		view_cmd = "bcftools view %(gbcf_file)s |" % self.params
+		mix_cmd = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
+		out_cmd = "bcftools view -g ^miss -c 1 -O b -o %(bcf_file)s" % self.params
+		cmd = "%s %s %s" % (view_cmd,mix_cmd,out_cmd)
 		run_cmd(cmd)
 		final_bcf = self.params["bcf_file"]
 		if gff_file and filecheck(gff_file):
