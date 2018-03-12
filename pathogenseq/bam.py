@@ -91,7 +91,7 @@ class bam:
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
 		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
 		self.params["low_dp_bcf_file"] = "%s.low_dp.bcf" % self.prefix
-		self.params["mixed_cmd"] = " | bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1'" % self.params if mixed_as_missing else ""
+		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
 		if call_method=="optimise":
 			call_method = self.get_calling_params()
 
