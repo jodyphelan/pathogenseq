@@ -91,15 +91,15 @@ class bam:
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
 		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
 		self.params["low_dp_bcf_file"] = "%s.low_dp.bcf" % self.prefix
-
+		self.params["mixed_cmd"] = " | bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1'" % self.params if mixed_as_missing else ""
 		if call_method=="optimise":
 			call_method = self.get_calling_params()
 
 		if call_method=="high":
-			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | %(mixed_cmd)s bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		else:
-			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s | bcftools norm -f %(ref_file)s | %(mixed_cmd)s bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
@@ -117,13 +117,11 @@ class bam:
 		if gff_file and filecheck(gff_file):
 			self.params["gff_file"] = gff_file
 			self.params["ann_bcf_file"] = "%(prefix)s.csq.vcf.gz" % self.params
-			view_cmd = "bcftools view %(bcf_file)s" % self.params
-			mixed_cmd = " | bcftools +setGT -- -t q -i 'GT=\"het\"' -n . " % self.params if mixed_as_missing else ""
-			csq_cmd = " | bcftools view -e 'F_MISSING==1' |  bcftools csq -p m -f %(ref_file)s -g %(gff_file)s -Ob -o %(ann_bcf_file)s" % self.params
+			cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf_file)s -Ob -o %(ann_bcf_file)s" % self.params
 
-			cmd = "%s %s %s" % (view_cmd,mixed_cmd,csq_cmd)
 			run_cmd(cmd)
 			final_bcf = self.params["ann_bcf_file"]
+
 
 		return bcf(final_bcf,prefix=self.prefix)
 	def create_dummy_low_dp_bcf(self,gff_file,min_dp=10,bed_file=None):
