@@ -8,7 +8,7 @@ def main(args):
 	bam = ps.bam(args.bam,args.prefix,args.ref)
 	bcf = bam.call_variants(call_method="low",gff_file=args.gff,bed_file=args.bed,mixed_as_missing=True)
 	csq = bcf.load_csq(ann_file=args.ann,changes=True)
-	tmp_bcf = "%s.low_dp.bcf" % args.prefix
+	tmp_bcf = "%s.missing.bcf" % args.prefix
 	missing_pos = ps.get_missing_positions(tmp_bcf)
 	outfile = "%s.results.json" % args.prefix
 	results = {"variants":{},"missing":missing_pos}
