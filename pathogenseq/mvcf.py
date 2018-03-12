@@ -387,7 +387,7 @@ dev.off()
 		ref_codons = defaultdict(lambda:defaultdict(dict))
 		view_cmd = "bcftools view %(bcf)s" % self.params
 		mixed_cmd = " | bcftools +setGT -- -t q -i 'GT=\"het\"' -n . " % self.params if mixed_as_missing else ""
-		query_cmd = " | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n'"
+		query_cmd = " | bcftools query -f '%CHROM\\t%POS\\t%REF\\t%ALT[\\t%SAMPLE\\t%TBCSQ]\\n'"
 
 		cmd = "%s %s %s" % (view_cmd,mixed_cmd,query_cmd)
 		print cmd
