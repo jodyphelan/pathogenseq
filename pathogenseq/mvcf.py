@@ -372,7 +372,7 @@ dev.off()
 #			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
 
 
-	def load_csq(self,ann_file=None,changes=False,use_genomic=True,use_gene=True,mixed_as_missing=False):
+	def load_csq(self,ann_file=None,changes=False,use_genomic=True,use_gene=True):
 		ann = defaultdict(dict)
 		if ann_file:
 			for l in tqdm(open(ann_file)):
@@ -385,7 +385,7 @@ dev.off()
 		prot_variants = defaultdict(lambda:defaultdict(dict))
 		change_num2pos = defaultdict(lambda:defaultdict(set))
 		ref_codons = defaultdict(lambda:defaultdict(dict))
-		
+
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n' %s" % self.params["bcf"]
 		print cmd
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
