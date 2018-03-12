@@ -45,7 +45,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="SNPs"):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="SNPs",bed_file=None):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -56,6 +56,8 @@ class bam:
 		"""
 		self.params["min_dp"] = min_dp
 		self.params["bcf_file"] = "%s.gbcf.gz" % self.prefix
+		self.params["bed_file"] = bed_file
+		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
 
 		if vtype=="snps": self.params["vtype"] = "-V indels"
 		elif vtype=="indels": self.params["vtype"] = "-V snps"
@@ -66,11 +68,11 @@ class bam:
 			call_method = self.get_calling_params()
 
 		if call_method=="high":
-			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -t DP,AD -r {} | bcftools call -mg %(min_dp)s %(vtype)s -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
+			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		else:
-			cmd = "splitchr.py %(ref_file)s 50000 | xargs -i -P %(threads)s sh -c \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call -mg %(min_dp)s %(vtype)s -Oz -o %(prefix)s_{}.vcf.gz\"" % self.params
-			#cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
+			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+#			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
@@ -92,15 +94,18 @@ class bam:
 		self.params["bed_file"] = bed_file
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
 		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
-		self.params["low_dp_bcf_file"] = "%s.low_dp.bcf" % self.prefix
+		self.params["missing_bcf_file"] = "%s.missing.bcf" % self.prefix
 		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
-		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both")
+		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file)
+
 
 		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()
-		cmd = "bcftools view %(gbcf_file)s -T ^%(del_bed)s -g miss -O b -o %(low_dp_bcf_file)s" % self.params
-		run_cmd(cmd)
 		view_cmd = "bcftools view %(gbcf_file)s |" % self.params
 		mix_cmd = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
+		out_cmd = "bcftools view %(gbcf_file)s -T ^%(del_bed)s -g miss -O b -o %(low_dp_bcf_file)s" % self.params
+		cmd = "%s %s %s" % (view_cmd,mix_cmd,out_cmd)
+		run_cmd(cmd)
+
 		out_cmd = "bcftools view -g ^miss -c 1 -O b -o %(bcf_file)s" % self.params
 		cmd = "%s %s %s" % (view_cmd,mix_cmd,out_cmd)
 		run_cmd(cmd)
