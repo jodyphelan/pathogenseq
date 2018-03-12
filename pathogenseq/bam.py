@@ -84,7 +84,7 @@ class bam:
 			variants.append((r.CHROM,r.POS,r.REF,s.gt_bases,s.data.DP,s.data.GT))
 		return variants
 
-	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4):
+	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
 		self.params["min_dp"] = min_dp
 		self.params["bcf_file"] = "%s.bcf" % self.prefix
 		self.params["bed_file"] = bed_file
@@ -117,7 +117,11 @@ class bam:
 		if gff_file and filecheck(gff_file):
 			self.params["gff_file"] = gff_file
 			self.params["ann_bcf_file"] = "%(prefix)s.csq.vcf.gz" % self.params
-			cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf_file)s -Ob -o %(ann_bcf_file)s" % self.params
+			view_cmd = "bcftools view %(bcf_file)s" % self.params
+			mixed_cmd = " | bcftools +setGT -- -t q -i 'GT=\"het\"' -n . " % self.params if mixed_as_missing else ""
+			csq_cmd = " | bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf_file)s -Ob -o %(ann_bcf_file)s" % self.params
+
+			cmd = "%s %s %s" % (view_cmd,mixed_cmd,csq_cmd)
 			run_cmd(cmd)
 			final_bcf = self.params["ann_bcf_file"]
 

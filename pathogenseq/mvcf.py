@@ -385,14 +385,10 @@ dev.off()
 		prot_variants = defaultdict(lambda:defaultdict(dict))
 		change_num2pos = defaultdict(lambda:defaultdict(set))
 		ref_codons = defaultdict(lambda:defaultdict(dict))
-		view_cmd = "bcftools view %(bcf)s" % self.params
-		mixed_cmd = " | bcftools +setGT -- -t q -i 'GT=\"het\"' -n . " % self.params if mixed_as_missing else ""
-		query_cmd = " | bcftools query -f '%CHROM\\t%POS\\t%REF\\t%ALT[\\t%SAMPLE\\t%TBCSQ]\\n'"
-
-		cmd = "%s %s %s" % (view_cmd,mixed_cmd,query_cmd)
+		
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n' %s" % self.params["bcf"]
 		print cmd
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
-			print line
 			row = line.rstrip().split()
 			chrom = row[0]
 			pos = int(row[1])
