@@ -119,7 +119,7 @@ class bam:
 			self.params["ann_bcf_file"] = "%(prefix)s.csq.vcf.gz" % self.params
 			view_cmd = "bcftools view %(bcf_file)s" % self.params
 			mixed_cmd = " | bcftools +setGT -- -t q -i 'GT=\"het\"' -n . " % self.params if mixed_as_missing else ""
-			csq_cmd = " | bcftools csq -p m -f %(ref_file)s -g %(gff_file)s -Ob -o %(ann_bcf_file)s" % self.params
+			csq_cmd = " | bcftools view -c 1 |  bcftools csq -p m -f %(ref_file)s -g %(gff_file)s -Ob -o %(ann_bcf_file)s" % self.params
 
 			cmd = "%s %s %s" % (view_cmd,mixed_cmd,csq_cmd)
 			run_cmd(cmd)
