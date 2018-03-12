@@ -387,7 +387,7 @@ dev.off()
 		ref_codons = defaultdict(lambda:defaultdict(dict))
 
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n' %s" % self.params["bcf"]
-		print cmd
+		sys.stderr.write("%s\n"%cmd) 
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = line.rstrip().split()
 			chrom = row[0]
