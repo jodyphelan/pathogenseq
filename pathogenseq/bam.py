@@ -58,7 +58,7 @@ class bam:
 		self.params["bcf_file"] = "%s.gbcf.gz" % self.prefix
 		self.params["bed_file"] = bed_file
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
-		print threads
+		self.params["threads"] = threads
 		if vtype=="snps": self.params["vtype"] = "-V indels"
 		elif vtype=="indels": self.params["vtype"] = "-V snps"
 		elif vtype=="both":	self.params["vtype"] = ""
