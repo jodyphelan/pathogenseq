@@ -537,7 +537,7 @@ dev.off()
 			OUT = open(outfile,"w")
 			OUT.write("""DATASET_COLORSTRIP
 	SEPARATOR TAB
-	DATASET_LABEL	Lineage
+	DATASET_LABEL	%s
 	COLOR	#ff0000
 
 	LEGEND_TITLE	Amino acid
@@ -546,7 +546,7 @@ dev.off()
 	LEGEND_LABELS	%s
 
 	DATA
-	""" % (shape_line,col_line,lab_line))
+	""" % (mutation,shape_line,col_line,lab_line))
 			for s in self.samples:
 				OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
 			OUT.close()
