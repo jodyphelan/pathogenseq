@@ -4,3 +4,4 @@ tqdm
 ete3
 biopython
 bokeh
+colour
