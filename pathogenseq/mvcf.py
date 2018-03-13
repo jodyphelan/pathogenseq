@@ -525,8 +525,7 @@ dev.off()
 			else:
 				continue
 			num_aa = len(set(csq.values()))
-			print mutation
-			print num_aa
+
 			cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),num_aa))]
 			col_dict = {d:cols[i] for i,d in enumerate(set(csq.values()))}
 			shape_line = "\t".join(["1" for x in range(num_aa)])
@@ -548,5 +547,6 @@ dev.off()
 	DATA
 	""" % (mutation,shape_line,col_line,lab_line))
 			for s in self.samples:
-				OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
+				if csq[s]!=ref_aa:
+					OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
 			OUT.close()
