@@ -36,6 +36,6 @@ stats["bam_depth_5"] = bamqc.genome_cov[5]
 
 json.dump(stats,open("%s.stats.json" % prefix,"w"))
 O = open("%s.log"%prefix,"w")
-for x in ["fastq_mean_read_len","fastq_read_num","kraken_pct_filt","bam_pct_reads_mapped","bam_med_dp","bam_depth_5","bam_depth_10"]:
+for x in ["fastq_mean_read_len","fastq_read_num","bam_pct_reads_mapped","bam_med_dp","bam_depth_5","bam_depth_10"]:
 	O.write("%s\t%s\n" % (x,stats[x]))
 O.close()
