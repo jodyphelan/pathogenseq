@@ -76,7 +76,7 @@ class bam:
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
-		cmd = "bcftools concat -aD -Ob -o %(gbcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
+		cmd = "bcftools concat -aD -Ob -o %(bcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
 		run_cmd(cmd)
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf*\"}'`" % self.params
 		run_cmd(cmd)

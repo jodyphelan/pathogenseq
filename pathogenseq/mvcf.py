@@ -11,6 +11,7 @@ from tqdm import tqdm
 from bokeh.plotting import figure, output_file, show
 from bokeh.layouts import column
 from ete3 import Tree
+from colour import Color
 
 re_seq = re.compile("([0-9\-]*)([A-Z\*]+)")
 re_I = re.compile("([A-Z\*]+)")
@@ -387,7 +388,7 @@ dev.off()
 		ref_codons = defaultdict(lambda:defaultdict(dict))
 
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n' %s" % self.params["bcf"]
-		sys.stderr.write("%s\n"%cmd) 
+		sys.stderr.write("%s\n"%cmd)
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = line.rstrip().split()
 			chrom = row[0]
@@ -513,4 +514,33 @@ dev.off()
 					#p = probs[node.name][i][nuc] if node.name in probs else 1.0
 					#node.add_features(prob=p)
 				print t.get_ascii(attributes=["name", "nuc"], show_internal=True)
-#	def itol_from_bcf(self,chrom,pos):
+	def itol_from_bcf(self,mutation):
+		gene,variant = mutation.split("__")
+		change_num,ref_aa,alt_aa = parse_mutation(variant)
+		csq = self.load_csq()
+		csq = csq[gene][change_num]
+
+		num_aa = len(set(csq.values()))
+		cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),num_aa))]
+		col_dict = {d:cols[i] for i,d in enumerate(set(csq.values()))}
+		shape_line = "\t".join(["1" for x in range(num_aa)])
+		col_line = "\t".join(col_dict.values())
+		lab_line = "\t".join(col_dict.keys())
+
+		outfile = "%s.itol.txt" % mutation
+		OUT = open(outfile,"w")
+		OUT.write("""DATASET_COLORSTRIP
+SEPARATOR TAB
+DATASET_LABEL	Lineage
+COLOR	#ff0000
+
+LEGEND_TITLE	Amino acid
+LEGEND_SHAPES	%s
+LEGEND_COLORS	%s
+LEGEND_LABELS	%s
+
+DATA
+""" % (shape_line,col_line,lab_line))
+		for s in self.samples:
+			OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
+		OUT.close()
