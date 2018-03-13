@@ -172,7 +172,7 @@ class qc_bam:
 		if filecheck(ref): self.ref = ref
 		self.genome_cov,self.med_dp,self.ref_dp = get_genome_cov(bam,ref,cov_thresholds)
 		self.num_reads_mapped,self.pct_reads_mapped = flagstat(bam)
-		print self.genome_cov
+
 	def plot_cov(self,chrom,imgfile,start=None,end=None,window=10000,step=5000,optimise=True,plot_median=True):
 		"""
 		Plot coverage across chromosomes
