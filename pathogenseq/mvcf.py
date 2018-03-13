@@ -515,12 +515,12 @@ dev.off()
 					#node.add_features(prob=p)
 				print t.get_ascii(attributes=["name", "nuc"], show_internal=True)
 	def itol_from_bcf(self,mutation_file):
+		all_csq = self.load_csq()
 		for l in open(mutation_file):
 			mutation = l.rstrip()
 			gene,variant = mutation.split("__")
 			change_num,ref_aa,alt_aa = parse_mutation(variant)
-			csq = self.load_csq()
-			csq = csq[gene][change_num]
+			csq = all_csq[gene][change_num]
 			num_aa = len(set(csq.values()))
 			print mutation
 			print num_aa
