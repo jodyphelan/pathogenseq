@@ -514,33 +514,36 @@ dev.off()
 					#p = probs[node.name][i][nuc] if node.name in probs else 1.0
 					#node.add_features(prob=p)
 				print t.get_ascii(attributes=["name", "nuc"], show_internal=True)
-	def itol_from_bcf(self,mutation):
-		gene,variant = mutation.split("__")
-		change_num,ref_aa,alt_aa = parse_mutation(variant)
-		csq = self.load_csq()
-		csq = csq[gene][change_num]
+	def itol_from_bcf(self,mutation_file):
+		for l in open(mutation_file):
+			mutation = l.rstrip()
+			gene,variant = mutation.split("__")
+			change_num,ref_aa,alt_aa = parse_mutation(variant)
+			csq = self.load_csq()
+			csq = csq[gene][change_num]
+			num_aa = len(set(csq.values()))
+			print mutation
+			print num_aa
+			cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),num_aa))]
+			col_dict = {d:cols[i] for i,d in enumerate(set(csq.values()))}
+			shape_line = "\t".join(["1" for x in range(num_aa)])
+			col_line = "\t".join(col_dict.values())
+			lab_line = "\t".join(col_dict.keys())
 
-		num_aa = len(set(csq.values()))
-		cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),num_aa))]
-		col_dict = {d:cols[i] for i,d in enumerate(set(csq.values()))}
-		shape_line = "\t".join(["1" for x in range(num_aa)])
-		col_line = "\t".join(col_dict.values())
-		lab_line = "\t".join(col_dict.keys())
+			outfile = "%s.itol.txt" % mutation
+			OUT = open(outfile,"w")
+			OUT.write("""DATASET_COLORSTRIP
+	SEPARATOR TAB
+	DATASET_LABEL	Lineage
+	COLOR	#ff0000
 
-		outfile = "%s.itol.txt" % mutation
-		OUT = open(outfile,"w")
-		OUT.write("""DATASET_COLORSTRIP
-SEPARATOR TAB
-DATASET_LABEL	Lineage
-COLOR	#ff0000
+	LEGEND_TITLE	Amino acid
+	LEGEND_SHAPES	%s
+	LEGEND_COLORS	%s
+	LEGEND_LABELS	%s
 
-LEGEND_TITLE	Amino acid
-LEGEND_SHAPES	%s
-LEGEND_COLORS	%s
-LEGEND_LABELS	%s
-
-DATA
-""" % (shape_line,col_line,lab_line))
-		for s in self.samples:
-			OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
-		OUT.close()
+	DATA
+	""" % (shape_line,col_line,lab_line))
+			for s in self.samples:
+				OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
+			OUT.close()

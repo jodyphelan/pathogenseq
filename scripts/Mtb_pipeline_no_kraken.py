@@ -32,7 +32,7 @@ bamqc.plot_cov("Chromosome",cov_plot)
 stats["bam_pct_reads_mapped"] = bamqc.pct_reads_mapped
 stats["bam_med_dp"] = bamqc.med_dp
 stats["bam_depth_10"] = bamqc.genome_cov[10]
-stats["bam_depth_5"] = bamqc.genome_cov[20]
+stats["bam_depth_5"] = bamqc.genome_cov[5]
 
 json.dump(stats,open("%s.stats.json" % prefix,"w"))
 O = open("%s.log"%prefix,"w")
