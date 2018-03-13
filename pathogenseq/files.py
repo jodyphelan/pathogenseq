@@ -75,12 +75,18 @@ def nofile(filename):
 	else:
 		return False
 
+def bowtie_index(ref):
+	if nofile("%s.1.bt2"%ref):
+		cmd = "bowtie2-build %s %s" % (ref,ref)
+		run_cmd(cmd)
+
 def bwa_index(ref):
 	"""
 	Create BWA index for a reference
 	"""
-	cmd = "bwa index %s" % ref
-	run_cmd(cmd)
+	if nofile("%s.bwt"%ref):
+		cmd = "bwa index %s" % ref
+		run_cmd(cmd)
 
 def run_cmd(cmd,verbose=1):
 	"""

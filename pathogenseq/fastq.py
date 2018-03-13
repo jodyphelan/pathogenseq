@@ -40,8 +40,6 @@ class fastq:
 		self.params["threads"] = threads
 		if filecheck(ref_file):
 			self.params["ref_file"] = ref_file
-		if nofile(ref_file+".bwt"):
-			bwa_index(ref_file)
 		self.params["bam_file"] = "%s.bam" % prefix
 		self.params["r1_tp"] = "%s_1_trim_pair.fq" % prefix
 		self.params["r1_tu"] = "%s_1_trim_unpair.fq" % prefix
@@ -92,6 +90,8 @@ class mapping:
 	"""
 
 	def __init__(self,prefix,ref_file,paired1=None,paired2=None,unpaired=None,threads=4,mapper="bwa",platform="Illumina"):
+		if mapper=="bwa": bwa_index(ref_file)
+		elif mapper=="bowtie2": bowtie_index(ref_file)
 		self.params = {}
 		if (paired1 and not paired2) or (paired2 and not paired1):
 			print "Please provide two paired end reads...Exiting"
