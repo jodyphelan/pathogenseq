@@ -45,7 +45,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="SNPs",bed_file=None):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 

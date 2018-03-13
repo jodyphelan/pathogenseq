@@ -31,7 +31,7 @@ fastq.illumina()
 bam_file = "%s.bam" % prefix
 
 bam = ps.bam(bam_file,prefix,ref)
-bam.call_snps()
+bam.gbcf(vtype="snps",threads=threads)
 
 bamqc = bam.get_bam_qc(ref)
 cov_plot = "%s.cov.png" % (prefix)
