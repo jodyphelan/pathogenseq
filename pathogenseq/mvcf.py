@@ -520,7 +520,10 @@ dev.off()
 			mutation = l.rstrip()
 			gene,variant = mutation.split("__")
 			change_num,ref_aa,alt_aa = parse_mutation(variant)
-			csq = all_csq[gene][change_num]
+			if gene in all_csq and change_num in all_csq[gene]:
+				csq = all_csq[gene][change_num]
+			else:
+				continue
 			num_aa = len(set(csq.values()))
 			print mutation
 			print num_aa
