@@ -58,7 +58,7 @@ class bam:
 		self.params["bcf_file"] = "%s.gbcf.gz" % self.prefix
 		self.params["bed_file"] = bed_file
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
-
+		print threads
 		if vtype=="snps": self.params["vtype"] = "-V indels"
 		elif vtype=="indels": self.params["vtype"] = "-V snps"
 		elif vtype=="both":	self.params["vtype"] = ""
@@ -81,7 +81,7 @@ class bam:
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
 
-		return bcf(self.params["gbcf_file"],prefix=self.prefix)
+		return bcf(self.params["bcf_file"],prefix=self.prefix)
 
 	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
 		self.params["min_dp"] = min_dp
