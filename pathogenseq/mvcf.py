@@ -547,6 +547,6 @@ dev.off()
 	DATA
 	""" % (mutation,shape_line,col_line,lab_line))
 			for s in self.samples:
-				if csq[s]!=ref_aa:
+				if csq[s]==alt_aa:
 					OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
 			OUT.close()
