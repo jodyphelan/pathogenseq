@@ -112,7 +112,7 @@ def index_bam(bamfile,threads=4):
 	"""
 	Indexing a bam file
 	"""
-	if filecheck(bamfile) and nofile(bamfile+".bai"):
+	if filecheck(bamfile):
 		cmd = "samtools index -@ %s %s" % (threads,bamfile)
 		run_cmd(cmd)
 
