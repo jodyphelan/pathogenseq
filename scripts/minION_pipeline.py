@@ -26,7 +26,7 @@ stats["genome_cov_1"] = bam_qc.genome_cov[1]
 stats["genome_cov_10"] = bam_qc.genome_cov[10]
 bam_qc.plot_cov("Chromosome",cov_png)
 bam_qc.extract_gc_skew(gc_file)
-variants = bam.pileup2vcf()
+variants = bam.pileup2vcf(indels=False)
 stats["hom_variants"] = len([x for x in variants if x[5]=="1/1"])
 stats["het_variants"] = len([x for x in variants if x[5]=="0/1"])
 json.dump(stats,open(stats_file,"w"))
