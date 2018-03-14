@@ -1,6 +1,8 @@
 import re
 from fasta import *
 indelre = re.compile("(\w)[\+\-](\d+)(\w+)")
+gap_char = "-"
+
 def recode_indels(indels):
 	#["C+5CGGGG","G-1C"]
 	sorted_indels = sorted([x for x in indels],key=lambda y:len(y))
