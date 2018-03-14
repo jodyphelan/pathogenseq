@@ -263,28 +263,36 @@ class bam:
 			DP4 = "0,%s,0,%s" % (ref_depth,tot_dp-ref_depth)
 
 			call = max_allele
-			if indels and (len(max_allele)>1 or len(ref)>1): #INDELS!!!!
+#			if arr[1]=="13228": import pdb; pdb.set_trace()
+			if not indels and (len(max_allele)>1 or len(ref)>1): #INDELS!!!!
 				ref_run_end_pos = arr[1]
 				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
-			if tot_dp>=min_dp and adjusted_allele_frac>min_hom_frac and call==ref:
+			elif tot_dp<min_dp:
+				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\tDP4=%s\tGT:DP\t%s:%s\n" % (arr[0],arr[1],ref,call,DP4,"./.",tot_dp))
+				ref_run_start_pos = -1
+			elif tot_dp>=min_dp and adjusted_allele_frac>min_hom_frac and call==ref: #REF base call
 				ref_run_end_pos = arr[1]
 				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
-			elif tot_dp>=min_dp and adjusted_allele_frac<=min_hom_frac and adjusted_allele_frac>min_het_frac:
+			elif tot_dp>=min_dp and adjusted_allele_frac<=min_hom_frac and adjusted_allele_frac>min_het_frac: # mixed call
 				if call==ref:
 					call=alleles[depth.index(sorted(depth)[-2])]
-				gt="0/1"
-				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
-				OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=%s\tGT:DP\t0/0:%s\n" % (arr[0],ref_run_start_pos,ref_run_start_ref,int(arr[1])-1,ref_run_min_dp,ref_run_min_dp))
-				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\tDP4=%s\tGT:DP\t%s:%s\n" % (arr[0],arr[1],ref,call,DP4,gt,tot_dp))
-				ref_run_start_pos = -1
-				variants.append((arr[0],arr[1],ref,call,tot_dp,gt))
+				if (len(call)>1 or len(ref)>1) and not indels:
+					ref_run_end_pos = arr[1]
+					if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
+				else:
+					gt="0/1"
+					if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
+					OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=%s\tGT:DP\t0/0:%s\n" % (arr[0],ref_run_start_pos,ref_run_start_ref,int(arr[1])-1,ref_run_min_dp,ref_run_min_dp))
+					OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\tDP4=%s\tGT:DP\t%s:%s\n" % (arr[0],arr[1],ref,call,DP4,gt,tot_dp))
+					ref_run_start_pos = -1
+					variants.append((arr[0],arr[1],ref,call,tot_dp,gt))
 			else:
 				if call==ref:
 					call="."
 					gt="0/0"
 				else:
 					gt="1/1"
-				OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=%s\tGT:DP\t0/0:%s\n" % (arr[0],ref_run_start_pos,ref_run_start_ref,int(arr[1])-1,ref_run_min_dp,ref_run_min_dp))
+					OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=%s\tGT:DP\t0/0:%s\n" % (arr[0],ref_run_start_pos,ref_run_start_ref,int(arr[1])-1,ref_run_min_dp,ref_run_min_dp))
 				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\tDP4=%s\tGT:DP\t%s:%s\n" % (arr[0],arr[1],ref,call,DP4,gt,tot_dp))
 				ref_run_start_pos = -1
 				variants.append((arr[0],arr[1],ref,call,tot_dp,gt))
