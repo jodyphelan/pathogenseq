@@ -205,8 +205,7 @@ class bam:
 					call = max_allele
 				final_calls[arr[0]][arr[1]].append((call,1,max_allele_dp))
 		return final_calls
-	def pileup2vcf(self,min_het_frac=0.3,min_hom_frac=0.6,min_dp=10,bed_file=None):
-
+	def pileup2vcf(self,min_het_frac=0.3,min_hom_frac=0.6,min_dp=10,bed_file=None,indels=True):
 
 		header = """##fileformat=VCFv4.1
 ##source=htsbox-pileup-r340
@@ -264,9 +263,9 @@ class bam:
 			DP4 = "0,%s,0,%s" % (ref_depth,tot_dp-ref_depth)
 
 			call = max_allele
-#			if len(max_allele)>1 or len(ref)>1: #INDELS!!!!
-#				ref_run_end_pos = arr[1]
-#				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
+			if indels and (len(max_allele)>1 or len(ref)>1): #INDELS!!!!
+				ref_run_end_pos = arr[1]
+				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
 			if tot_dp>=min_dp and adjusted_allele_frac>min_hom_frac and call==ref:
 				ref_run_end_pos = arr[1]
 				if tot_dp<ref_run_min_dp: ref_run_min_dp = tot_dp
