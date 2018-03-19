@@ -535,17 +535,17 @@ dev.off()
 			outfile = "%s.itol.txt" % mutation
 			OUT = open(outfile,"w")
 			OUT.write("""DATASET_COLORSTRIP
-	SEPARATOR TAB
-	DATASET_LABEL	%s
-	COLOR	#ff0000
+SEPARATOR TAB
+DATASET_LABEL	%s
+COLOR	#ff0000
 
-	LEGEND_TITLE	Amino acid
-	LEGEND_SHAPES	%s
-	LEGEND_COLORS	%s
-	LEGEND_LABELS	%s
+LEGEND_TITLE	Amino acid
+LEGEND_SHAPES	%s
+LEGEND_COLORS	%s
+LEGEND_LABELS	%s
 
-	DATA
-	""" % (mutation,shape_line,col_line,lab_line))
+DATA
+""" % (mutation,shape_line,col_line,lab_line))
 			for s in self.samples:
 				if csq[s]==alt_aa:
 					OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))

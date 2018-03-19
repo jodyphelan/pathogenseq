@@ -55,7 +55,7 @@ class bam:
 			min_dp(int): Minimum depth required to group site into reference-block
 		"""
 		self.params["min_dp"] = min_dp
-		self.params["bcf_file"] = "%s.gbcf.gz" % self.prefix
+		self.params["bcf_file"] = "%s.gbcf" % self.prefix
 		self.params["bed_file"] = bed_file
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
 		self.params["threads"] = threads
