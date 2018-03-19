@@ -414,6 +414,7 @@ dev.off()
 				if row[i+1][0]=="@": continue
 				if info[-1]=="pseudogene": continue
 				gene = info[1]
+				if info[0]=="intron":continue
 				if info[0]=="frameshift&start_lost" or info[0]=="missense&inframe_altering" or info[0]=="missense" or info[0]=="*missense" or info[0]=="start_lost" or info[0]=="*start_lost" or info[0]=="*stop_lost" or info[0]=="stop_lost" or info[0]=="stop_gained" or info[0]=="*stop_gained":
 					change_num,ref_aa,alt_aa = parse_mutation(info[5])
 					change_num2pos[gene][change_num].add((chrom,pos))
