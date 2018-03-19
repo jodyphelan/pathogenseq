@@ -107,7 +107,7 @@ class bam:
 		final_bcf = self.params["bcf_file"]
 		if gff_file and filecheck(gff_file):
 			self.params["gff_file"] = gff_file
-			self.params["ann_bcf_file"] = "%(prefix)s.csq.vcf.gz" % self.params
+			self.params["ann_bcf_file"] = "%(prefix)s.csq.bcf" % self.params
 			cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf_file)s -Ob -o %(ann_bcf_file)s" % self.params
 
 			run_cmd(cmd)
