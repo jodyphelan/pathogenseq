@@ -5,7 +5,7 @@ import argparse
 import json
 
 def main(args):
-	bam = ps.bam(args.bam,args.prefix,args.ref)
+	bam = ps.bam(args.bam,args.prefix,args.ref,threads=args.threads)
 	bcf = bam.call_variants(call_method=args.call_method,gff_file=args.gff,bed_file=args.bed,mixed_as_missing=True,threads=args.threads,min_dp=args.min_depth)
 	csq = bcf.load_csq(ann_file=args.ann,changes=True)
 	tmp_bcf = "%s.missing.bcf" % args.prefix
