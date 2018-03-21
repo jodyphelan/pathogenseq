@@ -6,7 +6,7 @@ import json
 
 def main(args):
 	bam = ps.bam(args.bam,args.prefix,args.ref)
-	bcf = bam.call_variants(call_method=args.depth,gff_file=args.gff,bed_file=args.bed,mixed_as_missing=True,threads=args.threads)
+	bcf = bam.call_variants(call_method=args.depth,gff_file=args.gff,bed_file=args.bed,mixed_as_missing=True,threads=args.threads,min_dp=args.min_depth)
 	csq = bcf.load_csq(ann_file=args.ann,changes=True)
 	tmp_bcf = "%s.missing.bcf" % args.prefix
 	missing_pos = ps.get_missing_positions(tmp_bcf)
@@ -27,7 +27,8 @@ parser.add_argument('bed', help='BED file')
 parser.add_argument('ann', help='ANN file')
 parser.add_argument('prefix', help='Prefix for files')
 parser.add_argument('--threads','-t', type=int,default=1,help='Number of threads')
-parser.add_argument('--depth','-d', type=str,default="optimise",choices=["low","high","optimise"],help='Number of threads')
+parser.add_argument('--call_method','-c', type=str,default="optimise",choices=["low","high","optimise"],help='Number of threads')
+parser.add_argument('--min_depth','-d', type=int,default=10,help='Number of threads')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
