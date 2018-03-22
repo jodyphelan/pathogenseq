@@ -12,4 +12,4 @@ prefix = sys.argv[3]
 threads = int(sys.argv[4])
 
 bam = ps.bam(bam_file=bam_file,ref_file=ref_file,prefix=prefix,threads=threads)
-bam.call_snps()
+bam.gbcf()
