@@ -577,8 +577,9 @@ DATA
 		idx = {}
 		for l in open(index_file):
 			row = l.rstrip().split()
+			if row[0] in idx: sys.stderr.write("Duplicate values in index file (%s)...Exiting!\n"%row[0]); quit(1)
 			idx[row[0]] = row[1]
-			if row[0] in idx: sys.stderr.write("Duplicate values in index file...Exiting!"); quit(1)
+
 		new_bcf_file = "%(prefix)s.reheader.bcf" % self.params
 		tmp_header = "%(prefix)s.tmp.header" % self.params
 		OUT = open(tmp_header,"w")
