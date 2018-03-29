@@ -551,3 +551,23 @@ DATA
 				if csq[s]==alt_aa:
 					OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
 			OUT.close()
+
+	def compress_variants(self):
+		cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%GT]\\n' %(bcf)s" % self.params
+		results = defaultdict(list)
+		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
+			row = l.rstrip().split()
+			results[tuple(row[2:])].append([row[0],row[1]])
+		final_results = {}
+		for i,key in enumerate(results):
+			var_name = "variant_%s" % i
+			O = open(var_name+".pheno","w")
+			for j,s in enumerate(self.samples):
+				tmp = "-9"
+				if key[j]=="0/0": tmp = "1"
+				elif key[j]=="1/1": tmp = "2"
+				O.write("0\t%s\t%s\n" % (s,tmp))
+			final_results[var_name] = results[key]
+			O.close()
+		json.dump(final_results,open("%s.compressed_variants.json" % self.prefix,"w"))
+		return final_results
