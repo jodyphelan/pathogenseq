@@ -571,3 +571,20 @@ DATA
 			O.close()
 		json.dump(final_results,open("%s.compressed_variants.json" % self.prefix,"w"))
 		return final_results
+
+	def reheader(self,index_file):
+		idx = {}
+		for l in open(index_file):
+			row = l.rstrip().split()
+			idx[row[0]] = row[1]
+		new_bcf_file = "%(prefix)s.reheader.bcf" % self.params
+		tmp_header = "%(prefix)s.tmp.header" % self.params
+		OUT = open(tmp_header,"w")
+		for l in subprocess.Popen("bcftools view -h %(bcf)s" % self.params,shell=True,stdout=subprocess.PIPE).stdout:
+			if l[:2]=="##": OUT.write(l); continue
+			row = l.rstrip().split()
+			for i in range(9,len(row)):
+				if row[i] not in idx: print "%s not found in index file...Exiting!" % row[i]; quit(1)
+				row[i] = idx[row[i]]
+			OUT.write("%s\n" % "\t".join(row))
+		OUT.close()
