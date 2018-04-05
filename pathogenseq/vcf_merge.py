@@ -82,8 +82,8 @@ class vcf_merge:
 		self.params["mix_cut"] = mix_cut
 		self.params["low_cov"] = low_cov
 		self.params["qual_file"] = "%s.sample_quals.txt" % prefix
-		self.params["bed_include"] = "bcftools view -T %s |" % bed_include if bed_include!=None else ""
-		self.params["bed_exclude"] = "bcftools view -T ^%s |" % bed_exclude if bed_exclude!=None else ""
+		self.params["bed_include"] = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
+		self.params["bed_exclude"] = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
 		if not mappability_file:
 			create_mappability_file(ref_file,threads)
 			self.params["mappability_file"] = "genome.mappability.bed"
@@ -135,7 +135,7 @@ class vcf_merge:
 
 	def extract_variants(self):
 		"""Extract all variant positions"""
-		cmd = "bcftools +setGT %(merged_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(prefilt_bcf)s -O b" % self.params
+		cmd = "bcftools +setGT %(merged_bcf)s -Ou -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(prefilt_bcf)s -O b" % self.params
 		run_cmd(cmd)
 
 	def filt_non_uniq(self):
@@ -191,7 +191,7 @@ class vcf_merge:
 
 	def mask_mixed(self):
 		"""Create a BCF file with mixed called masked as missing"""
-		cmd = "bcftools +setGT %(sample_filt_bcf)s -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(mix_masked_bcf)s" % self.params
+		cmd = "bcftools +setGT %(sample_filt_bcf)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(mix_masked_bcf)s" % self.params
 		run_cmd(cmd)
 	def get_bcf_obj(self):
 		return bcf(self.params["mix_masked_bcf"],self.params["ref_file"])

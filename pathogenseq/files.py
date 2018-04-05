@@ -6,6 +6,11 @@ import csv
 from collections import defaultdict
 import json
 
+def log(msg,ext=False):
+	sys.stderr.write(msg+"\n")
+	if ext:
+		exit(1)
+
 def init_params():
 	conf = json.load(open("%s/%s" % (sys.prefix,"pathogenseq.conf")))
 	return conf

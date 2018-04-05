@@ -31,6 +31,7 @@ def get_genome_cov(bam_file,ref_file,min_dp):
 	for s in fdict:
 		ref_cov[s] = [0 for x in range(len(fdict[s]))]
 	samtools_cmd = "samtools depth -aa --reference %s %s" % (ref_file,bam_file)
+	log(samtools_cmd)
 	for l in subprocess.Popen(samtools_cmd,shell=True,stdout=subprocess.PIPE).stdout:
 		arr = l.rstrip().split()
 		if arr[0] not in ref_cov: print "Can't find %s in FASTA...Have you used the correct reference sequence?";quit()
@@ -230,9 +231,18 @@ class qc_bam:
 			plot.axvline(ymin=0,ymax=0.05,x=start/d,color="orange")
 			plot.axvline(ymin=0,ymax=0.05,x=end/d,color="orange")
 		fig.savefig(imgfile)
-	def save_cov(self,filename):
+	def save_cov(self,filename,bed=None):
 		"""Save coverage to a json file"""
-		json.dump(self.ref_dp,open(filename,"w"))
+		if bed:
+			bed_regions = load_bed(bed,[1,2,3],4)
+			bed_cov = {d:[] for d in bed_regions.keys()}
+			for locus in bed_regions:
+				tmp = bed_regions[locus]
+				for i in range(int(tmp[1]),int(tmp[2])):
+					bed_cov[locus].append(self.ref_dp[tmp[0]][i])
+			json.dump(bed_cov,open(filename,"w"))
+		else:
+			json.dump(self.ref_dp,open(filename,"w"))
 	def region_cov(self,regions):
 		"""
 		Return a dictionary with mean depth across selected regions

@@ -73,7 +73,7 @@ class bcf:
 	def del_pos2bed(self):
 		self.params["del_bed"] = "%s.del_pos.bed" % self.prefix
 		OUT = open(self.params["del_bed"],"w")
-		cmd = "bcftools view -v indels %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % self.params
+		cmd = "bcftools view -Ou -v indels %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % self.params
 		sys.stderr.write(cmd)
 		j = 0
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
@@ -90,17 +90,27 @@ class bcf:
 
 
 
-	def load_variants_alt(self):
+	def load_variants_alt(self,chrom=None,pos=None):
 		variants = defaultdict(lambda:defaultdict(dict))
 		raw_variants = defaultdict(lambda:defaultdict(dict))
-		for l in tqdm(subprocess.Popen("bcftools query -f '%%CHROM\t%%POS[\t%%IUPACGT]\n' %s  | sed 's/\.\/\./N/g'" % self.params["bcf"], shell=True, stdout=subprocess.PIPE).stdout):
+		if chrom and pos:
+			cmd = "bcftools view %s %s:%s | bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g'" % (self.params["bcf"],chrom,pos)
+		else:
+			cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n' %s  | sed 's/\.\/\./N/g'" % self.params["bcf"]
+		log(cmd)
+		for l in tqdm(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout):
 			row = l.rstrip().split()
 			for i in range(len(self.samples)):
 				raw_variants[row[0]][row[1]][self.samples[i]] = row[i+2]
 		for chrom in raw_variants:
 			for pos in raw_variants[chrom]:
 				variants[chrom][int(pos)] = raw_variants[chrom][pos]
-		return variants
+		if chrom and pos and len(variants)==0:
+			log("Variant not found",True)
+		if chrom and pos:
+			return variants[chrom][int(pos)]
+		else:
+			return variants
 
 	def load_stats(self):
 		self.params["stats_file"] = "%s.stats.txt" % self.params["bcf"]
@@ -162,7 +172,7 @@ class bcf:
 	def extract_matrix(self,matrix_file=None):
 		self.params["matrix_file"] = matrix_file if matrix_file==True else self.params["prefix"]+".mat"
 		O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
-		cmd = "bcftools view %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
 		run_cmd(cmd,verbose=v)
 
 	def vcf_to_fasta(self,filename,threads=4):
@@ -265,7 +275,7 @@ dev.off()
 		self.params["tmp_file"] = "%(prefix)s.temp.bcf" % self.params
 		self.params["tmp2_file"] = "%(prefix)s.temp2.bcf" % self.params
 		self.params["outfile"] = outfile
-		cmd = "bcftools view -v snps %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\n' | awk '{print $1\"\t\"$2-1\"\t\"$2}' > %(targets_file)s" % self.params
+		cmd = "bcftools view -Ou -v snps %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\n' | awk '{print $1\"\t\"$2-1\"\t\"$2}' > %(targets_file)s" % self.params
 		run_cmd(cmd)
 		cmd = "bcftools view -T %(targets_file)s %(new_bcf)s -Ob -o %(tmp_file)s" % self.params
 		run_cmd(cmd)
@@ -273,7 +283,7 @@ dev.off()
 		cmd = "bcftools view -T %(targets_file)s %(bcf)s -Ob -o %(tmp2_file)s" % self.params
 		run_cmd(cmd)
 		index_bcf(self.params["tmp2_file"],self.params["threads"])
-		cmd = "bcftools merge --threads %(threads)s %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
+		cmd = "bcftools merge --threads -Ou %(threads)s %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
 		run_cmd(cmd)
 
 	def annotate_from_bed(self,bed_file,outfile=None,nested=False):
@@ -516,21 +526,28 @@ dev.off()
 					#p = probs[node.name][i][nuc] if node.name in probs else 1.0
 					#node.add_features(prob=p)
 				print t.get_ascii(attributes=["name", "nuc"], show_internal=True)
-	def itol_from_bcf(self,mutation_file):
-		all_csq = self.load_csq()
+
+	def itol_from_bcf(self,mutation_file,amino_acid=False):
+		if amino_acid:
+			all_csq = self.load_csq()
 		for l in open(mutation_file):
 			mutation = l.rstrip()
-			gene,variant = mutation.split("__")
-			change_num,ref_aa,alt_aa = parse_mutation(variant)
-			if gene in all_csq and change_num in all_csq[gene]:
-				csq = all_csq[gene][change_num]
+			if amino_acid:
+				gene,variant = mutation.split("__")
+				change_num,ref_aa,alt_aa = parse_mutation(variant)
+				if gene in all_csq and change_num in all_csq[gene]:
+					variant_dict = all_csq[gene][change_num]
+				else:
+					continue
 			else:
-				continue
-			num_aa = len(set(csq.values()))
+				chrom,pos = mutation.split("__")
+				variant_dict = self.load_variants_alt(chrom,pos)
 
-			cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),num_aa))]
-			col_dict = {d:cols[i] for i,d in enumerate(set(csq.values()))}
-			shape_line = "\t".join(["1" for x in range(num_aa)])
+			num_var = len(set(variant_dict.values()))
+
+			cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),num_var))]
+			col_dict = {d:cols[i] for i,d in enumerate(set(variant_dict.values()))}
+			shape_line = "\t".join(["1" for x in range(num_var)])
 			col_line = "\t".join(col_dict.values())
 			lab_line = "\t".join(col_dict.keys())
 
@@ -549,8 +566,12 @@ LEGEND_LABELS	%s
 DATA
 """ % (mutation,shape_line,col_line,lab_line))
 			for s in self.samples:
-				if csq[s]==alt_aa:
-					OUT.write("%s\t%s\n" % (s,col_dict[csq[s]]))
+				if amino_acid:
+					if variant_dict[s]==alt_aa:
+						OUT.write("%s\t%s\n" % (s,col_dict[variant_dict[s]]))
+				else:
+					OUT.write("%s\t%s\n" % (s,col_dict[variant_dict[s]]))
+
 			OUT.close()
 
 	def compress_variants(self):

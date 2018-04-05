@@ -75,6 +75,7 @@ setup(
 		 'scripts/venn_diagram.py',
 		 'scripts/fasta2vcf.py',
 		 'scripts/pathogen-profiler.py'
+		 'scripts/combine_dict_list.py'
 		],
 	data_files = [(sys.prefix,["pathogenseq.conf"])],
 
