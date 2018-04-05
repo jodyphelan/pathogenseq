@@ -13,7 +13,7 @@ def main(args):
 
 	cov_png = "%s.cov.png" % prefix
 	stats_file = "%s.stats.json" % prefix
-	gc_file = "%s.gc_skew.txt" % prefix
+	gc_file = "%s.gc_skew.json" % prefix
 	cov_file = "%s.regions.cov.json" % prefix
 	stats = OrderedDict()
 	fq = ps.fastq(prefix,ref,r1,threads=threads)
