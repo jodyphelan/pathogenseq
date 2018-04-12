@@ -162,7 +162,10 @@ class mapping:
 			elif self.mapper=="bowtie2":
 				cmd = "%(bowtie2_prefix)s  -x %(ref_file)s -U %(unpaired)s | samtools view -@ %(threads)s -b - | samtools sort -@ %(threads)s -o %(bam_file)s" % self.params
 			elif self.mapper=="minimap2":
-				cmd = "%(minimap2_prefix)s -x sr  %(ref_file)s %(unpaired)s | samtools view -@ %(threads)s -b - | samtools sort -@ %(threads)s -o %(bam_file)s -" % self.params
+				if self.params["platform"]=="minION":
+					cmd = "%(minimap2_prefix)s -x map-ont  %(ref_file)s %(unpaired)s | samtools view -@ %(threads)s -b - | samtools sort -@ %(threads)s -o %(bam_file)s -" % self.params
+				else:
+					cmd = "%(minimap2_prefix)s -x sr  %(ref_file)s %(unpaired)s | samtools view -@ %(threads)s -b - | samtools sort -@ %(threads)s -o %(bam_file)s -" % self.params
 			run_cmd(cmd)
 	def get_bam_qc(self,cov_thresholds=[1,5,10,20]):
 		"""
