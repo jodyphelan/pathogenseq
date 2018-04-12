@@ -27,7 +27,9 @@ def main(args):
 	stats["pct_reads_mapped"] = bam_qc.pct_reads_mapped
 	stats["genome_cov_1"] = bam_qc.genome_cov[1]
 	stats["genome_cov_10"] = bam_qc.genome_cov[10]
-	bam_qc.plot_cov("Chromosome",cov_png)
+	fasta = ps.fasta(ref).fa_dict
+	for seq in fasta:
+		bam_qc.plot_cov(seq,cov_png)
 	bam_qc.extract_gc_skew(gc_file)
 	if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
 	variants = bam.pileup2vcf(indels=False)
