@@ -206,7 +206,9 @@ class qc_bam:
 		else:
 			n,d = "G",1000000000
 		if optimise:
-			if region_size<100000:
+			if region_size<10000:
+				window,step=2,1
+			elif region_size<100000:
 				window,step=100,50
 			elif region_size>100000 and region_size<1000000:
 				window,step=1000,500
