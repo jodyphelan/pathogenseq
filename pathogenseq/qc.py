@@ -212,7 +212,7 @@ class qc_bam:
 				window,step=100,50
 			elif region_size>100000 and region_size<1000000:
 				window,step=1000,500
-
+		log("Outputting coverage plot with window=%s and step=%s" % (window,step))
 		x = []
 		y = []
 		hw = int(window/2)
