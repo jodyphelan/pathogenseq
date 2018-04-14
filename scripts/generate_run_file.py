@@ -8,7 +8,7 @@ def main(args):
 	O = open(args.out_script,"w")
 	for row in csv.DictReader(open(args.sample_file)):
 		params = {}
-		params["ref_file"] = "%s/%s.fasta" % (args.ref_dir,row["Reference"])
+		params["ref_file"] = "%s/%s" % (args.ref_dir,row["Reference"])
 		ps.filecheck(params["ref_file"])
 		params["r1"] = "%s/%s" % (args.fastq_dir,row["ReadF"])
 		ps.filecheck(params["r1"])
