@@ -174,7 +174,7 @@ class qc_bam:
 		self.genome_cov,self.med_dp,self.ref_dp = get_genome_cov(bam,ref,cov_thresholds)
 		self.num_reads_mapped,self.pct_reads_mapped = flagstat(bam)
 
-	def plot_cov(self,chrom,imgfile,start=None,end=None,window=10000,step=5000,optimise=True,plot_median=True):
+	def plot_cov(self,chrom,imgfile,start=None,end=None,window=10000,step=5000,optimise=True,plot_median=True,primers=None):
 		"""
 		Plot coverage across chromosomes
 
@@ -232,6 +232,11 @@ class qc_bam:
 		if offset:
 			plot.axvline(ymin=0,ymax=0.05,x=start/d,color="orange")
 			plot.axvline(ymin=0,ymax=0.05,x=end/d,color="orange")
+		if primers:
+			locations = fasta(self.ref).find_primer_positions(primers)
+			for primer in sorted(locations,key=lambda x:locations[x]["start"]):
+				p = locations[primer]
+				plot.plot((p["start"]/d,p["end"]/d),(0,0),'r-',lw=3)
 		fig.savefig(imgfile)
 	def save_cov(self,filename,bed=None):
 		"""Save coverage to a json file"""

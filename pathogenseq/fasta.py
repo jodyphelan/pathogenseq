@@ -245,6 +245,15 @@ class fasta:
 				start+=size
 				end+=size
 			print "%s:%s-%s" % (s,start,lengths[s])
+	def find_primer_positions(self,primer_fasta):
+		tmp_file = get_random_file()
+		cmd = "blastn -task blastn -query %s -subject %s -outfmt 6 > %s" % (primer_fasta,self.fa_file,tmp_file)
+		run_cmd(cmd)
+		results = {}
+		for l in open(tmp_file):
+			row = l.rstrip().split()
+			results[row[0]] = {"chrom":row[1],"start":int(row[8]),"end":int(row[9])}
+		return results
 
 
 def revcom(s):

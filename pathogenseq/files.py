@@ -5,9 +5,19 @@ import subprocess
 import csv
 from collections import defaultdict
 import json
+import random
+
+rand_generator = random.SystemRandom()
+
+def get_random_file(prefix = None):
+	randint = rand_generator.randint(1,999999)
+	if prefix:
+		return "%s.%s.txt" % (prefix,randint)
+	else:
+		return "%s.tmp.txt" % (randint)
 
 def log(msg,ext=False):
-	sys.stderr.write(msg+"\n")
+	sys.stderr.write(str(msg)+"\n")
 	if ext:
 		exit(1)
 
