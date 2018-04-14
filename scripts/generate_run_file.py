@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import sys
 import pathogenseq.files as ps
 import csv
