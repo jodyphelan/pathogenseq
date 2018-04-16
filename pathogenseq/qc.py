@@ -115,7 +115,7 @@ class qc_fastq:
 			cmd = "centrifuge -x %(centrifuge_db)s -1 %(fq1)s -2 %(fq2)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s" % self.params
 		else:
 			cmd = "centrifuge -x %(centrifuge_db)s -U %(fq1)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s" % self.params
-		run_cmd(cmd)
+		#run_cmd(cmd)
 		if filter_fastq:
 			taxa = filter_fastq.split(",")
 			self.params["cf_filt_fq_1"] = "%(prefix)s_1.centrifuge_filt.fastq.gz" % self.params
@@ -137,6 +137,7 @@ class qc_fastq:
 		for l in open(self.params["centrifuge_report"]):
 			#Mycobacterium avium     1764    species 6256976 13835   352     2.10431e-06
 			row = l.rstrip().split("\t")
+			if row[0]=="name": continue
 			tot_uniq_reads+=int(row[5])
 			if int(row[5])>top_num_reads:
 				top_hit = "_".join(row[0])
