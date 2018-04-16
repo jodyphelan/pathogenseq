@@ -129,6 +129,7 @@ class qc_fastq:
 				print taxa
 				if row[2] in taxa:
 					O.write("%s\n" % row[0])
+			O.close()
 			cmd = "seqtk subset %(fq1)s %(tmp_file)s | gzip -c > %(cf_filt_fq_1)s" % self.params
 			run_cmd(cmd)
 			cmd = "seqtk subset %(fq2)s %(tmp_file)s | gzip -c > %(cf_filt_fq_2)s" % self.params
