@@ -144,7 +144,8 @@ class qc_fastq:
 				top_hit = "_".join(row[0])
 				top_num_reads = int(row[4])
 
-		return "%s;%s;%.3f" % (top_hit,top_num_reads,(top_num_reads/self.read_num))
+		tmp = "%s;%s;%.3f" % (top_hit,top_num_reads,(top_num_reads/self.read_num))
+		return self.params["cf_filt_fq_1"],self.params["cf_filt_fq_2"],tmp
 
 	def run_kraken(self,kraken_db,filter_fastq = None):
 		"""

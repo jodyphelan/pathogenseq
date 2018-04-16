@@ -16,13 +16,10 @@ fastqqc = ps.qc_fastq(prefix,r1,r2)
 stats["fastq_mean_read_len"] = fastqqc.mean_read_len
 stats["fastq_read_num"] = fastqqc.read_num
 
-fastqqc.run_kraken("/opt/storage2/ernest/kraken/kraken/standard_db","77643,1773,78331,33894,1765")
-
-fr1 = "%s_1.kraken_filt.fastq.gz" %prefix
-fr2 = "%s_2.kraken_filt.fastq.gz" %prefix
+fr1,fr2,tmp = fastqqc.run_centrifuge("/opt/storage2/jody/software/p+h+v","77643,1773,78331,33894,1765",threads)
+stats["centrifuge"]
 
 newfastqqc = ps.qc_fastq(prefix,fr1,fr2)
-stats["kraken_pct_filt"] = newfastqqc.read_num/fastqqc.read_num*100
 
 fastq = ps.fastq(prefix,ref,fr1,fr2,threads=threads)
 
@@ -43,6 +40,6 @@ stats["bam_depth_5"] = bamqc.genome_cov[5]
 
 json.dump(stats,open("%s.stats.json" % prefix,"w"))
 O = open("%s.log"%prefix,"w")
-for x in ["fastq_mean_read_len","fastq_read_num","kraken_pct_filt","bam_pct_reads_mapped","bam_med_dp","bam_depth_5","bam_depth_10"]:
+for x in ["fastq_mean_read_len","fastq_read_num","centrifuge","bam_pct_reads_mapped","bam_med_dp","bam_depth_5","bam_depth_10"]:
 	O.write("%s\t%s\n" % (x,stats[x]))
 O.close()
