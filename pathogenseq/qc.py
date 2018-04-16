@@ -119,7 +119,7 @@ class qc_fastq:
 		if filter_fastq:
 			taxa = filter_fastq.split(",")
 			self.params["cf_filt_fq_1"] = "%(prefix)s_1.centrifuge_filt.fastq.gz" % self.params
-			self.params["cf_filt_fq_2"] = "%(prefix)s_1.centrifuge_filt.fastq.gz" % self.params
+			self.params["cf_filt_fq_2"] = "%(prefix)s_2.centrifuge_filt.fastq.gz" % self.params
 			self.params["tmp_file"] = get_random_file()
 			O = open(self.params["tmp_file"],"w")
 			for l in open(self.params["centrifuge_log"]):
