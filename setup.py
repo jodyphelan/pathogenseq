@@ -69,7 +69,7 @@ setup(
 		 'scripts/merge_vcfs.py',
 		 'scripts/minION_pipeline.py',
 		 'scripts/Mtb_pipeline.py',
-		 'scripts/Mtb_pipeline_no_kraken.py',
+		 'scripts/Mtb_pipeline_no_filt.py',
 		 'scripts/sambamba_depth.py',
 		 'scripts/splitchr.py',
 		 'scripts/venn_diagram.py',
