@@ -17,7 +17,9 @@ stats["fastq_mean_read_len"] = fastqqc.mean_read_len
 stats["fastq_read_num"] = fastqqc.read_num
 
 fr1,fr2,tmp = fastqqc.run_centrifuge("/opt/storage2/jody/software/p+h+v","77643,1773,78331,33894,1765",threads)
-stats["centrifuge"] = tmp
+stats["centrifuge_top_hit"] = tmp[0]
+stats["centrifuge_pct_reads"] = tmp[1]
+
 
 newfastqqc = ps.qc_fastq(prefix,fr1,fr2)
 
@@ -40,6 +42,6 @@ stats["bam_depth_5"] = bamqc.genome_cov[5]
 
 json.dump(stats,open("%s.stats.json" % prefix,"w"))
 O = open("%s.log"%prefix,"w")
-for x in ["fastq_mean_read_len","fastq_read_num","centrifuge","bam_pct_reads_mapped","bam_med_dp","bam_depth_5","bam_depth_10"]:
+for x in ["fastq_mean_read_len","fastq_read_num","centrifuge_top_hit","centrifuge_pct_reads","bam_pct_reads_mapped","bam_med_dp","bam_depth_5","bam_depth_10"]:
 	O.write("%s\t%s\n" % (x,stats[x]))
 O.close()

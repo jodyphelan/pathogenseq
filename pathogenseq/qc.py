@@ -117,6 +117,7 @@ class qc_fastq:
 			cmd = "centrifuge -x %(centrifuge_db)s -U %(fq1)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s" % self.params
 		#run_cmd(cmd)
 		if filter_fastq:
+			num_mtb = 0
 			taxa = filter_fastq.split(",")
 			self.params["cf_filt_fq_1"] = "%(prefix)s_1.centrifuge_filt.fastq.gz" % self.params
 			self.params["cf_filt_fq_2"] = "%(prefix)s_2.centrifuge_filt.fastq.gz" % self.params
@@ -126,6 +127,7 @@ class qc_fastq:
 				#K00250:202:HNN53BBXX:8:1101:6066:998    NC_016947.1     1138382 21377   21377   235     302     4
 				row = l.rstrip().split()
 				if row[2] in taxa:
+					num_mtb+=1
 					O.write("%s\n" % row[0])
 			O.close()
 			cmd = "seqtk subseq %(fq1)s %(tmp_file)s | gzip -c > %(cf_filt_fq_1)s" % self.params
@@ -144,7 +146,7 @@ class qc_fastq:
 				top_hit = row[0].replace(" ","_")
 				top_num_reads = int(row[4])
 
-		tmp = [top_hit,top_num_reads,(top_num_reads/self.read_num)]
+		tmp = [top_hit,num_mtb/self.read_num]
 		return self.params["cf_filt_fq_1"],self.params["cf_filt_fq_2"],tmp
 
 	def run_kraken(self,kraken_db,filter_fastq = None):
