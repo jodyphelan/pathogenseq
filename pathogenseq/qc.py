@@ -106,7 +106,7 @@ class qc_fastq:
 	def approx_depth(self,genome_size):
 		"""Return approx depth for a given genome size"""
 		return self.read_num*self.mean_read_len/gsize_convert(genome_size)
-	def run_centrifuge,(centrifuge_db,filter_fastq=None):
+	def run_centrifuge(centrifuge_db,filter_fastq=None):
 		self.params["centrifuge_db"] = centrifuge_db
 		self.params["centrifuge_report"] = "%(prefix)s.centrifuge.report.txt" % self.params
 		self.params["centrifuge_log"] = "%(prefix)s.centrifuge.log" % self.params
