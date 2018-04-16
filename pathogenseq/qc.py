@@ -126,12 +126,11 @@ class qc_fastq:
 				#K00250:202:HNN53BBXX:8:1101:6066:998    NC_016947.1     1138382 21377   21377   235     302     4
 				row = l.rstrip().split()
 				if row[2] in taxa:
-					print "bleh"
 					O.write("%s\n" % row[0])
 			O.close()
-			cmd = "seqtk subset %(fq1)s %(tmp_file)s | gzip -c > %(cf_filt_fq_1)s" % self.params
+			cmd = "seqtk subseq %(fq1)s %(tmp_file)s | gzip -c > %(cf_filt_fq_1)s" % self.params
 			run_cmd(cmd)
-			cmd = "seqtk subset %(fq2)s %(tmp_file)s | gzip -c > %(cf_filt_fq_2)s" % self.params
+			cmd = "seqtk subseq %(fq2)s %(tmp_file)s | gzip -c > %(cf_filt_fq_2)s" % self.params
 			run_cmd(cmd)
 		top_hit = ""
 		top_num_reads = 0
