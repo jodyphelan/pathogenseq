@@ -115,7 +115,7 @@ class qc_fastq:
 			cmd = "centrifuge -x %(centrifuge_db)s -1 %(fq1)s -2 %(fq2)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s" % self.params
 		else:
 			cmd = "centrifuge -x %(centrifuge_db)s -U %(fq1)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s" % self.params
-		run_cmd(cmd)
+		#run_cmd(cmd)
 		if filter_fastq:
 			taxa = filter_fastq.split(",")
 			self.params["cf_filt_fq_1"] = "%(prefix)s_1.centrifuge_filt.fastq.gz" % self.params
