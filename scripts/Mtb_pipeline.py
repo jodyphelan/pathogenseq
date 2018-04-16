@@ -17,7 +17,7 @@ stats["fastq_mean_read_len"] = fastqqc.mean_read_len
 stats["fastq_read_num"] = fastqqc.read_num
 
 fr1,fr2,tmp = fastqqc.run_centrifuge("/opt/storage2/jody/software/p+h+v","77643,1773,78331,33894,1765",threads)
-stats["centrifuge"]
+stats["centrifuge"] = tmp
 
 newfastqqc = ps.qc_fastq(prefix,fr1,fr2)
 
