@@ -141,10 +141,10 @@ class qc_fastq:
 			row = l.rstrip().split("\t")
 			if row[0]=="name": continue
 			if int(row[4])>top_num_reads:
-				top_hit = "_".join(row[0])
+				top_hit = row[0].replace(" ","_")
 				top_num_reads = int(row[4])
 
-		tmp = "%s;%s;%.3f" % (top_hit,top_num_reads,(top_num_reads/self.read_num))
+		tmp = (top_hit,top_num_reads,(top_num_reads/self.read_num))
 		return self.params["cf_filt_fq_1"],self.params["cf_filt_fq_2"],tmp
 
 	def run_kraken(self,kraken_db,filter_fastq = None):
