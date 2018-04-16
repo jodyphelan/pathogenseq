@@ -106,6 +106,42 @@ class qc_fastq:
 	def approx_depth(self,genome_size):
 		"""Return approx depth for a given genome size"""
 		return self.read_num*self.mean_read_len/gsize_convert(genome_size)
+	def run_centrifuge,(centrifuge_db,filter_fastq=None):
+		self.params["centrifuge_db"] = centrifuge_db
+		self.params["centrifuge_report"] = "%(prefix)s.centrifuge.report.txt" % self.params
+		self.params["centrifuge_log"] = "%(prefix)s.centrifuge.log" % self.params
+		if self.paried:
+			cmd = "centrifuge -x %(centrifuge_db)s -1 %(fq1)s -2 %(fq2)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s"
+		else:
+			cmd = "centrifuge -x %(centrifuge_db)s -U %(fq1)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s"
+		run_cmd(cmd)
+		if filter_fastq:
+			taxa = filter_fastq.split(",")
+			self.params["cf_filt_fq_1"] = "%(prefix)s_1.centrifuge_filt.fastq.gz" % self.params
+			self.params["cf_filt_fq_2"] = "%(prefix)s_1.centrifuge_filt.fastq.gz" % self.params
+			self.params["tmp_file"] = get_random_file()
+			O = open(self.params["tmp_file"],"w")
+			for l in open(self.params["centrifuge_log"]):
+				#K00250:202:HNN53BBXX:8:1101:6066:998    NC_016947.1     1138382 21377   21377   235     302     4
+				row = l.rstrip().split()
+				if row[2] in taxa:
+					O.write("%s\n" % row[0])
+			cmd = "seqtk subset %(fq1)s %(tmp_file)s | gzip -c > %(cf_filt_fq_1)s" % self.params
+			run_cmd(cmd)
+			cmd = "seqtk subset %(fq2)s %(tmp_file)s | gzip -c > %(cf_filt_fq_2)s" % self.params
+			run_cmd(cmd)
+		top_hit = ""
+		top_num_reads = 0
+		tot_uniq_reads = 0
+		for l in open(self.params["centrifuge_report"]):
+			#Mycobacterium avium     1764    species 6256976 13835   352     2.10431e-06
+			row = l.rstrip().split("\t")
+			tot_uniq_reads+=int(row[5])
+			if int(row[5])>top_num_reads:
+				top_hit = "_".join(row[0])
+				top_num_reads = int(row[5])
+		return "%s;%s;%.3f" % (top_hit,top_num_reads,(top_num_reads/tot_uniq_reads))
+
 	def run_kraken(self,kraken_db,filter_fastq = None):
 		"""
 		Run kraken with an option to create filtered fastq files
