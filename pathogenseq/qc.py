@@ -106,14 +106,14 @@ class qc_fastq:
 	def approx_depth(self,genome_size):
 		"""Return approx depth for a given genome size"""
 		return self.read_num*self.mean_read_len/gsize_convert(genome_size)
-	def run_centrifuge(centrifuge_db,filter_fastq=None):
+	def run_centrifuge(self,centrifuge_db,filter_fastq=None,threads=4):
 		self.params["centrifuge_db"] = centrifuge_db
 		self.params["centrifuge_report"] = "%(prefix)s.centrifuge.report.txt" % self.params
 		self.params["centrifuge_log"] = "%(prefix)s.centrifuge.log" % self.params
 		if self.paried:
-			cmd = "centrifuge -x %(centrifuge_db)s -1 %(fq1)s -2 %(fq2)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s"
+			cmd = "centrifuge -x %(centrifuge_db)s -1 %(fq1)s -2 %(fq2)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s"
 		else:
-			cmd = "centrifuge -x %(centrifuge_db)s -U %(fq1)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s"
+			cmd = "centrifuge -x %(centrifuge_db)s -U %(fq1)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s"
 		run_cmd(cmd)
 		if filter_fastq:
 			taxa = filter_fastq.split(",")
