@@ -135,16 +135,15 @@ class qc_fastq:
 			run_cmd(cmd)
 		top_hit = ""
 		top_num_reads = 0
-		tot_uniq_reads = 0
+
 		for l in open(self.params["centrifuge_report"]):
 			#Mycobacterium avium     1764    species 6256976 13835   352     2.10431e-06
 			row = l.rstrip().split("\t")
 			if row[0]=="name": continue
-			tot_uniq_reads+=int(row[5])
-			if int(row[5])>top_num_reads:
+			if int(row[4])>top_num_reads:
 				top_hit = "_".join(row[0])
-				top_num_reads = int(row[5])
-		return "%s;%s;%.3f" % (top_hit,top_num_reads,(top_num_reads/tot_uniq_reads))
+				top_num_reads = int(row[4])
+		return "%s;%s;%.3f" % (top_hit,top_num_reads,(top_num_reads/self.read_num))
 
 	def run_kraken(self,kraken_db,filter_fastq = None):
 		"""
