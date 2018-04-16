@@ -125,6 +125,8 @@ class qc_fastq:
 			for l in open(self.params["centrifuge_log"]):
 				#K00250:202:HNN53BBXX:8:1101:6066:998    NC_016947.1     1138382 21377   21377   235     302     4
 				row = l.rstrip().split()
+				print row[2]
+				print taxa
 				if row[2] in taxa:
 					O.write("%s\n" % row[0])
 			cmd = "seqtk subset %(fq1)s %(tmp_file)s | gzip -c > %(cf_filt_fq_1)s" % self.params
