@@ -51,7 +51,6 @@ parser.add_argument('--threads',"-t", help='First read file')
 parser.add_argument('--bed_cov',"-b",default=None, help='First read file')
 parser.add_argument('--primers',"-p",default=None, help='First read file')
 parser.add_argument('--centrifuge',"-c",default=None, help='First read file')
-
 parser.set_defaults(func=main)
 
 args = parser.parse_args()

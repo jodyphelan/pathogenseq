@@ -19,6 +19,10 @@ def main(args):
 	stats = OrderedDict()
 	fq = ps.fastq(prefix,ref,r1,r2,threads=threads)
 	fq_qc = fq.get_fastq_qc()
+	if args.centrifuge:
+		t1,t2 = fq_qc.run_centrifuge(args.centrifuge,False,threads)
+		stats["centrifuge_top_hit"] = t1
+		stats["centrifuge_top_hit_num_reads"] = t2
 	stats["mean_read_len"] = fq_qc.mean_read_len
 	stats["median_read_len"] = fq_qc.median_read_len
 	stats["read_num"] = fq_qc.read_num
@@ -47,6 +51,7 @@ parser.add_argument('prefix', help='First read file')
 parser.add_argument('--threads',"-t",type=int,default=1, help='First read file')
 parser.add_argument('--bed_cov',"-b",default=None, help='First read file')
 parser.add_argument('--primers',"-p",default=None, help='First read file')
+parser.add_argument('--centrifuge',"-c",default=None, help='First read file')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
