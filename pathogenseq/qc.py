@@ -142,9 +142,9 @@ class qc_fastq:
 			#Mycobacterium avium     1764    species 6256976 13835   352     2.10431e-06
 			row = l.rstrip().split("\t")
 			if row[0]=="name": continue
-			if int(row[4])>top_num_reads:
+			if int(row[5])>top_num_reads:
 				top_hit = row[0].replace(" ","_")
-				top_num_reads = int(row[4])
+				top_num_reads = int(row[5])
 		if filter_fastq:
 			tmp = [top_hit,num_mtb/self.read_num]
 			return self.params["cf_filt_fq_1"],self.params["cf_filt_fq_2"],tmp
