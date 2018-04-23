@@ -22,7 +22,7 @@ def main(args):
 	stats["median_read_len"] = fq_qc.median_read_len
 	stats["read_num"] = fq_qc.read_num
 	if args.centrifuge:
-		t1,t2 = run_centrifuge(args.centrifuge,False,threads)
+		t1,t2 = fq_qc.run_centrifuge(args.centrifuge,False,threads)
 		stats["centrifuge_top_hit"] = t1
 		stats["centrifuge_top_hit_num_reads"] = t2
 	bam = fq.minION()
