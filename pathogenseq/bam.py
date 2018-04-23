@@ -27,7 +27,9 @@ class bam:
 		if filecheck(bam_file): self.params["bam_file"] = bam_file
 		self.params["prefix"] = prefix
 		self.prefix = prefix
-		if filecheck(ref_file): self.params["ref_file"] = ref_file
+		if filecheck(ref_file):
+			self.params["ref_file"] = ref_file
+			self.ref_fa_dict = fasta(self.params["ref_file"]).fa_dict
 		self.params["platform"] = platform
 		self.params["threads"] = threads
 	def get_calling_params(self):
@@ -117,13 +119,16 @@ class bam:
 		return bcf(final_bcf,prefix=self.prefix)
 	def create_dummy_low_dp_bcf(self,gff_file,min_dp=10,bed_file=None):
 		self.params["gff_file"] = gff_file
+
+		contig_line = "\n".join(["##contig=<ID=%s,length=%s>" % (s,len(self.ref_fa_dict[s])) for s in self.ref_fa_dict])
 		header = """##fileformat=VCFv4.1
 ##source=htsbox-pileup-r340
-##reference=/home/jody/refgenome/MTB-h37rv_asm19595v2-eg18.fa
+##reference=%s
 ##contig=<ID=Chromosome,length=4411532>
+%s
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE
-"""
+""" % (self.ref_file,contig_line)
 		self.params["dp_vcf_file"] = "%(prefix)s.low_cov.vcf" % self.params
 		OUT = open(self.params["dp_vcf_file"],"w")
 		OUT.write(header)
@@ -206,11 +211,11 @@ class bam:
 				final_calls[arr[0]][arr[1]].append((call,1,max_allele_dp))
 		return final_calls
 	def pileup2vcf(self,min_het_frac=0.3,min_hom_frac=0.6,min_dp=10,bed_file=None,indels=True):
-
+		self.params["contig_line"] = "\n".join(["##contig=<ID=%s,length=%s>" % (s,len(self.ref_fa_dict[s])) for s in self.ref_fa_dict])
 		header = """##fileformat=VCFv4.1
 ##source=htsbox-pileup-r340
-##reference=/home/jody/refgenome/MTB-h37rv_asm19595v2-eg18.fa
-##contig=<ID=Chromosome,length=4411532>
+##reference=%(ref_file)s
+%(contig_line)s
 ##INFO=<ID=DP4,Number=4,Type=Integer,Description="Number of high-quality ref-forward , ref-reverse, alt-forward and alt-reverse bases">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Raw Depth">
