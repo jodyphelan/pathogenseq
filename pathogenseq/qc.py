@@ -145,9 +145,11 @@ class qc_fastq:
 			if int(row[4])>top_num_reads:
 				top_hit = row[0].replace(" ","_")
 				top_num_reads = int(row[4])
-
-		tmp = [top_hit,num_mtb/self.read_num]
-		return self.params["cf_filt_fq_1"],self.params["cf_filt_fq_2"],tmp
+		if filter_fastq:
+			tmp = [top_hit,num_mtb/self.read_num]
+			return self.params["cf_filt_fq_1"],self.params["cf_filt_fq_2"],tmp
+		else:
+			return top_hit,top_num_reads/self.read_num
 
 	def run_kraken(self,kraken_db,filter_fastq = None):
 		"""
