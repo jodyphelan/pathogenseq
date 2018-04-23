@@ -54,7 +54,7 @@ def load_bed(filename,columns,key1,key2=None):
 			results[row[key1-1]]= tuple([row[int(x)-1] for x in columns])
 	return results
 
-def split_bed(bed_file,size):
+def split_bed(bed_file,size,reformat=False):
 	bed_regions = {}
 	for l in open(filecheck(bed_file)):
 		row = l.rstrip().split()
@@ -66,11 +66,20 @@ def split_bed(bed_file,size):
 				tmpe+=size
 				if tmpe>end:
 					tmpe=end
-				print "%s:%s-%s" % (chrom,tmps,tmpe)
+				loc = "%s:%s-%s" % (chrom,tmps,tmpe)
+				loc_str = "%s_%s_%s" % (chrom,tmps,tmpe)
+				if reformat:
+					print "%s\t%s" % (loc,loc_str)
+				else:
+					print loc
 				tmps=tmpe+1
 		else:
-			print "%s:%s-%s" % (chrom,start,end)
-
+			loc = "%s:%s-%s" % (chrom,start,end)
+			loc_str = "%s_%s_%s" % (chrom,start,end)
+			if reformat:
+				print "%s\t%s" % (loc,loc_str)
+			else:
+				print loc
 def filecheck(filename):
 	"""
 	Check if file is there and quit if it isn't
@@ -123,11 +132,11 @@ def run_cmd(cmd,verbose=1):
 		print("Command Failed! Please Check!")
 		exit(1)
 
-def index_bam(bamfile,threads=4):
+def index_bam(bamfile,threads=4,overwrite=False):
 	"""
 	Indexing a bam file
 	"""
-	if filecheck(bamfile):
+	if filecheck(bamfile) and nofile(bamfile+".bai") and overwrite:
 		cmd = "samtools index -@ %s %s" % (threads,bamfile)
 		run_cmd(cmd)
 

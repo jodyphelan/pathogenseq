@@ -57,7 +57,7 @@ class bam:
 		self.params["min_dp"] = min_dp
 		self.params["bcf_file"] = "%s.gbcf" % self.prefix
 		self.params["bed_file"] = bed_file
-		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
+		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s --reformat" % self.params if bed_file else "splitchr.py %(ref_file)s 50000 --reformat" % self.params
 		self.params["threads"] = threads
 		if vtype=="snps": self.params["vtype"] = "-V indels"
 		elif vtype=="indels": self.params["vtype"] = "-V snps"
@@ -68,17 +68,17 @@ class bam:
 			call_method = self.get_calling_params()
 
 		if call_method=="high":
-			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		else:
-			cmd = "%(cmd_split_chr)s | parallel -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 #			cmd = "samtools mpileup -ugf %(ref_file)s %(bam_file)s -aa -ABq0 -Q0 -t DP | bcftools call -mg %(min_dp)s -V indels -Oz -o %(vcf_file)s" % self.params
 		run_cmd(cmd)
-		cmd = "%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
+		cmd = "%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
-		cmd = "bcftools concat -aD -Ob -o %(bcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf\"}'`" % self.params
+		cmd = "bcftools concat -aD -Ob -o %(bcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 		run_cmd(cmd)
-		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$1\".bcf*\"}'`" % self.params
+		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
 
 		return bcf(self.params["bcf_file"],prefix=self.prefix)

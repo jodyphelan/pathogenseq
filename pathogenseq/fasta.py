@@ -235,16 +235,26 @@ class fasta:
 
 		OUT.close()
 
-	def splitchr(self,size):
+	def splitchr(self,size,reformat=False):
 		lengths = {s:len(self.fa_dict[s]) for s in self.fa_dict}
 		for s in self.fa_dict:
 			start = 0
 			end = start+size
 			while end<lengths[s]:
-				print "%s:%s-%s" % (s,start+1,end)
+				loc_str = "%s_%s_%s" % (s,start+1,end)
+				loc = "%s:%s-%s" % (s,start+1,end)
+				if reformat:
+					print "%s\t%s" % (loc,loc_str)
+				else:
+					print loc
 				start+=size
 				end+=size
-			print "%s:%s-%s" % (s,start,lengths[s])
+			loc = "%s:%s-%s" % (s,start,lengths[s])
+			loc_str = "%s_%s_%s" % (s,start,lengths[s])
+			if reformat:
+				print "%s\t%s" % (loc,loc_str)
+			else:
+				print loc
 	def find_primer_positions(self,primer_fasta):
 		tmp_file = get_random_file()
 		cmd = "blastn -task blastn -query %s -subject %s -outfmt 6 > %s" % (primer_fasta,self.fa_file,tmp_file)
