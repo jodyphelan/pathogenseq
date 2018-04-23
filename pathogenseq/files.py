@@ -136,9 +136,10 @@ def index_bam(bamfile,threads=4,overwrite=False):
 	"""
 	Indexing a bam file
 	"""
-	if filecheck(bamfile) and nofile(bamfile+".bai") and overwrite:
-		cmd = "samtools index -@ %s %s" % (threads,bamfile)
-		run_cmd(cmd)
+	if filecheck(bamfile)
+	 	if nofile(bamfile+".bai") or overwrite:
+			cmd = "samtools index -@ %s %s" % (threads,bamfile)
+			run_cmd(cmd)
 
 def index_bcf(bcf,threads=4):
 	"""
