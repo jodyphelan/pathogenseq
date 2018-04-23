@@ -149,7 +149,7 @@ class qc_fastq:
 			tmp = [top_hit,num_mtb/self.read_num]
 			return self.params["cf_filt_fq_1"],self.params["cf_filt_fq_2"],tmp
 		else:
-			return top_hit,top_num_reads/self.read_num
+			return top_hit,top_num_reads
 
 	def run_kraken(self,kraken_db,filter_fastq = None):
 		"""
