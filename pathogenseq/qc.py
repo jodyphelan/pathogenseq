@@ -111,7 +111,7 @@ class qc_fastq:
 		self.params["centrifuge_report"] = "%(prefix)s.centrifuge.report.txt" % self.params
 		self.params["centrifuge_log"] = "%(prefix)s.centrifuge.log" % self.params
 		self.params["threads"] = threads
-		if self.paried:
+		if self.paired:
 			cmd = "centrifuge -x %(centrifuge_db)s -1 %(fq1)s -2 %(fq2)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s" % self.params
 		else:
 			cmd = "centrifuge -x %(centrifuge_db)s -U %(fq1)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s" % self.params
