@@ -30,7 +30,7 @@ def create_mappability_file(ref_file,threads):
 		lines.append((chrom,int(arr[0]),arr[1]))
 	O = open("genome.mappability.bed","w")
 	for i in range(len(lines)-1):
-		O.write("%s\t%s\t%s\t%s\n" % (chrom,lines[i][1],lines[i+1][1]-1,lines[i][2]))
+		O.write("%s\t%s\t%s\t%s\n" % (lines[i][0],lines[i][1],lines[i+1][1]-1,lines[i][2]))
 	O.close()
 
 class vcf_merge:
