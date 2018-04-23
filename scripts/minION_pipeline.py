@@ -11,7 +11,7 @@ def main(args):
 	prefix = args.prefix
 	threads = args.threads
 
-	cov_png = "%s.cov.png" % prefix
+
 	stats_file = "%s.stats.json" % prefix
 	gc_file = "%s.gc_skew.json" % prefix
 	cov_file = "%s.regions.cov.json" % prefix
@@ -33,6 +33,7 @@ def main(args):
 	stats["genome_cov_10"] = bam_qc.genome_cov[10]
 	fasta = ps.fasta(ref).fa_dict
 	for seq in fasta:
+		cov_png = "%s.%s.cov.png" % (prefix,seq)
 		bam_qc.plot_cov(seq,cov_png,primers=args.primers)
 	bam_qc.extract_gc_skew(gc_file)
 	if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
