@@ -145,6 +145,7 @@ class qc_fastq:
 			if int(row[5])>top_num_reads:
 				top_hit = row[0].replace(" ","_")
 				top_num_reads = int(row[5])
+		rm_files([self.params["tmp_file"]])
 		if filter_fastq:
 			tmp = [top_hit,num_mtb/self.read_num]
 			return self.params["cf_filt_fq_1"],self.params["cf_filt_fq_2"],tmp
