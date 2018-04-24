@@ -58,7 +58,7 @@ class vcf_merge:
 		vcf_merge: A vcf_merge class object
 	"""
 
-	def __init__(self,sample_file,ref_file,prefix,mappability_file=None,vcf_dir=".",min_dp=10,keep_samples=None,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=None,bed_exclude=None,threads=4,vcf_ext="vcf.gz"):
+	def __init__(self,sample_file,ref_file,prefix,mappability_filter=False,mappability_file=None,vcf_dir=".",min_dp=10,keep_samples=None,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=None,bed_exclude=None,threads=4,vcf_ext="vcf.gz"):
 		self.params = {}
 		self.samples = []
 		self.keep_samples = []
@@ -84,12 +84,13 @@ class vcf_merge:
 		self.params["qual_file"] = "%s.sample_quals.txt" % prefix
 		self.params["bed_include"] = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
 		self.params["bed_exclude"] = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
-		if not mappability_file:
-			create_mappability_file(ref_file,threads)
-			self.params["mappability_file"] = "genome.mappability.bed"
-		else:
-			filecheck(mappability_file)
-			self.params["mappability_file"] = mappability_file
+		if mappability_filter:
+			if not mappability_file:
+				create_mappability_file(ref_file,threads)
+				self.params["mappability_file"] = "genome.mappability.bed"
+			else:
+				filecheck(mappability_file)
+				self.params["mappability_file"] = mappability_file
 		for l in open(sample_file):
 			self.samples.append(l.rstrip())
 		for s in self.samples:
@@ -166,7 +167,8 @@ class vcf_merge:
 		QF.write("sample\tmix\tmiss\n")
 
 		self.params["bcftools_stats_file"] = "%s.bcftools_stats.txt" % self.params["prefix"]
-		cmd =  "bcftools stats  %(uniq_filt_bcf)s -s - | grep ^PSC > %(bcftools_stats_file)s" % self.params
+		self.params["tmp_bcf"] = self.params["uniq_filt_bcf"] if mappability_filter else self.params["prefilt_bcf"]
+		cmd =  "bcftools stats  %(tmp_bcf)s -s - | grep ^PSC > %(bcftools_stats_file)s" % self.params
 		run_cmd(cmd)
 		for l in open(self.params["bcftools_stats_file"]):
 			row = l.rstrip().split()
