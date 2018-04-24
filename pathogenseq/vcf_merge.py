@@ -156,7 +156,8 @@ class vcf_merge:
 	def sample_filt(self):
 		"""Filter out low quality samples"""
 
-		num_calls = int(subprocess.Popen("bcftools view %(uniq_filt_bcf)s -H | wc -l" % self.params,shell=True,stdout=subprocess.PIPE).communicate()[0].rstrip())
+		self.params["tmp_bcf"] = self.params["uniq_filt_bcf"] if self.mappability_filter else self.params["prefilt_bcf"]
+		num_calls = int(subprocess.Popen("bcftools view %(tmp_bcf)s -H | wc -l" % self.params,shell=True,stdout=subprocess.PIPE).communicate()[0].rstrip())
 
 		miss = {}
 		mix = {}
@@ -168,7 +169,7 @@ class vcf_merge:
 		QF.write("sample\tmix\tmiss\n")
 
 		self.params["bcftools_stats_file"] = "%s.bcftools_stats.txt" % self.params["prefix"]
-		self.params["tmp_bcf"] = self.params["uniq_filt_bcf"] if self.mappability_filter else self.params["prefilt_bcf"]
+
 		cmd =  "bcftools stats  %(tmp_bcf)s -s - | grep ^PSC > %(bcftools_stats_file)s" % self.params
 		run_cmd(cmd)
 		for l in open(self.params["bcftools_stats_file"]):
