@@ -8,7 +8,8 @@ def main(args):
 	vcf = ps.vcf_merge(args.samples,args.ref,args.prefix,args.mappability_filter,args.mappability_file,args.vcf_dir,args.min_dp,args.keep_samples,args.fmiss,args.miss_cut,args.mix_cut,args.low_cov,args.bed_include,args.bed_exclude,args.threads,args.vcf_ext)
 	vcf.merge()
 	vcf.extract_variants()
-	vcf.filt_non_uniq()
+	if args.mappability_filter:
+		vcf.filt_non_uniq()
 	vcf.sample_filt()
 	vcf.mask_mixed()
 	bcf = vcf.get_bcf_obj()
