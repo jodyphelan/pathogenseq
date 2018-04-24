@@ -8,8 +8,8 @@ from collections import defaultdict
 import itertools
 import json
 from tqdm import tqdm
-from bokeh.plotting import figure, output_file, show
-from bokeh.layouts import column
+# from bokeh.plotting import figure, output_file, show
+# from bokeh.layouts import column
 from ete3 import Tree
 from colour import Color
 
