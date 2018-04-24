@@ -190,7 +190,7 @@ class vcf_merge:
 		HQ.close()
 		LQ.close()
 		QF.close()
-		cmd = "bcftools view -S %(hq_sample_file)s -a -c 1 -o %(sample_filt_bcf)s -O b %(uniq_filt_bcf)s" % self.params
+		cmd = "bcftools view -S %(hq_sample_file)s -a -c 1 -o %(sample_filt_bcf)s -O b %(tmp_bcf)s" % self.params
 		run_cmd(cmd)
 
 	def mask_mixed(self):
