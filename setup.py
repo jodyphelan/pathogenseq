@@ -77,7 +77,8 @@ setup(
 		 'scripts/pathogen-profiler.py',
 		 'scripts/combine_dict_list.py',
 		 'scripts/illumina_pipeline.py',
-		 'scripts/generate_run_file.py'
+		 'scripts/generate_run_file.py',
+		 'scripts/vcf2itol.py'
 		],
 	data_files = [(sys.prefix,["pathogenseq.conf"])],
 
