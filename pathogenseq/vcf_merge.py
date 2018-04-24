@@ -62,6 +62,7 @@ class vcf_merge:
 		self.params = {}
 		self.samples = []
 		self.keep_samples = []
+		self.mappability_filter = mappability_filter
 		self.params["sample_file"] = sample_file
 		self.params["ref_file"] = ref_file
 		self.params["threads"] = threads
@@ -167,7 +168,7 @@ class vcf_merge:
 		QF.write("sample\tmix\tmiss\n")
 
 		self.params["bcftools_stats_file"] = "%s.bcftools_stats.txt" % self.params["prefix"]
-		self.params["tmp_bcf"] = self.params["uniq_filt_bcf"] if mappability_filter else self.params["prefilt_bcf"]
+		self.params["tmp_bcf"] = self.params["uniq_filt_bcf"] if self.mappability_filter else self.params["prefilt_bcf"]
 		cmd =  "bcftools stats  %(tmp_bcf)s -s - | grep ^PSC > %(bcftools_stats_file)s" % self.params
 		run_cmd(cmd)
 		for l in open(self.params["bcftools_stats_file"]):
