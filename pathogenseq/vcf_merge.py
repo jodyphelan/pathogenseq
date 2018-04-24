@@ -15,8 +15,8 @@ def split_list(l, n):
 
 def create_mappability_file(ref_file,threads):
 	cmd = "gem-indexer -i %s -o genome" % ref_file
-	#run_cmd(cmd)
-	cmd = "gem-mappability -I genome.gem -o genome -l 65 -T %s -m 0 -e 0" % threads
+	run_cmd(cmd)
+	cmd = "gem-mappability -I genome.gem -o genome -l 65 -T %s" % threads
 	run_cmd(cmd)
 	cmd = "gem-2-wig -I genome.gem -i genome.mappability -o genome"
 	run_cmd(cmd)
@@ -59,6 +59,8 @@ class vcf_merge:
 	"""
 
 	def __init__(self,sample_file,ref_file,prefix,mappability_filter=False,mappability_file=None,vcf_dir=".",min_dp=10,keep_samples=None,fmiss=0.1,miss_cut=0.15,mix_cut=0.15,low_cov=False,bed_include=None,bed_exclude=None,threads=4,vcf_ext="vcf.gz"):
+		if mappability_file:
+			mappability_filter=True
 		self.params = {}
 		self.samples = []
 		self.keep_samples = []
@@ -85,6 +87,7 @@ class vcf_merge:
 		self.params["qual_file"] = "%s.sample_quals.txt" % prefix
 		self.params["bed_include"] = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
 		self.params["bed_exclude"] = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
+
 		if mappability_filter:
 			if not mappability_file:
 				create_mappability_file(ref_file,threads)
