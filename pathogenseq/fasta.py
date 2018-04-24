@@ -262,7 +262,10 @@ class fasta:
 		results = {}
 		for l in open(tmp_file):
 			row = l.rstrip().split()
-			results[row[0]] = {"chrom":row[1],"start":int(row[8]),"end":int(row[9])}
+			if row[0] in results:
+				if int(row[3]) < results[row[0]]["identities"]:
+					continue
+			results[row[0]] = {"chrom":row[1],"start":int(row[8]),"end":int(row[9]),"identities":int(row[3])}
 		return results
 
 
