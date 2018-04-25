@@ -76,7 +76,7 @@ class bam:
 				#cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 				cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -ugf %(ref_file)s %(bam_file)s  -ABq0 -Q0 -a DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 		elif platform=="minION":
-			cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup -f %(ref_file)s %(bam_file)s -I -a DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup -f %(ref_file)s %(bam_file)s -IB -a DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 		else:
 			log("Please choose a valid platform..Exiting!",ext=True)
 		run_cmd(cmd)
