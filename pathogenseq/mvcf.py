@@ -283,7 +283,7 @@ dev.off()
 		cmd = "bcftools view -T %(targets_file)s %(bcf)s -Ob -o %(tmp2_file)s" % self.params
 		run_cmd(cmd)
 		index_bcf(self.params["tmp2_file"],self.params["threads"])
-		cmd = "bcftools merge --threads -Ou %(threads)s %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
+		cmd = "bcftools merge --threads %(threads)s -Ou  %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
 		run_cmd(cmd)
 
 	def annotate_from_bed(self,bed_file,outfile=None,nested=False):
