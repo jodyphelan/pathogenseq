@@ -176,6 +176,9 @@ class bcf:
 		run_cmd(cmd,verbose=v)
 
 	def vcf_to_fasta(self,filename,threads=4):
+
+		
+	def vcf_to_fasta(self,filename,threads=4):
 		"""Create a fasta file from the SNPs"""
 		self.params["threads"] = threads
 		self.params["tmp_file"] = "%s.tmp.txt" % self.params["prefix"]
