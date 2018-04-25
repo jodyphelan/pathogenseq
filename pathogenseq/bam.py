@@ -66,9 +66,9 @@ class bam:
 		elif vtype=="both":	self.params["vtype"] = ""
 		else: sys.stderr.write("Please provide valid vtype: [snps|indels|both]...Exiting!"); quit(1)
 
-		if call_method=="optimise":
-			call_method = self.get_calling_params()
 		if platform=="illumina":
+			if call_method=="optimise":
+				call_method = self.get_calling_params()
 			if call_method=="high":
 				#cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s -B -t DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 				cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
