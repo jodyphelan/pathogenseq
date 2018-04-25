@@ -169,10 +169,16 @@ class bcf:
 		cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf)s -o %(ann_file)s" % self.params
 		run_cmd(cmd,verbose=v)
 
-	def extract_matrix(self,matrix_file=None):
+	def extract_matrix(self,matrix_file=None,fmt="old"):
 		self.params["matrix_file"] = matrix_file if matrix_file==True else self.params["prefix"]+".mat"
-		O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
-		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
+		if fmt=="new":
+			O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\tinfo\ttype\t%s\n" % ("\t".join(self.samples)))
+			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t.\\t.[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
+		elif fmt=="old":
+			O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
+			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
+		else:
+			log("Choose valid format [old,new]...Exiting!",ext=True)
 		run_cmd(cmd,verbose=v)
 
 	def vcf_to_fasta_alt(self,filename,ref_file,threads=4,chunk_size = 50000, bed_file=None):
