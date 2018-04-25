@@ -1,15 +1,19 @@
 #! /usr/bin/env python
 import sys
 import pathogenseq as ps
+import argparse
 
-if len(sys.argv)!=5:
-	print "call_snps.py <bam_file> <ref_file> <prefix> <threads>"
-	quit()
+def main(args):
+	bam = ps.bam(bam_file=args.bam,ref_file=args.ref,prefix=args.prefix,threads=args.threads,platform=args.platform)
+	bam.gbcf(threads=threads)
 
-bam_file = sys.argv[1]
-ref_file = sys.argv[2]
-prefix = sys.argv[3]
-threads = int(sys.argv[4])
+parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('bam', help='First read file')
+parser.add_argument('ref', help='Second read file')
+parser.add_argument('prefix', help='Reference Sequence')
+parser.add_argument('--threads','-t', type=int, default=1, help='Number of threads')
+parser.add_argument('--platform','-p', type=str,default="illumina",choices=["illumina","minION",help='Mapping tool to use')
+parser.set_defaults(func=main)
 
-bam = ps.bam(bam_file=bam_file,ref_file=ref_file,prefix=prefix,threads=threads)
-bam.gbcf(threads=threads)
+args = parser.parse_args()
+args.func(args)
