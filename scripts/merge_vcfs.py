@@ -13,7 +13,7 @@ def main(args):
 	vcf.sample_filt()
 	vcf.mask_mixed()
 	bcf = vcf.get_bcf_obj()
-	bcf.vcf_to_fasta(args.prefix+".snps.fa",args.threads)
+	bcf.vcf_to_fasta_alt(args.prefix+".snps.fa",args.ref,args.threads)
 
 
 
