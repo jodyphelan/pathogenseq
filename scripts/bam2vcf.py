@@ -12,7 +12,7 @@ parser.add_argument('bam', help='First read file')
 parser.add_argument('ref', help='Second read file')
 parser.add_argument('prefix', help='Reference Sequence')
 parser.add_argument('--threads','-t', type=int, default=1, help='Number of threads')
-parser.add_argument('--platform','-p', type=str,default="illumina",choices=["illumina","minION",help='Mapping tool to use')
+parser.add_argument('--platform','-p', type=str,default="illumina",choices=["illumina","minION"],help='Mapping tool to use')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
