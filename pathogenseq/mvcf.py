@@ -175,9 +175,28 @@ class bcf:
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
 		run_cmd(cmd,verbose=v)
 
-	def vcf_to_fasta(self,filename,threads=4):
+	def vcf_to_fasta_alt(self,filename,ref_file,threads=4,chunk_size = 50000, bed_file=None):
+		self.params["ref_file"] = ref_file
+		self.params["chunk_size"] = chunk_size
+		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % self.params if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % self.params
+		self.params["tmp_file"] = "%s.tmp.txt" % self.params["prefix"]
+		self.params["threads"] = threads
+		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view %(bcf)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % self.params
+		run_cmd(cmd)
+		cmd = "paste `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'` > %(tmp_file)s" % self.params
+		run_cmd(cmd)
+		cmd = "rm `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'`" % self.params
+		run_cmd(cmd)
+		O = open(filename,"w")
+		for i,l in enumerate(open(self.params["tmp_file"])):
+			row = l.rstrip().split()
+			if i==0: continue
+			s = self.samples[i-1]
+			seq = "".join(row).replace("./.","N")
+			O.write(">%s\n%s\n" % ( s,seq))
+		O.close()
 
-		
+
 	def vcf_to_fasta(self,filename,threads=4):
 		"""Create a fasta file from the SNPs"""
 		self.params["threads"] = threads

@@ -9,6 +9,25 @@ import random
 
 rand_generator = random.SystemRandom()
 
+def cmd_out(cmd):
+	cmd = "set -u pipefail; " + cmd
+	if verbose==2:
+		sys.stderr.write("\nRunning command:\n%s\n" % cmd)
+		stderr = open("/dev/stderr","w")
+	elif verbose==1:
+		sys.stderr.write("\nRunning command:\n%s\n" % cmd)
+		stderr = open("/dev/null","w")
+	else:
+		stderr = open("/dev/null","w")
+	try:
+		res = subprocess.Popen(cmd,shell=True,stderr = stderr,stdout=subprocess.PIPE)
+		for l in res.stdout:
+			yield l.rstrip()
+	except:
+		print("Command Failed! Please Check!")
+		exit(1)
+	stderr.close()
+
 def get_random_file(prefix = None):
 	randint = rand_generator.randint(1,999999)
 	if prefix:
