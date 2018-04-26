@@ -64,7 +64,7 @@ class bam:
 		self.params["threads"] = threads
 
 		if primers:
-			self.params["primer_bed_file"] = "%(preifx)s.primers.bed" % self.params
+			self.params["primer_bed_file"] = "%(prefix)s.primers.bed" % self.params
 			TMP = open(self.params["primer_bed_file"],"w")
 			positions = self.ref_fa.find_primer_positions(primers)
 			for x in positions:
