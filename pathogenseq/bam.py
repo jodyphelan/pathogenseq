@@ -96,9 +96,9 @@ class bam:
 		cmd = "%(cmd_split_chr)s | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
 		if primers:
-			cmd = "bcftools concat -aD -Ob -o %(bcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
-		else:
 			cmd = "bcftools concat -aD -Ou `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'` | bcftools +setGT -Ob -o %(bcf_file)s -T %(primer_bed_file)s -- -t a -n ." % self.params
+		else:
+			cmd = "bcftools concat -aD -Ob -o %(bcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 		run_cmd(cmd)
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
