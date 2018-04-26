@@ -29,7 +29,8 @@ class bam:
 		self.prefix = prefix
 		if filecheck(ref_file):
 			self.params["ref_file"] = ref_file
-			self.ref_fa_dict = fasta(self.params["ref_file"]).fa_dict
+			self.ref_fa = fasta(self.params["ref_file"])
+			self.ref_fa_dict = self.ref_fa.fa_dict
 		self.params["platform"] = platform
 		self.params["threads"] = threads
 	def get_calling_params(self):
@@ -63,7 +64,15 @@ class bam:
 		self.params["threads"] = threads
 
 		if primers:
-			ref = f
+			self.params["primer_bed_file"] = "%(preifx)s.primers.bed" % self.params
+			TMP = open(self.params["primer_bed_file"],"w")
+			positions = self.ref_fa.find_primer_positions(primers)
+			for x in positions:
+				p = positions[x]
+				if p["start"] < p["end"]:
+					p["start"],p["end"] = p["end"],p["start"]
+				TMP.write("%s\t%s\t%s\t%s\n" % (p["chrom"],p["start"],p["end"],x))
+			TMP.close()
 
 		if vtype=="snps": self.params["vtype"] = "-V indels"
 		elif vtype=="indels": self.params["vtype"] = "-V snps"
@@ -82,14 +91,14 @@ class bam:
 		elif platform=="minION":
 			cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup -f %(ref_file)s %(bam_file)s -I -a DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 		else:
-			log("Please choose a valid platform..Exiting!",ext=True)
+			log("Please choose a valid platform...Exiting!",ext=True)
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
 		if primers:
 			cmd = "bcftools concat -aD -Ob -o %(bcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 		else:
-			cmd = "bcftools concat -aD -Ou `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'` | bcftools +setGT -Ob -o %(bcf_file)s -T %(primer_bed)s -- -t a -n ." % self.params
+			cmd = "bcftools concat -aD -Ou `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'` | bcftools +setGT -Ob -o %(bcf_file)s -T %(primer_bed_file)s -- -t a -n ." % self.params
 		run_cmd(cmd)
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
