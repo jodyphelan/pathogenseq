@@ -130,9 +130,9 @@ class qc_fastq:
 					num_mtb+=1
 					O.write("%s\n" % row[0])
 			O.close()
-			cmd = "seqtk subseq %(fq1)s %(tmp_file)s | gzip -c > %(cf_filt_fq_1)s" % self.params
+			cmd = "seqtk subseq %(fq1)s %(tmp_file)s | pigz -p %(threads)s -c > %(cf_filt_fq_1)s" % self.params
 			run_cmd(cmd)
-			cmd = "seqtk subseq %(fq2)s %(tmp_file)s | gzip -c > %(cf_filt_fq_2)s" % self.params
+			cmd = "seqtk subseq %(fq2)s %(tmp_file)s | pigz -p %(threads)s -c > %(cf_filt_fq_2)s" % self.params
 			run_cmd(cmd)
 			rm_files([self.params["tmp_file"]])
 

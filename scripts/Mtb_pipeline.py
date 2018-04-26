@@ -12,7 +12,7 @@ prefix = sys.argv[4]
 threads = sys.argv[5]
 
 stats = {}
-fastqqc = ps.qc_fastq(prefix,r1,r2)
+fastqqc = ps.qc_fastq(prefix,r1,r2,threads=threads)
 stats["fastq_mean_read_len"] = fastqqc.mean_read_len
 stats["fastq_read_num"] = fastqqc.read_num
 
@@ -21,7 +21,7 @@ stats["centrifuge_top_hit"] = tmp[0]
 stats["centrifuge_pct_reads"] = tmp[1]
 
 
-newfastqqc = ps.qc_fastq(prefix,fr1,fr2)
+newfastqqc = ps.qc_fastq(prefix,fr1,fr2,threads=threads)
 
 fastq = ps.fastq(prefix,ref,fr1,fr2,threads=threads)
 
@@ -29,7 +29,7 @@ fastq.illumina(mapper="bowtie2")
 
 bam_file = "%s.bam" % prefix
 
-bam = ps.bam(bam_file,prefix,ref)
+bam = ps.bam(bam_file,prefix,ref,threads=threads)
 bam.gbcf(vtype="snps",threads=threads)
 
 bamqc = bam.get_bam_qc()
