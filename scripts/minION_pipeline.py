@@ -38,6 +38,7 @@ def main(args):
 	bam_qc.extract_gc_skew(gc_file)
 	if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
 	variants = bam.pileup2vcf(indels=False)
+	bam.gbcf(threads=threads,platform="minION")
 	stats["hom_variants"] = len([x for x in variants if x[5]=="1/1"])
 	stats["het_variants"] = len([x for x in variants if x[5]=="0/1"])
 	json.dump(stats,open(stats_file,"w"))
