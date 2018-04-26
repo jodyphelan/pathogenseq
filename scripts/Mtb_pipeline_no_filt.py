@@ -19,7 +19,7 @@ stats["fastq_read_num"] = fastqqc.read_num
 
 fastq = ps.fastq(prefix,ref,r1,r2,threads=threads)
 
-fastq.illumina(mapper="bowtie2")
+fastq.illumina(mapper="minimap2")
 
 bam_file = "%s.bam" % prefix
 
