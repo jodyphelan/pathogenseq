@@ -9,15 +9,12 @@ from mvcf import *
 import vcf
 import pysam
 
-def get_overlapping_reads(inbam,chrom,start,end,outbam):
-	IN = pysam.AlignmentFile(inbam,"rb")
-	OUT = pysam.AlignmentFile(outbam,"wb",template=IN)
+def get_overlapping_reads(IN,chrom,start,end,OUT):
 	for read in IN.fetch(chrom,start,end):
 		print "%s\t%s\t%s" % (read.qname,read.reference_start,read.reference_end)
 		if read.reference_start<=start and read.reference_end>=end:
 			print "OK!"
 			OUT.write(read)
-	OUT.close()
 
 class bam:
 	"""
@@ -109,14 +106,19 @@ class bam:
 			self.params["primer_bcf"] = "%(prefix)s.primer.bcf" % self.params
 
 			if primer_search:
+				self.params["primer_bam"] = "%(prefix)s.primers.bam" % self.params
+				IN = pysam.AlignmentFile(self.params["bam_file"],"rb")
+				OUT = pysam.AlignmentFile(self.params["primer_bam"],"wb",template=IN)
 				for pname in positions:
 					pr = positions[pname]
 					tmp_bam = "%s.%s.bam" % (self.params["prefix"],pname)
-					get_overlapping_reads(self.params["bam_file"],pr["chrom"],pr["start"],pr["end"],tmp_bam)
-
-			cmd = "bcftools concat -aD -Ob -o %(non_primer_bcf)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
+					get_overlapping_reads(IN,pr["chrom"],pr["start"],pr["end"],OUT)
+				OUT.close()
+				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s -B -a DP,AD -R %(primer_bed_file)s |cftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
+			else:
+				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -R %(primer_bed_file)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(primer_bcf)s -- -t a -n ." % self.params
 			run_cmd(cmd)
-			cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -R %(primer_bed_file)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(primer_bcf)s -- -t a -n ." % self.params
+			cmd = "bcftools concat -aD -Ob -o %(non_primer_bcf)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
 			cmd = "bcftools concat %(primer_bcf)s %(non_primer_bcf)s | bcftools sort -Ob -o %(bcf_file)s " % self.params
 			run_cmd(cmd)
