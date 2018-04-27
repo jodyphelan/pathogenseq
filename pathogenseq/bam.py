@@ -53,7 +53,6 @@ class bam:
 		self.params["platform"] = platform
 		self.params["threads"] = threads
 	def generate_primer_bcf(self,threads=4,flank=30):
-		bcf_files = []
 		for l in open(self.params["primer_bed_file"]):
 			chrom,start,end,pid = l.rstrip().split()[:4]
 			start = int(start)
@@ -68,8 +67,8 @@ class bam:
 			else:
 				cmd = "samtools index %(prefix)s.%(pid)s.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.%(pid)s.bam %(mpileup_options)s -r %(tmp)s | bcftools call -t %(tmp)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 			run_cmd(cmd)
-			cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` | bcftools sort -Ob -o %(primer_bcf)s" % self.params
-			run_cmd(cmd)
+		cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` | bcftools sort -Ob -o %(primer_bcf)s" % self.params
+		run_cmd(cmd)
 	def get_calling_params(self):
 		dp = []
 		cmd = "samtools depth %(bam_file)s" % self.params
