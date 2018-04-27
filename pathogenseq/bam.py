@@ -13,7 +13,7 @@ def get_overlapping_reads(IN,chrom,start,end,OUT):
 	for read in IN.fetch(chrom,start,end):
 		print start
 		print end
-		
+
 		print "%s\t%s\t%s" % (read.query_name,read.reference_start,read.reference_end)
 		if read.reference_start<=start and read.reference_end>=end:
 			print "OK!"
@@ -81,7 +81,7 @@ class bam:
 				p = positions[x]
 				if p["start"] > p["end"]:
 					p["start"],p["end"] = p["end"],p["start"]
-				TMP.write("%s\t%s\t%s\t%s\n" % (p["chrom"],p["start"]-30,p["end"]+30,x))
+				TMP.write("%s\t%s\t%s\t%s\n" % (p["chrom"],p["start"],p["end"],x))
 			TMP.close()
 
 		if vtype=="snps": self.params["vtype"] = "-V indels"
@@ -118,7 +118,7 @@ class bam:
 				for pname in positions:
 					pr = positions[pname]
 					tmp_bam = "%s.%s.bam" % (self.params["prefix"],pname)
-					get_overlapping_reads(IN,pr["chrom"],pr["start"],pr["end"],OUT)
+					get_overlapping_reads(IN,pr["chrom"],pr["start"]-30,pr["end"]+30,OUT)
 				OUT.close()
 				index_bam(self.params["primer_bam"])
 				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(primer_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
