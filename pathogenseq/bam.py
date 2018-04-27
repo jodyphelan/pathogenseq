@@ -97,8 +97,8 @@ class bam:
 		run_cmd(cmd)
 		if primers:
 			self.params["tmp_bcf"] = "%(prefix)s.tmp.bcf" % self.params
-			self.parms["primer_bcf"] = "%(prefix)s.primer.bcf" % self.params
-			self.parms["non_primer_bcf"] = "%(prefix)s.non_primer.bcf" % self.params
+			self.params["primer_bcf"] = "%(prefix)s.primer.bcf" % self.params
+			self.params["non_primer_bcf"] = "%(prefix)s.non_primer.bcf" % self.params
 
 			cmd = "bcftools concat -aD -Ob -o %(tmp_bcf)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
@@ -106,7 +106,7 @@ class bam:
 			run_cmd(cmd)
 			cmd = "bcftools view -Ob -o %(non_primer_bcf)s -T ^%(primer_bed_file)s %(tmp_bcf)s" % self.params
 			run_cmd(cmd)
-			cmd = "bcftools view -Ob -o %(bcf_file)s %(primer_bcf)s %(non_primer_bcf)s"
+			cmd = "bcftools view -Ob -o %(bcf_file)s %(primer_bcf)s %(non_primer_bcf)s" self.params
 		else:
 			cmd = "bcftools concat -aD -Ob -o %(bcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
