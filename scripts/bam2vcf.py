@@ -5,7 +5,7 @@ import argparse
 
 def main(args):
 	bam = ps.bam(bam_file=args.bam,ref_file=args.ref,prefix=args.prefix,threads=args.threads)
-	bam.gbcf(threads=args.threads,platform=args.platform)
+	bam.gbcf(threads=args.threads,platform=args.platform,primers=args.primers)
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('bam', help='First read file')
