@@ -101,7 +101,7 @@ class bam:
 
 			cmd = "bcftools concat -aD -Ob -o %(non_primer_bcf)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
-			cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -r {1} | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t a -n .\"" % self.params
+			cmd = "%(cmd_split_primer_bed)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -r {1} | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t a -n .\"" % self.params
 			run_cmd(cmd)
 			cmd = "bcftools view -Ob -o %(non_primer_bcf)s -T ^%(primer_bed_file)s %(tmp_bcf)s" % self.params
 			run_cmd(cmd)
