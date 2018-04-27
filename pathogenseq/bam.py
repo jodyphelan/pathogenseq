@@ -12,14 +12,10 @@ import pysam
 def get_overlapping_reads(infile,chrom,start,end,outfile,flank=30,threads=4):
 	IN = pysam.AlignmentFile(infile,"rb")
 	OUT = pysam.AlignmentFile(outfile,"wb",template=IN)
-	for l in open(bed_file):
-		chrom,start,end = l.rstrip().split()[:3]
-		start = int(start)
-		end = int(end)
-		if start-flank<0: continue
-		for read in IN.fetch(chrom,start,end):
-			if read.reference_start<=start-flank and read.reference_end>=flank:
-				OUT.write(read)
+	if start-flank<0: continue
+	for read in IN.fetch(chrom,start,end):
+		if read.reference_start<=start-flank and read.reference_end>=flank:
+			OUT.write(read)
 	OUT.close()
 
 
@@ -56,7 +52,6 @@ class bam:
 			chrom,start,end,pid = l.rstrip().split()[:4]
 			start = int(start)
 			end = int(end)
-			if start-flank<0: continue
 			tmp_bcf = "%s.%s.bcf" % (self.prefix,pid)
 			tmp_bam = "%s.%s.bam" % (self.prefix,pid)
 			get_overlapping_reads(self.bam,chrom,start,end,tmp_bam,flank=30,threads=threads)
