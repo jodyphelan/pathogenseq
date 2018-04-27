@@ -14,11 +14,15 @@ def get_overlapping_reads(infile,chrom,start,end,outfile,flank=30,threads=4):
 	OUT = pysam.AlignmentFile(outfile,"wb",template=IN)
 	if start-flank<0:
 		OUT.close()
+		return 0
 	else:
+		i = 0
 		for read in IN.fetch(chrom,start,end):
 			if read.reference_start<=start-flank and read.reference_end>=flank:
+				i+=1
 				OUT.write(read)
 		OUT.close()
+		return i
 
 
 
@@ -56,9 +60,13 @@ class bam:
 			end = int(end)
 			tmp_bcf = "%s.%s.bcf" % (self.prefix,pid)
 			tmp_bam = "%s.%s.bam" % (self.prefix,pid)
-			get_overlapping_reads(self.bam,chrom,start,end,tmp_bam,flank=300,threads=threads)
-		cmd = "cut -f4 %(primer_bed_file)s | parallel -j %(threads)s \"samtools index %(prefix)s.{}.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.{}.bam %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
-		run_cmd(cmd)
+			self.params["tmp"] = "%s:%s-%s" % (chrom,start,end)
+			read_num = get_overlapping_reads(self.bam,chrom,start,end,tmp_bam,flank=300,threads=threads)
+			if read_num==0:
+				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r %(tmp)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(primer_bcf)s -- -t a -n ." % self.params
+			else:
+				cmd = "samtools index %(prefix)s.{}.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.{}.bam %(mpileup_options)s -r %(tmp)s | bcftools call -t %(tmp)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			run_cmd(cmd)
 	def get_calling_params(self):
 		dp = []
 		cmd = "samtools depth %(bam_file)s" % self.params
