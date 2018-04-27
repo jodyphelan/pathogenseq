@@ -84,7 +84,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=1000):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -96,7 +96,8 @@ class bam:
 		self.params["min_dp"] = min_dp
 		self.params["bcf_file"] = "%s.gbcf" % self.prefix
 		self.params["bed_file"] = bed_file
-		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 1000 --bed %(bed_file)s --reformat" % self.params if bed_file else "splitchr.py %(ref_file)s 50000 --reformat" % self.params
+		self.params["chunk_size"] = chunk_size
+		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % self.params if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % self.params
 		self.params["threads"] = threads
 
 		if primers:
