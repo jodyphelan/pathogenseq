@@ -96,7 +96,7 @@ class bam:
 		self.params["min_dp"] = min_dp
 		self.params["bcf_file"] = "%s.gbcf" % self.prefix
 		self.params["bed_file"] = bed_file
-		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s --reformat" % self.params if bed_file else "splitchr.py %(ref_file)s 50000 --reformat" % self.params
+		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 1000 --bed %(bed_file)s --reformat" % self.params if bed_file else "splitchr.py %(ref_file)s 50000 --reformat" % self.params
 		self.params["threads"] = threads
 
 		if primers:
