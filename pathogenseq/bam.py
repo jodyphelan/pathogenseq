@@ -9,11 +9,19 @@ from mvcf import *
 import vcf
 import pysam
 
-def get_overlapping_reads(IN,chrom,start,end,OUT):
-	for read in IN.fetch(chrom,start,end):
-		if read.reference_start<=start and read.reference_end>=end:
-			OUT.write(read)
-
+def get_overlapping_reads(infile,bed_file,outfile,flank=30,threads=4):
+	IN = pysam.AlignmentFile(infile,"rb")
+	tmpfile = outfile+".tmp.bam"
+	OUT = pysam.AlignmentFile(tmpfile,"wb",template=IN)
+	for l in open(bed_file):
+		chrom,start,end = l.rstrip().split()[:3]
+		if start-flank<0: continue
+		for read in IN.fetch(chrom,start,end):
+			if read.reference_start<=start-flank and read.reference_end>=flank:
+				OUT.write(read)
+	OUT.close()
+	run_cmd("samtools sort -@ %s -o %s %s" % (threads,outfile,tmpfile))
+	rm_files([tmpfile])
 class bam:
 	"""
 	A class to perform operations on BAM files such as SNP calling
@@ -85,7 +93,7 @@ class bam:
 		else: sys.stderr.write("Please provide valid vtype: [snps|indels|both]...Exiting!"); quit(1)
 		self.params["primer_cmd"] = " -T ^%(primer_bed_file)s" % self.params if primers else ""
 
-		if call_method=="optimise":	call_method = self.get_calling_params()
+		if call_method=="optimise" and platform=="illumina": call_method = self.get_calling_params()
 		self.params["mpileup_options"] = ""
 		if platform=="illumina" and  call_method=="high":
 			self.params["mpileup_options"] = "-B -a DP,AD"
@@ -108,14 +116,7 @@ class bam:
 
 			if overlap_search:
 				self.params["primer_bam"] = "%(prefix)s.primers.bam" % self.params
-				IN = pysam.AlignmentFile(self.params["bam_file"],"rb")
-				OUT = pysam.AlignmentFile(self.params["primer_bam"],"wb",template=IN)
-				for pname in positions:
-					pr = positions[pname]
-					tmp_bam = "%s.%s.bam" % (self.params["prefix"],pname)
-					if pr["start"]-30<1: continue
-					get_overlapping_reads(IN,pr["chrom"],pr["start"]-30,pr["end"]+30,OUT)
-				OUT.close()
+				get_overlapping_reads(self.params["bam_file"],self.params["primer_bed_file"],self.params["primer_bam"],flank=30,threads=self.params["threads"])
 				index_bam(self.params["primer_bam"])
 				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(primer_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 			else:
