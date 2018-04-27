@@ -113,6 +113,7 @@ class bam:
 				for pname in positions:
 					pr = positions[pname]
 					tmp_bam = "%s.%s.bam" % (self.params["prefix"],pname)
+					if pr["start"]-30<1: continue
 					get_overlapping_reads(IN,pr["chrom"],pr["start"]-30,pr["end"]+30,OUT)
 				OUT.close()
 				index_bam(self.params["primer_bam"])
