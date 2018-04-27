@@ -11,6 +11,9 @@ import pysam
 
 def get_overlapping_reads(IN,chrom,start,end,OUT):
 	for read in IN.fetch(chrom,start,end):
+		print start
+		print end
+		
 		print "%s\t%s\t%s" % (read.query_name,read.reference_start,read.reference_end)
 		if read.reference_start<=start and read.reference_end>=end:
 			print "OK!"
