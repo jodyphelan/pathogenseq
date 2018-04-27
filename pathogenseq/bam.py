@@ -15,6 +15,8 @@ def get_overlapping_reads(infile,bed_file,outfile,flank=30,threads=4):
 	OUT = pysam.AlignmentFile(tmpfile,"wb",template=IN)
 	for l in open(bed_file):
 		chrom,start,end = l.rstrip().split()[:3]
+		start = int(start)
+		end = int(end)
 		if start-flank<0: continue
 		for read in IN.fetch(chrom,start,end):
 			if read.reference_start<=start-flank and read.reference_end>=flank:
