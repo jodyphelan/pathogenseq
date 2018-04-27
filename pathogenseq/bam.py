@@ -50,7 +50,7 @@ class bam:
 			self.ref_fa_dict = self.ref_fa.fa_dict
 		self.params["platform"] = platform
 		self.params["threads"] = threads
-	def generate_primer_bcf(self,threads=self.threads):
+	def generate_primer_bcf(self,threads=4):
 		bcf_files = []
 		for l in open(self.params["primer_bed_file"]):
 			chrom,start,end,pid = l.rstrip().split()[:4]
