@@ -114,6 +114,7 @@ class bam:
 					tmp_bam = "%s.%s.bam" % (self.params["prefix"],pname)
 					get_overlapping_reads(IN,pr["chrom"],pr["start"],pr["end"],OUT)
 				OUT.close()
+				index_bam(self.params["primer_bam"])
 				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s -B -a DP,AD -R %(primer_bed_file)s |cftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 			else:
 				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -R %(primer_bed_file)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(primer_bcf)s -- -t a -n ." % self.params
