@@ -266,6 +266,7 @@ class fasta:
 				if int(row[3]) < results[row[0]]["identities"]:
 					continue
 			results[row[0]] = {"chrom":row[1],"start":int(row[8]),"end":int(row[9]),"identities":int(row[3])}
+		rm_files([tmp_file])
 		return results
 
 
