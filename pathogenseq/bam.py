@@ -132,7 +132,7 @@ class bam:
 
 			if overlap_search:
 				self.params["primer_bam"] = "%(prefix)s.primers.bam" % self.params
-				get_overlapping_reads()
+				generate_primer_bcf()
 				quit()
 				index_bam(self.params["primer_bam"])
 				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(primer_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
