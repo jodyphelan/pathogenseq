@@ -7,7 +7,17 @@ from qc import *
 from utils import *
 from mvcf import *
 import vcf
+import pysam
 
+def get_overlapping_reads(inbam,chrom,start,end,outbam):
+	IN = pysam.AlignmentFile(inbam,"rb")
+	OUT = pysam.AlignmentFile(outbam,"wb",template=IN)
+	for read in IN.fetch(chrom,start,end):
+		print "%s\t%s\t%s" % (read.qname,read.reference_start,read.reference_end)
+		if read.reference_start<=start and read.reference_end>=end:
+			print "OK!"
+			OUT.write(read)
+	OUT.close()
 
 class bam:
 	"""
@@ -48,7 +58,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,primer_search=False):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -97,6 +107,12 @@ class bam:
 		if primers:
 			self.params["non_primer_bcf"] = "%(prefix)s.non_primer.bcf" % self.params
 			self.params["primer_bcf"] = "%(prefix)s.primer.bcf" % self.params
+
+			if primer_search:
+				for pname in positions:
+					pr = positions[pname]
+					tmp_bam = "%s.%s.bam" % (self.params["prefix"],pname)
+					get_overlapping_reads(self.params["bam_file"],pr["chrom"],pr["start"],pr["end"],tmp_bam)
 
 			cmd = "bcftools concat -aD -Ob -o %(non_primer_bcf)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
