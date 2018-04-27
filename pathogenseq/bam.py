@@ -95,15 +95,12 @@ class bam:
 		cmd = "%(cmd_split_chr)s | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
 		if primers:
-			self.params["cmd_split_primer_bed"] = "splitchr.py %(ref_file)s 50000 --bed %(primer_bed_file)s --reformat" % self.params
 			self.params["non_primer_bcf"] = "%(prefix)s.non_primer.bcf" % self.params
 			self.params["primer_bcf"] = "%(prefix)s.primer.bcf" % self.params
 
 			cmd = "bcftools concat -aD -Ob -o %(non_primer_bcf)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
-			cmd = "%(cmd_split_primer_bed)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -r {1} | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t a -n .\"" % self.params
-			run_cmd(cmd)
-			cmd = "bcftools view -Ob -o %(non_primer_bcf)s -T ^%(primer_bed_file)s %(tmp_bcf)s" % self.params
+			cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -R %(primer_bed_file)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(primer_bcf)s -- -t a -n .\"" % self.params
 			run_cmd(cmd)
 			cmd = "bcftools concat %(primer_bcf)s %(non_primer_bcf)s | bcftools sort -Ob -o %(bcf_file)s " % self.params
 			run_cmd(cmd)
