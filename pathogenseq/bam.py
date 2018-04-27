@@ -11,10 +11,6 @@ import pysam
 
 def get_overlapping_reads(IN,chrom,start,end,OUT):
 	for read in IN.fetch(chrom,start,end):
-		print start
-		print end
-
-		print "%s\t%s\t%s" % (read.query_name,read.reference_start,read.reference_end)
 		if read.reference_start<=start and read.reference_end>=end:
 			print "OK!"
 			OUT.write(read)
@@ -135,6 +131,7 @@ class bam:
 
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
+		rm_files([self.params["primer_bed_file"],self.params["primer_bam"],self.params["non_primer_bcf"],self.params["primer_bcf"]])
 
 		return bcf(self.params["bcf_file"],prefix=self.prefix)
 
