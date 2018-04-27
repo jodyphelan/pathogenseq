@@ -9,10 +9,9 @@ from mvcf import *
 import vcf
 import pysam
 
-def get_overlapping_reads(infile,bed_file,outfile,flank=30,threads=4):
+def get_overlapping_reads(infile,chrom,start,end,outfile,flank=30,threads=4):
 	IN = pysam.AlignmentFile(infile,"rb")
-	tmpfile = outfile+".tmp.bam"
-	OUT = pysam.AlignmentFile(tmpfile,"wb",template=IN)
+	OUT = pysam.AlignmentFile(outfile,"wb",template=IN)
 	for l in open(bed_file):
 		chrom,start,end = l.rstrip().split()[:3]
 		start = int(start)
@@ -22,8 +21,9 @@ def get_overlapping_reads(infile,bed_file,outfile,flank=30,threads=4):
 			if read.reference_start<=start-flank and read.reference_end>=flank:
 				OUT.write(read)
 	OUT.close()
-	run_cmd("samtools sort -@ %s -o %s %s" % (threads,outfile,tmpfile))
-	rm_files([tmpfile])
+
+
+
 class bam:
 	"""
 	A class to perform operations on BAM files such as SNP calling
@@ -39,7 +39,9 @@ class bam:
 	def __init__(self,bam_file,prefix,ref_file,platform="Illumina",threads=4):
 		self.params = {}
 		index_bam(bam_file,threads=threads)
-		if filecheck(bam_file): self.params["bam_file"] = bam_file
+		if filecheck(bam_file):
+			self.params["bam_file"] = bam_file
+			self.bam = bam_file
 		self.params["prefix"] = prefix
 		self.prefix = prefix
 		if filecheck(ref_file):
@@ -48,6 +50,18 @@ class bam:
 			self.ref_fa_dict = self.ref_fa.fa_dict
 		self.params["platform"] = platform
 		self.params["threads"] = threads
+	def generate_primer_bcf(self,threads=self.threads):
+		bcf_files = []
+		for l in open(self.params["primer_bed_file"]):
+			chrom,start,end,pid = l.rstrip().split()[:4]
+			start = int(start)
+			end = int(end)
+			if start-flank<0: continue
+			tmp_bcf = "%s.%s.bcf" % (self.prefix,pid)
+			tmp_bam = "%s.%s.bam" % (self.prefix,pid)
+			get_overlapping_reads(infile,chrom,start,end,tmp_bam,flank=30,threads=threads)
+		cmd = "cut -f4 %(primer_bed_file)s | parallel -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(prefix)s.{1}.bam %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
+		run_cmd(cmd)
 	def get_calling_params(self):
 		dp = []
 		cmd = "samtools depth %(bam_file)s" % self.params
@@ -118,7 +132,8 @@ class bam:
 
 			if overlap_search:
 				self.params["primer_bam"] = "%(prefix)s.primers.bam" % self.params
-				get_overlapping_reads(self.params["bam_file"],self.params["primer_bed_file"],self.params["primer_bam"],flank=30,threads=self.params["threads"])
+				get_overlapping_reads()
+				quit()
 				index_bam(self.params["primer_bam"])
 				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(primer_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 			else:
