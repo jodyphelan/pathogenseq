@@ -11,9 +11,7 @@ import pysam
 
 def get_overlapping_reads(IN,chrom,start,end,OUT):
 	for read in IN.fetch(chrom,start,end):
-		print "%s\t%s\t%s" % (read.qname,read.reference_start,read.reference_end)
 		if read.reference_start<=start and read.reference_end>=end:
-			print "OK!"
 			OUT.write(read)
 
 class bam:
@@ -86,21 +84,26 @@ class bam:
 		elif vtype=="both":	self.params["vtype"] = ""
 		else: sys.stderr.write("Please provide valid vtype: [snps|indels|both]...Exiting!"); quit(1)
 		self.params["primer_cmd"] = " -T ^%(primer_bed_file)s" % self.params if primers else ""
-		if platform=="illumina":
-			if call_method=="optimise":
-				call_method = self.get_calling_params()
-			if call_method=="high":
-				cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
-			else:
-				#cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"samtools mpileup  -ugf %(ref_file)s %(bam_file)s  -aa -ABq0 -Q0 -t DP,AD -r {1} | bcftools call %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
-				cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s  -ABq0 -Q0 -a DP,AD -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+
+		if call_method=="optimise":	call_method = self.get_calling_params()
+		self.params["mpileup_options"] = ""
+		if platform=="illumina" and  call_method=="high":
+			self.params["mpileup_options"] = "-B -a DP,AD"
+		elif platform=="illumina" and call_method=="low":
+			self.params["mpileup_options"] = "-ABq0 -Q0 -a DP,AD"
 		elif platform=="minION":
-			cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup -f %(ref_file)s %(bam_file)s -I -a DP,AD -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
+			self.params["mpileup_options"] = "-ABq0 -Q0 -a DP,AD"
+		elif platform=="illumina":
+			self.params["mpileup_options"] = "-I -a DP,AD"
 		else:
 			log("Please choose a valid platform...Exiting!",ext=True)
+
+
+		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
+
 		if primers:
 			self.params["non_primer_bcf"] = "%(prefix)s.non_primer.bcf" % self.params
 			self.params["primer_bcf"] = "%(prefix)s.primer.bcf" % self.params
@@ -115,9 +118,9 @@ class bam:
 					get_overlapping_reads(IN,pr["chrom"],pr["start"],pr["end"],OUT)
 				OUT.close()
 				index_bam(self.params["primer_bam"])
-				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s -B -a DP,AD -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(primer_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
+				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(primer_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 			else:
-				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s -B -a DP,AD -R %(primer_bed_file)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(primer_bcf)s -- -t a -n ." % self.params
+				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(primer_bcf)s -- -t a -n ." % self.params
 			run_cmd(cmd)
 			cmd = "bcftools concat -aD -Ob -o %(non_primer_bcf)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
@@ -126,6 +129,7 @@ class bam:
 		else:
 			cmd = "bcftools concat -aD -Ob -o %(bcf_file)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
+
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
 
