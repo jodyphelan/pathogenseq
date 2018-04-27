@@ -61,6 +61,7 @@ class bam:
 			tmp_bcf = "%s.%s.bcf" % (self.prefix,pid)
 			tmp_bam = "%s.%s.bam" % (self.prefix,pid)
 			self.params["tmp"] = "%s:%s-%s" % (chrom,start,end)
+			self.params["pid"] = pid
 			read_num = get_overlapping_reads(self.bam,chrom,start,end,tmp_bam,flank=30,threads=threads)
 			if read_num==0:
 				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r %(tmp)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t a -n ." % self.params
