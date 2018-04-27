@@ -53,7 +53,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,primer_search=True):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -76,7 +76,7 @@ class bam:
 				p = positions[x]
 				if p["start"] > p["end"]:
 					p["start"],p["end"] = p["end"],p["start"]
-				TMP.write("%s\t%s\t%s\t%s\n" % (p["chrom"],p["start"],p["end"],x))
+				TMP.write("%s\t%s\t%s\t%s\n" % (p["chrom"],p["start"]-30,p["end"]+30,x))
 			TMP.close()
 
 		if vtype=="snps": self.params["vtype"] = "-V indels"
@@ -106,7 +106,7 @@ class bam:
 			self.params["non_primer_bcf"] = "%(prefix)s.non_primer.bcf" % self.params
 			self.params["primer_bcf"] = "%(prefix)s.primer.bcf" % self.params
 
-			if primer_search:
+			if overlap_search:
 				self.params["primer_bam"] = "%(prefix)s.primers.bam" % self.params
 				IN = pysam.AlignmentFile(self.params["bam_file"],"rb")
 				OUT = pysam.AlignmentFile(self.params["primer_bam"],"wb",template=IN)
