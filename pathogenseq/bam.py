@@ -66,7 +66,7 @@ class bam:
 			if read_num==0:
 				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r %(tmp)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t a -n ." % self.params
 			else:
-				cmd = "samtools index %(prefix)s.%(tmp)s.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.%(tmp)s.bam %(mpileup_options)s -r %(tmp)s | bcftools call -t %(tmp)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
+				cmd = "samtools index %(prefix)s.%(pid)s.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.%(tmp)s.bam %(mpileup_options)s -r %(tmp)s | bcftools call -t %(tmp)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 			run_cmd(cmd)
 			cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` | bcftools sort -Ob -o %(primer_bcf)s" % self.params
 			run_cmd(cmd)
