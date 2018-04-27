@@ -59,7 +59,7 @@ class bam:
 			if start-flank<0: continue
 			tmp_bcf = "%s.%s.bcf" % (self.prefix,pid)
 			tmp_bam = "%s.%s.bam" % (self.prefix,pid)
-			get_overlapping_reads(infile,chrom,start,end,tmp_bam,flank=30,threads=threads)
+			get_overlapping_reads(self.bam,chrom,start,end,tmp_bam,flank=30,threads=threads)
 		cmd = "cut -f4 %(primer_bed_file)s | parallel -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(prefix)s.{1}.bam %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.{}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 		run_cmd(cmd)
 	def get_calling_params(self):
