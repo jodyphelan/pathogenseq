@@ -102,7 +102,7 @@ class bam:
 
 			cmd = "bcftools concat -aD -Ob -o %(tmp_bcf)s `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf\"}'`" % self.params
 			run_cmd(cmd)
-			cmd = "bcftools +setGT -Ob -o %(primer_bcf)s -T %(primer_bed_file)s %(tmp_bcf)s" % self.params
+			cmd = "bcftools +setGT -Ob -o %(primer_bcf)s -T %(primer_bed_file)s %(tmp_bcf)s -- -t a -n ." % self.params
 			run_cmd(cmd)
 			cmd = "bcftools view -Ob -o %(non_primer_bcf)s -T ^%(primer_bed_file)s %(tmp_bcf)s" % self.params
 			run_cmd(cmd)
