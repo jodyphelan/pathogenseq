@@ -64,6 +64,7 @@ class fastq:
 		else:
 			psmapper = mapping(self.params["prefix"],self.params["ref_file"],unpaired=self.params["r1t"],mapper=mapper,threads=self.params["threads"])
 		psmapper.map()
+		rm_files([self.params["r1_tp"],self.params["r2_tp"],self.params["rtu"]])
 		return psmapper.get_bam()
 	def minION(self,mapper="minimap2"):
 		psmapper = mapping(self.params["prefix"],self.params["ref_file"],unpaired=self.params["r1"],mapper=mapper,threads=self.params["threads"],platform="minION")
