@@ -238,7 +238,7 @@ class fasta:
 	def splitchr(self,size,reformat=False):
 		lengths = {s:len(self.fa_dict[s]) for s in self.fa_dict}
 		for s in self.fa_dict:
-			start = 0
+			start = 1
 			end = start+size
 			while end<lengths[s]:
 				loc_str = "%s_%s_%s" % (s,start+1,end)
