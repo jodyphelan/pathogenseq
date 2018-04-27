@@ -78,7 +78,7 @@ class bam:
 		elif vtype=="indels": self.params["vtype"] = "-V snps"
 		elif vtype=="both":	self.params["vtype"] = ""
 		else: sys.stderr.write("Please provide valid vtype: [snps|indels|both]...Exiting!"); quit(1)
-		self.params["primer_cmd"] = " -T ^%(primer_bed_file)s" if primers else ""
+		self.params["primer_cmd"] = " -T ^%(primer_bed_file)s" % self.params if primers else ""
 		if platform=="illumina":
 			if call_method=="optimise":
 				call_method = self.get_calling_params()
