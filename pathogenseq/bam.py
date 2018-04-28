@@ -94,7 +94,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=1000):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -167,7 +167,7 @@ class bam:
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
 		if primers:
-			rm_files([self.params["primer_bed_file"],self.params["primer_bam"],self.params["primer_bam"]+".bai",self.params["non_primer_bcf"],self.params["primer_bcf"]])
+			rm_files([self.params["primer_bed_file"],self.params["non_primer_bcf"],self.params["primer_bcf"]])
 
 		return bcf(self.params["bcf_file"],prefix=self.prefix)
 
