@@ -85,6 +85,8 @@ class qc_fastq:
 		self.kraken_run = False
 		if filecheck(fq1):
 			self.params["fq1"] = fq1
+		print fq2
+		print filecheck(fq2)
 		if fq2 and filecheck(fq2):
 			self.params["fq2"] = fq2
 			self.paried = True
