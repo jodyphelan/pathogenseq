@@ -68,6 +68,7 @@ class bam:
 				#cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r %(tmp)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t a -n ." % self.params
 				FAILED.write(l)
 			else:
+				pass
 				#cmd = "samtools index %(prefix)s.%(pid)s.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.%(pid)s.bam %(mpileup_options)s -r %(tmp)s | bcftools call -t %(tmp)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 			FAILED.close()
 			cmd = "cut -f4 %(primer_bed_file)s | parallel --col-sep '\t' -j %(threads)s \"samtools index %(prefix)s.{4}.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.{4}.bam %(mpileup_options)s -r {1}:{2}-{3} | bcftools call -t {1}:{2}-{3} %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.{4}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
