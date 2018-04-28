@@ -8,7 +8,7 @@ from utils import *
 from mvcf import *
 import vcf
 import pysam
-
+from tqdm import tqdm
 def get_overlapping_reads(infile,chrom,start,end,outfile,flank=30,threads=4):
 	IN = pysam.AlignmentFile(infile,"rb")
 	OUT = pysam.AlignmentFile(outfile,"wb",template=IN)
@@ -55,7 +55,7 @@ class bam:
 	def generate_primer_bcf(self,threads=4,flank=30):
 		self.params["failed_primers"] = "%(prefix)s.failed_primers.bed" % self.params
 		FAILED = open(self.params["failed_primers"],"w")
-		for l in open(self.params["primer_bed_file"]):
+		for l in tqdm(open(self.params["primer_bed_file"])):
 			chrom,start,end,pid = l.rstrip().split()[:4]
 			start = int(start)
 			end = int(end)
