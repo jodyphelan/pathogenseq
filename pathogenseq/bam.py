@@ -73,7 +73,9 @@ class bam:
 			FAILED.close()
 			cmd = "cat %(primer_bed_file)s | parallel --col-sep '\\t' -j %(threads)s \"samtools index %(prefix)s.{4}.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.{4}.bam %(mpileup_options)s -r {1}:{2}-{3} | bcftools call -t {1}:{2}-{3} %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.{4}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 			run_cmd(cmd)
+			print "Done and doing the next one!"
 			cmd = "cat %(failed_primers)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1}:{2}-{3} | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.{4}.bcf -- -t a -n .\"" % self.params
+			run_cmd(cmd)
 		cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` | bcftools sort -Ob -o %(primer_bcf)s" % self.params
 		run_cmd(cmd)
 	def get_calling_params(self):
