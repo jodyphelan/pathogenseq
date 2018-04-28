@@ -18,7 +18,7 @@ def get_overlapping_reads(infile,chrom,start,end,outfile,flank=30,threads=4):
 	else:
 		i = 0
 		for read in IN.fetch(chrom,start,end):
-			if read.reference_start<=start-flank and read.reference_end>=flank:
+			if read.reference_start<=start-flank and read.reference_end>=end+flank:
 				i+=1
 				OUT.write(read)
 		OUT.close()
@@ -114,7 +114,7 @@ class bam:
 			self.params["primer_bed_file"] = "%(prefix)s.primers.bed" % self.params
 			TMP = open(self.params["primer_bed_file"],"w")
 			positions = self.ref_fa.find_primer_positions(primers)
-			for x in positions:
+			for x in sorted(positions,key=lambda d:positions[d]["start"]):
 				p = positions[x]
 				if p["start"] > p["end"]:
 					p["start"],p["end"] = p["end"],p["start"]
