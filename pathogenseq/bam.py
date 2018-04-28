@@ -53,6 +53,8 @@ class bam:
 		self.params["platform"] = platform
 		self.params["threads"] = threads
 	def generate_primer_bcf(self,threads=4,flank=30):
+		self.params["failed_primers"] = "%(prefix)s.failed_primers.bed" % self.params
+		FAILED = open(self.params["failed_primers"],"w")
 		for l in open(self.params["primer_bed_file"]):
 			chrom,start,end,pid = l.rstrip().split()[:4]
 			start = int(start)
@@ -63,10 +65,14 @@ class bam:
 			self.params["pid"] = pid
 			read_num = get_overlapping_reads(self.bam,chrom,start,end,tmp_bam,flank=30,threads=threads)
 			if read_num==0:
-				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r %(tmp)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t a -n ." % self.params
+				#cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r %(tmp)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t a -n ." % self.params
+				FAILED.write(l)
 			else:
-				cmd = "samtools index %(prefix)s.%(pid)s.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.%(pid)s.bam %(mpileup_options)s -r %(tmp)s | bcftools call -t %(tmp)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
+				#cmd = "samtools index %(prefix)s.%(pid)s.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.%(pid)s.bam %(mpileup_options)s -r %(tmp)s | bcftools call -t %(tmp)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
+			FAILED.close()
+			cmd = "cut -f4 %(primer_bed_file)s | parallel --col-sep '\t' -j %(threads)s \"samtools index %(prefix)s.{4}.bam && bcftools mpileup  -f %(ref_file)s %(prefix)s.{4}.bam %(mpileup_options)s -r {1}:{2}-{3} | bcftools call -t {1}:{2}-{3} %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s.{4}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 			run_cmd(cmd)
+			cmd = "cut -f4 %(primer_bed_file)s | parallel --col-sep '\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1}:{2}-{3} | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.{4}.bcf -- -t a -n .\"" % self.params
 		cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` | bcftools sort -Ob -o %(primer_bcf)s" % self.params
 		run_cmd(cmd)
 	def get_calling_params(self):
