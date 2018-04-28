@@ -151,9 +151,8 @@ class bam:
 			if overlap_search:
 				self.params["primer_bam"] = "%(prefix)s.primers.bam" % self.params
 				self.generate_primer_bcf()
-				quit()
 				index_bam(self.params["primer_bam"])
-				cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(primer_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
+				#cmd = "bcftools mpileup  -f %(ref_file)s %(primer_bam)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call -T %(primer_bed_file)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(primer_bcf)s -- -t q -i 'FMT/DP<%(min_dp)s' -n ." % self.params
 			else:
 				cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -R %(primer_bed_file)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(primer_bcf)s -- -t a -n ." % self.params
 			run_cmd(cmd)
