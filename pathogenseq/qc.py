@@ -85,11 +85,10 @@ class qc_fastq:
 		self.kraken_run = False
 		if filecheck(fq1):
 			self.params["fq1"] = fq1
-		print fq2
-		print filecheck(fq2)
 		if fq2 and filecheck(fq2):
 			self.params["fq2"] = fq2
-			self.paried = True
+			self.paired = True
+
 		self.params["prefix"] = prefix
 		self.params["threads"] = threads
 
@@ -113,7 +112,6 @@ class qc_fastq:
 		self.params["centrifuge_report"] = "%(prefix)s.centrifuge.report.txt" % self.params
 		self.params["centrifuge_log"] = "%(prefix)s.centrifuge.log" % self.params
 		self.params["threads"] = threads
-		print self.paired
 		if self.paired:
 			cmd = "centrifuge -x %(centrifuge_db)s -1 %(fq1)s -2 %(fq2)s -S %(centrifuge_log)s --report-file %(centrifuge_report)s -p %(threads)s" % self.params
 		else:
