@@ -134,7 +134,10 @@ class bam:
 		elif platform=="illumina" and call_method=="low":
 			self.params["mpileup_options"] = "-ABq0 -Q0 -a DP,AD"
 		elif platform=="minION":
-			self.params["mpileup_options"] = "-Iq8 -a DP,AD"
+			if vtype=="snps":
+				self.params["mpileup_options"] = "-Iq8 -a DP,AD"
+			else:
+				self.params["mpileup_options"] = "-q8 -a DP,AD"
 		else:
 			log("Please choose a valid platform...Exiting!",ext=True)
 
