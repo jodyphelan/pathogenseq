@@ -104,7 +104,7 @@ class vcf_merge:
 			self.keep_samples = [x.rstrip() for x in open(keep_samples).readlines()]
 		filecheck(sample_file)
 		filecheck(ref_file)
-
+		print mappability_filter
 
 	def merge(self):
 		"""Merge gVCF files"""
