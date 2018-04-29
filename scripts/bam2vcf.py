@@ -4,8 +4,8 @@ import pathogenseq as ps
 import argparse
 
 def main(args):
-	bam = ps.bam(bam_file=args.bam,ref_file=args.ref,prefix=args.prefix,threads=args.threads,vtype=args.vtype)
-	bam.gbcf(threads=args.threads,platform=args.platform,primers=args.primers,call_method=args.method)
+	bam = ps.bam(bam_file=args.bam,ref_file=args.ref,prefix=args.prefix,threads=args.threads)
+	bam.gbcf(threads=args.threads,platform=args.platform,primers=args.primers,call_method=args.method,vtype=args.vtype)
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('bam', help='First read file')
