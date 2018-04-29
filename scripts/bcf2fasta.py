@@ -2,8 +2,9 @@
 import sys
 import pathogenseq as ps
 infile = sys.argv[1]
-outfile = sys.argv[2]
-threads = sys.argv[3]
+reffile = sys.argv[2]
+outfile = sys.argv[3]
+threads = sys.argv[4]
 
 bcf = ps.bcf(infile)
-bcf.vcf_to_fasta(outfile,threads)
+bcf.vcf_to_fasta_alt(filename=outfile,ref_file=reffile,threas=threads)
