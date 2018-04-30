@@ -26,7 +26,7 @@ def main(args):
 
 	vcf.sample_filt(bcf_sample_filt,miss_cut=args.miss_cut,mix_cut=args.mix_cut,keep_samples=args.keep_samples)
 
-	vcf.filt_variants(bcf_variant_filt,fmiss=args.fmiss,threads=args.threads,fmiss=args.fmiss)
+	vcf.filt_variants(bcf_variant_filt,fmiss=args.fmiss,threads=args.threads)
 
 	vcf.mask_mixed(bcf_masked_filt)
 
