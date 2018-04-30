@@ -30,7 +30,7 @@ def main(args):
 
 	vcf.mask_mixed(bcf_masked_filt)
 
-	vcf.vcf_to_fasta_alt(filename=fasta_snps,ref_file=args.ref,threads=args.threads)
+	vcf.vcf_to_fasta_alt(outfile=fasta_snps,ref_file=args.ref,threads=args.threads)
 
 
 
