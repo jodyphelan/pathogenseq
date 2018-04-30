@@ -51,29 +51,27 @@ def get_missing_positions(bcf_file):
 v = True
 class bcf:
 	def __init__(self,filename,prefix=None,threads=4):
-		self.params = {}
 		self.samples = []
-		self.params["bcf"] = filename
-		self.bcf = filename
-		self.params["threads"] = threads
+		self.filename = filename
+		self.threads = threads
 		if prefix==None:
-			self.params["prefix"] = filename[:-4] if filename[-4:]==".bcf" else filename
+			self.prefix = filename[:-4] if filename[-4:]==".bcf" else filename
 		else:
-			self.params["prefix"] = prefix
-		self.prefix = self.params["prefix"]
-		self.params["temp_file"] = "%s.temp" % self.params["prefix"]
-		self.params["vcf"] = "%(prefix)s.vcf" % self.params
-		index_bcf(filename,self.params["threads"])
-		cmd = "bcftools query -l %(bcf)s > %(temp_file)s" % self.params
+			self.prefix = prefix
+		self.prefix = self.prefix
+		self.temp_file = "%s.temp" % self.prefix
+		index_bcf(filename,self.threads)
+		cmd = "bcftools query -l %(bcf)s > %(temp_file)s" % vars(self)
 		run_cmd(cmd)
-		for l in open(self.params["temp_file"]):
+		for l in open(self.temp_file):
 			self.samples.append(l.rstrip())
-		os.remove(self.params["temp_file"])
+		os.remove(self.temp_file)
+		self.vcf = "%s.vcf" % self.prefix
 
 	def del_pos2bed(self):
-		self.params["del_bed"] = "%s.del_pos.bed" % self.prefix
-		OUT = open(self.params["del_bed"],"w")
-		cmd = "bcftools view -Ou -v indels %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % self.params
+		self.del_bed = "%s.del_pos.bed" % self.prefix
+		OUT = open(self.del_bed,"w")
+		cmd = "bcftools view -Ou -v indels %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % vars(self)
 		sys.stderr.write(cmd)
 		j = 0
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
@@ -86,7 +84,7 @@ class bcf:
 			OUT.write("dummy\t1\t1\n")
 		OUT.close()
 
-		return self.params["del_bed"]
+		return self.del_bed
 
 
 
@@ -94,9 +92,9 @@ class bcf:
 		variants = defaultdict(lambda:defaultdict(dict))
 		raw_variants = defaultdict(lambda:defaultdict(dict))
 		if chrom and pos:
-			cmd = "bcftools view %s %s:%s | bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g'" % (self.params["bcf"],chrom,pos)
+			cmd = "bcftools view %s %s:%s | bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g'" % (self.filename,chrom,pos)
 		else:
-			cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n' %s  | sed 's/\.\/\./N/g'" % self.params["bcf"]
+			cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n' %s  | sed 's/\.\/\./N/g'" % self.filename
 		log(cmd)
 		for l in tqdm(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout):
 			row = l.rstrip().split()
@@ -113,11 +111,11 @@ class bcf:
 			return variants
 
 	def load_stats(self):
-		self.params["stats_file"] = "%s.stats.txt" % self.params["bcf"]
-		cmd = "bcftools stats -s - %(bcf)s > %(stats_file)s" % self.params
+		self.stats_file = "%s.stats.txt" % self.filename
+		cmd = "bcftools stats -s - %(bcf)s > %(stats_file)s" % vars(self)
 		run_cmd(cmd)
 		results = defaultdict(lambda:defaultdict(dict))
-		for l in open(self.params["stats_file"]):
+		for l in open(self.stats_file):
 			row = l.rstrip().split("\t")
 			if l[0]=="#": continue
 			if row[0]=="SN":
@@ -156,45 +154,45 @@ class bcf:
 			row = l.rstrip().split()
 			meta[row[1]].append(row[0])
 		for m in meta:
-			self.params["tmp_file"] = "%s.tmp.txt" % self.params["prefix"]
-			open(self.params["tmp_file"],"w").write("\n".join(meta[m]))
-			self.params["tmp_bcf"] = "%s.%s.bcf" % (self.params["prefix"],m)
-			cmd = "bcftools view -S %(tmp_file)s %(bcf)s -Ob -o %(tmp_bcf)s" % self.params
+			self.tmp_file = "%s.tmp.txt" % self.prefix
+			open(self.tmp_file,"w").write("\n".join(meta[m]))
+			self.tmp_bcf = "%s.%s.bcf" % (self.prefix,m)
+			cmd = "bcftools view -S %(tmp_file)s %(bcf)s -Ob -o %(tmp_bcf)s" % vars(self)
 			run_cmd(cmd)
 
 	def annotate(self,ref_file,gff_file):
-		self.params["ref_file"] = ref_file
-		self.params["gff_file"] = gff_file
-		self.params["ann_file"] = "%s.ann.bcf" % self.params["prefix"]
-		cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf)s -o %(ann_file)s" % self.params
+		self.ref_file = ref_file
+		self.gff_file = gff_file
+		self.ann_file = "%s.ann.bcf" % self.prefix
+		cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf)s -o %(ann_file)s" % vars(self)
 		run_cmd(cmd,verbose=v)
 
 	def extract_matrix(self,matrix_file=None,fmt="old"):
-		self.params["matrix_file"] = matrix_file if matrix_file==True else self.params["prefix"]+".mat"
+		self.matrix_file = matrix_file if matrix_file==True else self.prefix+".mat"
 		if fmt=="new":
-			O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\tinfo\ttype\t%s\n" % ("\t".join(self.samples)))
-			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t.\\t.[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
+			O = open(self.matrix_file,"w").write("chr\tpos\tref\tinfo\ttype\t%s\n" % ("\t".join(self.samples)))
+			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t.\\t.[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % vars(self)
 		elif fmt=="old":
-			O = open(self.params["matrix_file"],"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
-			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % self.params
+			O = open(self.matrix_file,"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
+			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(bcf)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % vars(self)
 		else:
 			log("Choose valid format [old,new]...Exiting!",ext=True)
 		run_cmd(cmd,verbose=v)
 
 	def vcf_to_fasta_alt(self,filename,ref_file,threads=4,chunk_size = 50000, bed_file=None):
-		self.params["ref_file"] = ref_file
-		self.params["chunk_size"] = chunk_size
-		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % self.params if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % self.params
-		self.params["tmp_file"] = "%s.tmp.txt" % self.params["prefix"]
-		self.params["threads"] = threads
-		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view %(bcf)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % self.params
+		self.ref_file = ref_file
+		self.chunk_size = chunk_size
+		self.cmd_split_chr = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % vars(self) if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % vars(self)
+		self.tmp_file = "%s.tmp.txt" % self.prefix
+		self.threads = threads
+		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view %(bcf)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % vars(self)
 		run_cmd(cmd)
-		cmd = "paste `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'` > %(tmp_file)s" % self.params
+		cmd = "paste `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'` > %(tmp_file)s" % vars(self)
 		run_cmd(cmd)
-		cmd = "rm `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'`" % self.params
+		cmd = "rm `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'`" % vars(self)
 		run_cmd(cmd)
 		O = open(filename,"w")
-		for i,l in enumerate(open(self.params["tmp_file"])):
+		for i,l in enumerate(open(self.tmp_file)):
 			row = l.rstrip().split()
 			if i==0: continue
 			s = self.samples[i-1]
@@ -205,12 +203,12 @@ class bcf:
 
 	def vcf_to_fasta(self,filename,threads=4):
 		"""Create a fasta file from the SNPs"""
-		self.params["threads"] = threads
-		self.params["tmp_file"] = "%s.tmp.txt" % self.params["prefix"]
-		cmd = "bcftools query -f '%%POS[\\t%%IUPACGT]\\n' %(bcf)s |  datamash transpose > %(tmp_file)s" % self.params
+		self.threads = threads
+		self.tmp_file = "%s.tmp.txt" % self.prefix
+		cmd = "bcftools query -f '%%POS[\\t%%IUPACGT]\\n' %(bcf)s |  datamash transpose > %(tmp_file)s" % vars(self)
 		run_cmd(cmd)
 		O = open(filename,"w")
-		for i,l in enumerate(open(self.params["tmp_file"])):
+		for i,l in enumerate(open(self.tmp_file)):
 			row = l.rstrip().split()
 			if i==0: continue
 			s = self.samples[i-1]
@@ -219,13 +217,13 @@ class bcf:
 		O.close()
 
 	def bcf2vcf(self):
-		if nofile(self.params["vcf"]):
-			cmd = "bcftools view %(bcf)s -Ov -o %(vcf)s" % self.params
+		if nofile(self.vcf):
+			cmd = "bcftools view %(bcf)s -Ov -o %(vcf)s" % vars(self)
 			run_cmd(cmd)
 
 	def get_variants(self):
-		if nofile(self.params["vcf"]): self.bcf2vcf()
-		vcf_reader = vcf.Reader(open(self.params["vcf"],"r"))
+		if nofile(self.vcf): self.bcf2vcf()
+		vcf_reader = vcf.Reader(open(self.vcf,"r"))
 		results = defaultdict(lambda:defaultdict(dict))
 		for record in vcf_reader:
 			for s in record.samples:
@@ -238,8 +236,8 @@ class bcf:
 			print(samples)
 			print("Can't handle more than 4 samples...Exiting!")
 			quit()
-		if nofile(self.params["vcf"]): self.bcf2vcf()
-		vcf_reader = vcf.Reader(open(self.params["vcf"],"r"))
+		if nofile(self.vcf): self.bcf2vcf()
+		vcf_reader = vcf.Reader(open(self.vcf,"r"))
 		results = defaultdict(int)
 		tot_snps = defaultdict(int)
 		data = defaultdict(int)
@@ -292,30 +290,31 @@ n1234=%(overlap_0_1_2_3)s,
 category = c("%(id_0)s","%(id_1)s","%(id_2)s","%(id_3)s"),fill=rainbow(4))
 dev.off()
 """ % data
-		temp_r_script = "%s.temp.R" % self.params["prefix"]
+		temp_r_script = "%s.temp.R" % self.prefix
 		open(temp_r_script,"w").write(rscript)
 		cmd = "Rscript %s" % temp_r_script
 		run_cmd(cmd)
 		rm_files([temp_r_script])
+
 	def merge_in_snps(self,bcf,outfile):
-		self.params["new_bcf"] = bcf
-		self.params["targets_file"] = "%(prefix)s.targets" % self.params
-		self.params["tmp_file"] = "%(prefix)s.temp.bcf" % self.params
-		self.params["tmp2_file"] = "%(prefix)s.temp2.bcf" % self.params
-		self.params["outfile"] = outfile
-		cmd = "bcftools view -Ou -v snps %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\n' | awk '{print $1\"\t\"$2-1\"\t\"$2}' > %(targets_file)s" % self.params
+		self.new_bcf = bcf
+		self.targets_file = "%(prefix)s.targets" % vars(self)
+		self.tmp_file = "%(prefix)s.temp.bcf" % vars(self)
+		self.tmp2_file = "%(prefix)s.temp2.bcf" % vars(self)
+		self.outfile = outfile
+		cmd = "bcftools view -Ou -v snps %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\n' | awk '{print $1\"\t\"$2-1\"\t\"$2}' > %(targets_file)s" % vars(self)
 		run_cmd(cmd)
-		cmd = "bcftools view -T %(targets_file)s %(new_bcf)s -Ob -o %(tmp_file)s" % self.params
+		cmd = "bcftools view -T %(targets_file)s %(new_bcf)s -Ob -o %(tmp_file)s" % vars(self)
 		run_cmd(cmd)
-		index_bcf(self.params["tmp_file"],self.params["threads"])
-		cmd = "bcftools view -T %(targets_file)s %(bcf)s -Ob -o %(tmp2_file)s" % self.params
+		index_bcf(self.tmp_file,self.threads)
+		cmd = "bcftools view -T %(targets_file)s %(bcf)s -Ob -o %(tmp2_file)s" % vars(self)
 		run_cmd(cmd)
-		index_bcf(self.params["tmp2_file"],self.params["threads"])
-		cmd = "bcftools merge --threads %(threads)s -Ou  %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % self.params
+		index_bcf(self.tmp2_file,self.threads)
+		cmd = "bcftools merge --threads %(threads)s -Ou  %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 
 	def annotate_from_bed(self,bed_file,outfile=None,nested=False):
-		temp_vcf = "%s.temp.vcf" % self.params["prefix"]
+		temp_vcf = "%s.temp.vcf" % self.prefix
 		self.vcf_from_bed(bed_file,temp_vcf)
 		bed_dict = defaultdict(dict)
 		for l in open(bed_file):
@@ -349,7 +348,7 @@ dev.off()
 		return results
 	def extract_compressed_json(self,outfile):
 		self.bcf2vcf()
-		vcf_reader = vcf.Reader(open(self.params["vcf"]))
+		vcf_reader = vcf.Reader(open(self.vcf))
 		results = defaultdict(lambda: defaultdict(dict))
 		for record in tqdm(vcf_reader):
 			tmp = defaultdict(list)
@@ -362,13 +361,13 @@ dev.off()
 			results[record.CHROM][record.POS] = tmp
 		json.dump({"variants":results,"samples":self.samples},open(outfile,"w"))
 	def bed_subset(self,bed_file,out_file,vcf=False):
-		temp_bed = "%s.temp.bed" % self.params["prefix"]
+		temp_bed = "%s.temp.bed" % self.prefix
 		cmd = "awk '{print $1\"\\t\"$2-1\"\\t\"$3}' %s > %s" % (bed_file,temp_bed)
 		run_cmd(cmd)
 		if vcf:
-			cmd = "bcftools view -R %s %s -o %s " % (temp_bed,self.params["bcf"],out_file)
+			cmd = "bcftools view -R %s %s -o %s " % (temp_bed,self.filename,out_file)
 		else:
-			cmd = "bcftools view -R %s %s -Ob -o %s " % (temp_bed,self.params["bcf"],out_file)
+			cmd = "bcftools view -R %s %s -Ob -o %s " % (temp_bed,self.filename,out_file)
 		run_cmd(cmd)
 		if not vcf:
 			return bcf(out_file)
@@ -376,7 +375,7 @@ dev.off()
 		drugs,meta = load_tsv(meta_file)
 		print drugs
 		bed_dict = load_bed(bed_file,columns=[5,6],key1=4,key2=5)
-		subset_bcf_name = "%s.subset.bcf" % self.params["prefix"]
+		subset_bcf_name = "%s.subset.bcf" % self.prefix
 		subset_bcf = self.bed_subset(bed_file,subset_bcf_name)
 		variants = subset_bcf.load_csq(ann_file)
 
@@ -426,7 +425,7 @@ dev.off()
 		change_num2pos = defaultdict(lambda:defaultdict(set))
 		ref_codons = defaultdict(lambda:defaultdict(dict))
 
-		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n' %s" % self.params["bcf"]
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n' %s" % self.filename
 		sys.stderr.write("%s\n"%cmd)
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = line.rstrip().split()
@@ -508,30 +507,30 @@ dev.off()
 
 
 	def ancestral_reconstruct(self):
-		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(bcf)s" % self.params
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(bcf)s" % vars(self)
 		variants = {}
 		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = l.rstrip().split()
 			variants[i] = (row[0],row[1])
-		self.params["reduced_bcf"] = "%(prefix)s.reduced.bcf" % self.params
-		cmd = "bcftools view -c 3 %(bcf)s -Ob -o %(reduced_bcf)s" % self.params
+		self.reduced_bcf = "%(prefix)s.reduced.bcf" % vars(self)
+		cmd = "bcftools view -c 3 %(bcf)s -Ob -o %(reduced_bcf)s" % vars(self)
 		run_cmd(cmd)
 		reduced = {}
-		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(reduced_bcf)s" % self.params
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(reduced_bcf)s" % vars(self)
 		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = l.rstrip().split()
 			reduced[i] = (row[0],row[1])
-		new_bcf = bcf(self.params["reduced_bcf"])
-		self.params["fasta_file"] = "%(prefix)s.reduced.snps.fa" % self.params
-		new_bcf.vcf_to_fasta(self.params["fasta_file"])
+		new_bcf = bcf(self.reduced_bcf)
+		self.fasta_file = "%(prefix)s.reduced.snps.fa" % vars(self)
+		new_bcf.vcf_to_fasta(self.fasta_file)
 
-		self.params["tree_file"] = "%s.newick.txt" % self.params["prefix"]
-		self.params["reconstructed_fasta"] = "%s.reconstructed.fasta" % self.params["prefix"]
-		cmd = "fastml -s %(fasta_file)s -x %(tree_file)s -j %(reconstructed_fasta)s -qf -mn" % self.params
+		self.tree_file = "%s.newick.txt" % self.prefix
+		self.reconstructed_fasta = "%s.reconstructed.fasta" % self.prefix
+		cmd = "fastml -s %(fasta_file)s -x %(tree_file)s -j %(reconstructed_fasta)s -qf -mn" % vars(self)
 #		run_cmd(cmd,verbose=2)
 
-		fdict = fasta(self.params["reconstructed_fasta"]).fa_dict
-		t = Tree(self.params["tree_file"], format=1)
+		fdict = fasta(self.reconstructed_fasta).fa_dict
+		t = Tree(self.tree_file, format=1)
 
 		for i in range(len(fdict.values()[0])):
 			num_transitions = 0
@@ -603,7 +602,7 @@ DATA
 			OUT.close()
 
 	def compress_variants(self):
-		cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%GT]\\n' %(bcf)s" % self.params
+		cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%GT]\\n' %(bcf)s" % vars(self)
 		results = defaultdict(list)
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
 			row = l.rstrip().split()
@@ -629,10 +628,10 @@ DATA
 			if row[0] in idx: sys.stderr.write("Duplicate values in index file (%s)...Exiting!\n"%row[0]); quit(1)
 			idx[row[0]] = row[1]
 
-		new_bcf_file = "%(prefix)s.reheader.bcf" % self.params
-		tmp_header = "%(prefix)s.tmp.header" % self.params
+		new_bcf_file = "%(prefix)s.reheader.bcf" % vars(self)
+		tmp_header = "%(prefix)s.tmp.header" % vars(self)
 		OUT = open(tmp_header,"w")
-		for l in subprocess.Popen("bcftools view -h %(bcf)s" % self.params,shell=True,stdout=subprocess.PIPE).stdout:
+		for l in subprocess.Popen("bcftools view -h %(bcf)s" % vars(self),shell=True,stdout=subprocess.PIPE).stdout:
 			if l[:2]=="##": OUT.write(l); continue
 			row = l.rstrip().split()
 			for i in range(9,len(row)):
