@@ -194,7 +194,7 @@ class bcf:
 		cmd = "rm `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'`" % vars(self)
 		run_cmd(cmd)
 		O = open(outfile,"w")
-		for i,l in enumerate(open(self.outfile)):
+		for i,l in enumerate(open(self.tmp_file)):
 			row = l.rstrip().split()
 			if i==0: continue
 			s = self.samples[i-1]
