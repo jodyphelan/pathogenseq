@@ -655,7 +655,7 @@ DATA
 		run_cmd(cmd)
 		return bcf(self.outfile)
 
-	def extract_variants(self,outfile,min_dp=10,bed_include=None,bed_exclude=None):
+	def extract_variants(self,outfile,min_dp=10,bed_include=None,bed_exclude=None,threads=4):
 		add_arguments_to_self(self,locals())
 		self.bed_include = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
 		self.bed_exclude = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
