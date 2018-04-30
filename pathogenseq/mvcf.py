@@ -181,20 +181,20 @@ class bcf:
 			log("Choose valid format [old,new]...Exiting!",ext=True)
 		run_cmd(cmd,verbose=v)
 
-	def vcf_to_fasta_alt(self,filename,ref_file,threads=4,chunk_size = 50000, bed_file=None):
+	def vcf_to_fasta_alt(self,outfile,ref_file,threads=4,chunk_size = 50000, bed_file=None):
 		self.ref_file = ref_file
 		self.chunk_size = chunk_size
 		self.cmd_split_chr = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % vars(self) if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % vars(self)
 		self.tmp_file = "%s.tmp.txt" % self.prefix
 		self.threads = threads
-		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view %(bcf)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % vars(self)
+		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view %(filename)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % vars(self)
 		run_cmd(cmd)
 		cmd = "paste `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'` > %(tmp_file)s" % vars(self)
 		run_cmd(cmd)
 		cmd = "rm `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'`" % vars(self)
 		run_cmd(cmd)
 		O = open(filename,"w")
-		for i,l in enumerate(open(self.tmp_file)):
+		for i,l in enumerate(open(self.outfile)):
 			row = l.rstrip().split()
 			if i==0: continue
 			s = self.samples[i-1]
