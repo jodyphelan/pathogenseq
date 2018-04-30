@@ -645,7 +645,7 @@ DATA
 		run_cmd(cmd)
 		rm_files([tmp_header])
 
-	def filt_variants(self,outfile,min_dp=10,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1):
+	def filt_variants(self,outfile,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1):
 		add_arguments_to_self(self,locals())
 		print vars(self)
 		self.bed_include = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
