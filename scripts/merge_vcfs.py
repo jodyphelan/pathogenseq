@@ -14,9 +14,9 @@ def main(args):
 	bcf_masked_filt = "%s.mixed_masked.bcf" % args.prefix
 	fasta_snps = "%s.snps.fa" % args.prefix
 
-	vcf = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads)
+	merged = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads)
 
-	vcf = vcf.extract_variants(bcf_variant_pos,min_dp=args.min_dp,bed_include=args.bed_include,bed_exclude=bed_exclude)
+	vcf = merged.extract_variants(bcf_variant_pos,min_dp=args.min_dp,bed_include=args.bed_include,bed_exclude=bed_exclude)
 
 	if args.mappability_filter:
 		if not args.mappability_file:
