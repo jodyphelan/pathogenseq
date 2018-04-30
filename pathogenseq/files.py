@@ -9,6 +9,12 @@ import random
 
 rand_generator = random.SystemRandom()
 
+def add_arguments_to_self(self,args):
+	args
+	for x in args:
+		if x=="self": continue
+		vars(self)[x] = args[x]
+
 def cmd_out(cmd):
 	cmd = "set -u pipefail; " + cmd
 	if verbose==2:

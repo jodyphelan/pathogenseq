@@ -5,16 +5,33 @@ import argparse
 
 
 def main(args):
-	vcf = ps.vcf_merge(args.samples,args.ref,args.prefix,args.mappability_filter,args.mappability_file,args.vcf_dir,args.min_dp,args.keep_samples,args.fmiss,args.miss_cut,args.mix_cut,args.low_cov,args.bed_include,args.bed_exclude,args.threads,args.vcf_ext)
-	vcf.merge()
-	vcf.extract_variants()
+	if args.mappability_file:
+		args.mappability_filter=True
+	bcf_variant_pos = "%s.prefilt.bcf" % args.prefix
+	bcf_sample_filt = "%s.sample_filt.bcf" % args.prefix
+	bcf_uniq_filt = "%s.uniq_filt.bcf" % args.prefix
+	bcf_variant_filt = "%s.variant_filt.bcf" % args.prefix
+	bcf_masked_filt = "%s.mixed_masked.bcf" % args.prefix
+	fasta_snps = "%s.snps.fa" % args.prefix
+
+	vcf = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads)
+
+	vcf = vcf.extract_variants(bcf_variant_pos,min_dp=args.min_dp,bed_include=args.bed_include,bed_exclude=bed_exclude)
+
 	if args.mappability_filter:
-		vcf.filt_non_uniq()
-	vcf.sample_filt()
-	vcf.mask_mixed()
-	bcf = vcf.get_bcf_obj()
-	bcf.vcf_to_fasta_alt(filename=args.prefix+".snps.fa",ref_file=args.ref,threads=args.threads)
-	print bcf.params
+		if not args.mappability_file:
+			create_mappability_file(args.ref,args.threads)
+			args.mappability_file = "%s.genome.mappability.bed" % args.prefix
+		vcf.filt_non_uniq(args.mappability_file,bcf_uniq_filt)
+
+	vcf.sample_filt(bcf_sample_filt,miss_cut=args.miss_cut,mix_cut=args.mix_cut,keep_samples=args.keep_samples)
+
+	vcf.extract_variants(bcf_variant_filt,threads=args.threads,fmiss=args.fmiss)
+
+	vcf.mask_mixed(bcf_masked_filt)
+
+	vcf.vcf_to_fasta_alt(filename=fasta_snps,ref_file=args.ref,threads=args.threads)
+
 
 
 

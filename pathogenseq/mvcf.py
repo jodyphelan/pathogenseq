@@ -48,6 +48,8 @@ def get_missing_positions(bcf_file):
 
 
 
+
+
 v = True
 class bcf:
 	def __init__(self,filename,prefix=None,threads=4):
@@ -61,7 +63,7 @@ class bcf:
 		self.prefix = self.prefix
 		self.temp_file = "%s.temp" % self.prefix
 		index_bcf(filename,self.threads)
-		cmd = "bcftools query -l %(bcf)s > %(temp_file)s" % vars(self)
+		cmd = "bcftools query -l %(filename)s > %(temp_file)s" % vars(self)
 		run_cmd(cmd)
 		for l in open(self.temp_file):
 			self.samples.append(l.rstrip())
@@ -643,8 +645,86 @@ DATA
 		run_cmd(cmd)
 		rm_files([tmp_header])
 
-	def extract_variants(self,min_dp=10,bed_include=None,):
-		self.min_dp = min_dp
+	def filt_variants(self,outfile,min_dp=10,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1):
+		add_arguments_to_self(self,locals())
+		print vars(self)
+		self.bed_include = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
+		self.bed_exclude = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
 		"""Extract all variant positions"""
-		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(prefilt_bcf)s -O b" % self.params
+		cmd = "bcftools view %(filename)s -Ou | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(outfile)s -O b" % vars(self)
 		run_cmd(cmd)
+		return bcf(self.outfile)
+
+	def extract_variants_pos(self,outfile,min_dp=10,bed_include=None,bed_exclude=None):
+		add_arguments_to_self(self,locals())
+		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0' -o %(outfile)s -O b" % vars(self)
+		return bcf(self.outfile)
+
+	def filt_non_uniq(self,mappability_file,outfile):
+		"""Filter out non unique positions"""
+		add_arguments_to_self(self,locals())
+		non_uniq = []
+		self.non_uniq_bed = "%s.genome.non_uniq.bed" % self.prefix
+		O = open(self.non_uniq_bed,"w")
+		for l in open(self.mappability_file):
+			arr = l.rstrip().split()
+			if float(arr[3])<1:
+				O.write(l)
+		O.close()
+		cmd = "bcftools view -T ^%(non_uniq_bed)s %(filename)s -O b -o %(outfile)s" % vars(self)
+		run_cmd(cmd)
+		return bcf(self.outfile)
+
+	def sample_filt(self,outfile,miss_cut=0.15,mix_cut=0.15,keep_samples=None):
+		"""Filter out low quality samples"""
+		add_arguments_to_self(self,locals())
+		self.hq_sample_file = "%s.HQ.samples.txt" % self.prefix
+		self.lq_sample_file = "%s.LQ.samples.txt" % self.prefix
+		self.qual_file = "%s.sample_quals.txt" % self.prefix
+		if keep_samples and filecheck(keep_samples):
+			self.keep_samples = [x.rstrip() for x in open(keep_samples).readlines()]
+		else:
+			self.keep_samples = []
+		num_calls = int(subprocess.Popen("bcftools view %(filename)s -H | wc -l" % vars(self),shell=True,stdout=subprocess.PIPE).communicate()[0].rstrip())
+
+		miss = {}
+		mix = {}
+		self.lq_samples = []
+		self.hq_samples = []
+		HQ = open(self.hq_sample_file,"w")
+		LQ = open(self.lq_sample_file,"w")
+		QF = open(self.qual_file,"w")
+		QF.write("sample\tmix\tmiss\n")
+
+		self.bcftools_stats_file = "%s.bcftools_stats.txt" % self.prefix
+
+		cmd =  "bcftools stats  %(filename)s -s - | grep ^PSC > %(bcftools_stats_file)s" % vars(self)
+		run_cmd(cmd)
+		for l in open(self.bcftools_stats_file):
+			row = l.rstrip().split()
+			s = row[2]
+			miss[s] = (num_calls-sum([int(row[i]) for i in [3,4,5]]))/num_calls
+			mix[s] = int(row[5])/num_calls
+			QF.write("%s\t%s\t%s\n" % (s,mix[s],miss[s]))
+			if s in self.keep_samples:
+				self.hq_samples.append(s)
+				HQ.write("%s\n" % s)
+			elif miss[s]>self.miss_cut or mix[s]>self.mix_cut:
+				self.lq_samples.append(s)
+				LQ.write("%s\n" % s)
+			else:
+				self.hq_samples.append(s)
+				HQ.write("%s\n" % s)
+		HQ.close()
+		LQ.close()
+		QF.close()
+		cmd = "bcftools view -S %(hq_sample_file)s -a -c 1 -o %(outfile)s -O b %(filename)s" % vars(self)
+		run_cmd(cmd)
+		return bcf(self.outfile)
+
+	def mask_mixed(self,outfile):
+		"""Create a BCF file with mixed called masked as missing"""
+		add_arguments_to_self(self,locals())
+		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(outfile)s" % vars(self)
+		run_cmd(cmd)
+		return bcf(self.outfile)
