@@ -22,13 +22,13 @@ def main(args):
 		if not args.mappability_file:
 			create_mappability_file(args.ref,args.threads)
 			args.mappability_file = "%s.genome.mappability.bed" % args.prefix
-		vcf.filt_non_uniq(args.mappability_file,bcf_uniq_filt)
+		vcf = vcf.filt_non_uniq(args.mappability_file,bcf_uniq_filt)
 
-	vcf.sample_filt(bcf_sample_filt,miss_cut=args.miss_cut,mix_cut=args.mix_cut,keep_samples=args.keep_samples)
+	vcf = vcf.sample_filt(bcf_sample_filt,miss_cut=args.miss_cut,mix_cut=args.mix_cut,keep_samples=args.keep_samples)
 
-	vcf.filt_variants(bcf_variant_filt,fmiss=args.fmiss,threads=args.threads)
+	vcf = vcf.filt_variants(bcf_variant_filt,fmiss=args.fmiss,threads=args.threads)
 
-	vcf.mask_mixed(bcf_masked_filt)
+	vcf = vcf.mask_mixed(bcf_masked_filt)
 
 	vcf.vcf_to_fasta_alt(outfile=fasta_snps,ref_file=args.ref,threads=args.threads)
 
