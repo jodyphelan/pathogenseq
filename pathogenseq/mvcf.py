@@ -193,7 +193,7 @@ class bcf:
 		run_cmd(cmd)
 		cmd = "rm `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'`" % vars(self)
 		run_cmd(cmd)
-		O = open(filename,"w")
+		O = open(outfile,"w")
 		for i,l in enumerate(open(self.outfile)):
 			row = l.rstrip().split()
 			if i==0: continue
