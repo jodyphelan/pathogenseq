@@ -14,7 +14,7 @@ def main(args):
 	bcf_masked_filt = "%s.mixed_masked.bcf" % args.prefix
 	fasta_snps = "%s.snps.fa" % args.prefix
 
-	merged = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads)
+	merged = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads).merge()
 
 	vcf = merged.extract_variants(bcf_variant_pos,min_dp=args.min_dp,bed_include=args.bed_include,bed_exclude=bed_exclude)
 
