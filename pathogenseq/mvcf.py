@@ -653,7 +653,7 @@ DATA
 		"""Extract all variant positions"""
 		cmd = "bcftools view %(filename)s -Ou | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(outfile)s -O b" % vars(self)
 		run_cmd(cmd)
-		return bcf(self.outfile)
+		return bcf(self.outfile,threads=self.threads)
 
 	def extract_variants(self,outfile,min_dp=10,bed_include=None,bed_exclude=None,threads=4):
 		add_arguments_to_self(self,locals())
@@ -661,7 +661,7 @@ DATA
 		self.bed_exclude = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0' -o %(outfile)s -O b" % vars(self)
 		run_cmd(cmd)
-		return bcf(self.outfile)
+		return bcf(self.outfile,threads=self.threads)
 
 	def filt_non_uniq(self,mappability_file,outfile):
 		"""Filter out non unique positions"""
@@ -676,7 +676,7 @@ DATA
 		O.close()
 		cmd = "bcftools view -T ^%(non_uniq_bed)s %(filename)s -O b -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
-		return bcf(self.outfile)
+		return bcf(self.outfile,threads=self.threads)
 
 	def sample_filt(self,outfile,miss_cut=0.15,mix_cut=0.15,keep_samples=None):
 		"""Filter out low quality samples"""
@@ -723,11 +723,11 @@ DATA
 		QF.close()
 		cmd = "bcftools view -S %(hq_sample_file)s -a -c 1 -o %(outfile)s -O b %(filename)s" % vars(self)
 		run_cmd(cmd)
-		return bcf(self.outfile)
+		return bcf(self.outfile,threads=self.threads)
 
 	def mask_mixed(self,outfile):
 		"""Create a BCF file with mixed called masked as missing"""
 		add_arguments_to_self(self,locals())
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
-		return bcf(self.outfile)
+		return bcf(self.outfile,threads=self.threads)
