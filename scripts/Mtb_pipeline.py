@@ -30,7 +30,7 @@ fastq.illumina(mapper="minimap2")
 bam_file = "%s.bam" % prefix
 
 bam = ps.bam(bam_file,prefix,ref,threads=threads)
-bam.gbcf(vtype="snps",threads=threads)
+bam.gbcf(vtype="snps",threads=threads,call_method="low")
 
 bamqc = bam.get_bam_qc()
 cov_plot = "%s.cov.png" % (prefix)
