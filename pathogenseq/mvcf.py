@@ -655,7 +655,7 @@ DATA
 		run_cmd(cmd)
 		return bcf(self.outfile)
 
-	def extract_variants_pos(self,outfile,min_dp=10,bed_include=None,bed_exclude=None):
+	def extract_variants(self,outfile,min_dp=10,bed_include=None,bed_exclude=None):
 		add_arguments_to_self(self,locals())
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0' -o %(outfile)s -O b" % vars(self)
 		return bcf(self.outfile)
