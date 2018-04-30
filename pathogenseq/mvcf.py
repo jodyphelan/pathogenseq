@@ -642,3 +642,9 @@ DATA
 		cmd = "bcftools reheader -h %s %s > %s" % (tmp_header,self.bcf,new_bcf_file)
 		run_cmd(cmd)
 		rm_files([tmp_header])
+
+	def extract_variants(self,min_dp=10,bed_include=None,):
+		self.min_dp = min_dp
+		"""Extract all variant positions"""
+		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(prefilt_bcf)s -O b" % self.params
+		run_cmd(cmd)
