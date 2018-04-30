@@ -108,7 +108,7 @@ class vcf_merge:
 
 	def merge(self):
 		"""Merge gVCF files"""
-		cmd = "cat %(sample_file)s | xargs -i -P %(threads)s sh -c \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % self.params
+		cmd = "cat %(sample_file)s | parallel -j %(threads)s \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % self.params
 		run_cmd(cmd)
 		tmp_bcfs = []
 		self.params["tmp_file"] = "%s.cmd.xargs.txt" % self.params["prefix"]
@@ -126,7 +126,7 @@ class vcf_merge:
 		X.close()
 		tmp_threads = 1 if self.params["threads"]==1 else int(self.params["threads"]/2)
 		if tmp_threads>8: tmp_threads = 8 #Stop the max number of files being hit... assuming 1000 files is limit
-		cmd = "cat %s | xargs -i -P %s sh -c \"{}\"" % (self.params["tmp_file"],tmp_threads)
+		cmd = "cat %s | parallel -j %s  \"{}\"" % (self.params["tmp_file"],tmp_threads)
 		run_cmd(cmd)
 		if len(tmp_bcfs)>1:
 			self.params["vcf_files"] = " ".join(tmp_bcfs)
@@ -201,4 +201,4 @@ class vcf_merge:
 		cmd = "bcftools +setGT %(sample_filt_bcf)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(mix_masked_bcf)s" % self.params
 		run_cmd(cmd)
 	def get_bcf_obj(self):
-		return bcf(self.params["mix_masked_bcf"],self.params["ref_file"])
+		return bcf(self.params["mix_masked_bcf"],self.params["prefix"])

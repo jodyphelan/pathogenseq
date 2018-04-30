@@ -7,4 +7,4 @@ outfile = sys.argv[3]
 threads = sys.argv[4]
 
 bcf = ps.bcf(infile)
-bcf.vcf_to_fasta_alt(filename=outfile,ref_file=reffile,threas=threads)
+bcf.vcf_to_fasta_alt(filename=outfile,ref_file=reffile,threads=threads)
