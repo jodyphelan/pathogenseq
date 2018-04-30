@@ -657,6 +657,8 @@ DATA
 
 	def extract_variants(self,outfile,min_dp=10,bed_include=None,bed_exclude=None):
 		add_arguments_to_self(self,locals())
+		self.bed_include = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
+		self.bed_exclude = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0' -o %(outfile)s -O b" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile)
