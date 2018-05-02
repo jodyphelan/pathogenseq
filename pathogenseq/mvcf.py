@@ -736,7 +736,7 @@ DATA
 		for s in self.samples:
 			self.tmp_sample = s
 			cmd = "bcftools view -s %(tmp_sample)s -i 'GT==\"./.\"' %(filename)s | bcftools query -f '%%CHROM\\t%%POS\n'" % vars(self)
-			self.tmp_file = "%(prefix).%(tmp_sample)s.missing.bed" % vars(self)
+			self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
 			TMP = open(self.tmp_file,"w")
 			for l in cmd_out(cmd):
 				row = l.rstrip().split()
