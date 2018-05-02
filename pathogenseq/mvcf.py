@@ -735,12 +735,12 @@ DATA
 		add_arguments_to_self(self,locals())
 		for s in self.samples:
 			self.tmp_sample = s
-			cmd = "bcftools view -s %(tmp_sample)s -i 'GT==\"./.\"' %(filename)s | bcftools query -f '%%CHROM\\t%%POS\n'" % vars(self)
+			cmd = "bcftools view -s %(tmp_sample)s -i 'GT==\"./.\"' %(filename)s | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
 			self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
 			TMP = open(self.tmp_file,"w")
 			for l in cmd_out(cmd):
 				row = l.rstrip().split()
-				TMP.write("%s\t%s\t%s" % (row[0],int(row[1])-1,row[1]))
+				TMP.write("%s\t%s\t%s\n" % (row[0],int(row[1])-1,row[1]))
 			TMP.close()
 			self.tmp_fa = "%(prefix)s.%(tmp_sample)s.tmp.fasta" % vars(self)
 			cmd = "bcftools consensus -f %(ref)s %(filename)s -o %(tmp_fa)s -m %(tmp_file)s -s %(tmp_sample)s" % vars(self)
