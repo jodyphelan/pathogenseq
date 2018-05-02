@@ -57,7 +57,16 @@ class bcf:
 		self.filename = filename
 		self.threads = threads
 		if prefix==None:
-			self.prefix = filename[:-4] if filename[-4:]==".bcf" else filename
+			if filename[-4:]==".bcf":
+				self.prefix = filename[:-4]
+			elif filename[-5:]==".gbcf":
+				self.prefix = filename[:-5]
+			elif filename[-7:]==".vcf.gz":
+				self.prefix = filename[-7:]==".vcf.gz"
+			elif filename[-4:]==".vcf":
+				self.prefix = filename[-4:]==".vcf"
+			else:
+				self.prefix = filename
 		else:
 			self.prefix = prefix
 		self.prefix = self.prefix
