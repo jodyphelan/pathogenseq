@@ -735,7 +735,7 @@ DATA
 		add_arguments_to_self(self,locals())
 		for s in samples:
 			self.tmp_sample = s
-			cmd = "bcftools view -s %(tmp_sample)s -i 'GT=="./."' %(filename)s | bcftools query -f '%%CHROM\\t%%POS'" % vars(self)
+			cmd = "bcftools view -s %(tmp_sample)s -i 'GT==\"./.\"' %(filename)s | bcftools query -f '%%CHROM\\t%%POS'" % vars(self)
 			self.tmp_file = "%s.missing.bed" % vars(self)
 			TMP = open(self.tmp_file,"w")
 			for l in cmd_out(cmd):
