@@ -733,7 +733,7 @@ DATA
 		return bcf(self.outfile,threads=self.threads)
 	def generate_consensus(self,ref):
 		add_arguments_to_self(self,locals())
-		for s in samples:
+		for s in self.samples:
 			self.tmp_sample = s
 			cmd = "bcftools view -s %(tmp_sample)s -i 'GT==\"./.\"' %(filename)s | bcftools query -f '%%CHROM\\t%%POS'" % vars(self)
 			self.tmp_file = "%s.missing.bed" % vars(self)
