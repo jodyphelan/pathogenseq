@@ -731,7 +731,7 @@ DATA
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
-	def generate_consensus(self,ref,outfile):
+	def generate_consensus(self,ref):
 		add_arguments_to_self(self,locals())
 		for s in samples:
 			self.tmp_sample = s
