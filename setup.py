@@ -58,7 +58,8 @@ setup(
 	license="MIT",
 	long_description="Pathogenseq variant calling pipeline",
 	scripts=
-		['scripts/bam_report.py',
+		['scripts/bcf2consensus.py',
+		 'scripts/bam_report.py',
 		 'scripts/bcf2fasta.py',
 		 'scripts/bam2vcf.py',
 		 'scripts/collate_json.py',
