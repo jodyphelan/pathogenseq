@@ -731,3 +731,24 @@ DATA
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
+	def generate_consensus(self,ref,outfile):
+		add_arguments_to_self(self,locals())
+		for s in samples:
+			self.tmp_sample = s
+			cmd = "bcftools view -s %(tmp_sample)s -i 'GT=="./."' %(filename)s | bcftools query -f '%%CHROM\\t%%POS'" % vars(self)
+			self.tmp_file = "%s.missing.bed" % vars(self)
+			TMP = open(self.tmp_file,"w")
+			for l in cmd_out(cmd):
+				row = l.rstrip().split()
+				TMP.write("%s\t%s\t%s" % (row[0],row[1],int(row[1])+1))
+			TMP.close()
+			self.tmp_fa = "%(prefix)s.%(tmp_sample)s.tmp.fasta" % vars(self)
+			cmd = "bcftools consensus -f %(ref)s %(filename)s -o %(outfile)s -m %(tmp_file)s -s %(tmp_sample)s" % vars(self)
+			run_cmd(cmd)
+			fa_dict = fasta(self.tmp_fa).fa_dict
+			self.final_fa = "%(prefix)s.%(tmp_sample)s.fasta" % vars(self)
+			FA = open(self.final_fa,"w")
+			for seq in fa_dict:
+				FA.write(">%s_%s\n%s" % (self.tmp_sample,seq,fa_dict[seq]))
+			FA.close()
+			rm_files([self.tmp_file,self.tmp_fa])

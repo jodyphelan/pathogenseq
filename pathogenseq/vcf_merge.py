@@ -50,7 +50,7 @@ class vcf_merge:
 		vcf_merge: A vcf_merge class object
 	"""
 
-	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="vcf.gz",threads=4):
+	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4):
 		add_arguments_to_self(self,locals())
 		self.samples = []
 		filecheck(sample_file)
@@ -75,13 +75,13 @@ class vcf_merge:
 		for i,tmp_samples in enumerate(chunks):
 			self.tmp_bcf = "%s.%s.tmp.bcf" % (self.prefix,i)
 			self.vcf_files = " ".join(["%s/%s.%s" % (self.vcf_dir,x,self.vcf_ext) for x in tmp_samples])
-			cmd = "bcftools merge --threads 2 -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s && bcftools index --threads 2" % vars(self)
+			cmd = "bcftools merge --threads 2 -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s && bcftools index --threads 2 %(tmp_bcf)s" % vars(self)
 			X.write("%s\n"%cmd)
 			tmp_bcfs.append(self.tmp_bcf)
 		X.close()
 		tmp_threads = 1 if self.threads==1 else int(self.threads/2)
 		if tmp_threads>8: tmp_threads = 8 #Stop the max number of files being hit... assuming 1000 files is limit
-		cmd = "cat %s | parallel -j %s  \"{}\"" % (self.tmp_file,tmp_threads)
+		cmd = "cat %s | parallel -j %s" % (self.tmp_file,tmp_threads)
 		run_cmd(cmd)
 		if len(tmp_bcfs)>1:
 			self.vcf_files = " ".join(tmp_bcfs)
