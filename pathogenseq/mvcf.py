@@ -751,4 +751,4 @@ DATA
 			for seq in fa_dict:
 				FA.write(">%s_%s\n%s" % (self.tmp_sample,seq,fa_dict[seq]))
 			FA.close()
-#			rm_files([self.tmp_file,self.tmp_fa])
+			rm_files([self.tmp_file,self.tmp_fa])
