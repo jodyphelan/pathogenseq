@@ -743,7 +743,7 @@ DATA
 				TMP.write("%s\t%s\t%s" % (row[0],row[1],int(row[1])+1))
 			TMP.close()
 			self.tmp_fa = "%(prefix)s.%(tmp_sample)s.tmp.fasta" % vars(self)
-			cmd = "bcftools consensus -f %(ref)s %(filename)s -o %(outfile)s -m %(tmp_file)s -s %(tmp_sample)s" % vars(self)
+			cmd = "bcftools consensus -f %(ref)s %(filename)s -o %(tmp_fa)s -m %(tmp_file)s -s %(tmp_sample)s" % vars(self)
 			run_cmd(cmd)
 			fa_dict = fasta(self.tmp_fa).fa_dict
 			self.final_fa = "%(prefix)s.%(tmp_sample)s.fasta" % vars(self)
