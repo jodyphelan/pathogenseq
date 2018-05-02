@@ -52,7 +52,7 @@ parser.add_argument('--low_cov', default=False,help='Reference Sequence')
 parser.add_argument('--bed_include',default=None, help='Reference Sequence')
 parser.add_argument('--bed_exclude', default=None,help='Reference Sequence')
 parser.add_argument('--vcf_dir', default=".",help='Reference Sequence')
-parser.add_argument('--vcf_ext', default="vcf.gz",help='Reference Sequence')
+parser.add_argument('--vcf_ext', default="gbcf",help='Reference Sequence')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
