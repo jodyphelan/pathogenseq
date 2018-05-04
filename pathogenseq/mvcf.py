@@ -123,7 +123,7 @@ class bcf:
 
 	def load_stats(self):
 		self.stats_file = "%s.stats.txt" % self.filename
-		cmd = "bcftools stats -s - %(bcf)s > %(stats_file)s" % vars(self)
+		cmd = "bcftools stats -v -s - %(filename)s > %(stats_file)s" % vars(self)
 		run_cmd(cmd)
 		results = defaultdict(lambda:defaultdict(dict))
 		for l in open(self.stats_file):
