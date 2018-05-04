@@ -48,7 +48,7 @@ parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_cla
 parser.add_argument('ref', help='First read file')
 parser.add_argument('reads', help='First read file')
 parser.add_argument('prefix', help='First read file')
-parser.add_argument('--threads',"-t", help='First read file')
+parser.add_argument('--threads',"-t", default=1, type=int, help='First read file')
 parser.add_argument('--bed_cov',"-b",default=None, help='First read file')
 parser.add_argument('--primers',"-p",default=None, help='First read file')
 parser.add_argument('--centrifuge',"-c",default=None, help='First read file')
