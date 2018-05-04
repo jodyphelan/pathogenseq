@@ -229,7 +229,7 @@ class bcf:
 
 	def bcf2vcf(self):
 		if nofile(self.vcf):
-			cmd = "bcftools view %(bcf)s -Ov -o %(vcf)s" % vars(self)
+			cmd = "bcftools view %(filename)s -Ov -o %(vcf)s" % vars(self)
 			run_cmd(cmd)
 
 	def get_variants(self):
