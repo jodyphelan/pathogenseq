@@ -11,7 +11,7 @@ def main(args):
 	bcf_sample_filt = "%s.sample_filt.bcf" % args.prefix
 	bcf_uniq_filt = "%s.uniq_filt.bcf" % args.prefix
 	bcf_variant_filt = "%s.variant_filt.bcf" % args.prefix
-	bcf_masked_filt = "%s.mixed_masked.bcf" % args.prefix
+	bcf_masked_filt = "%s.mix_masked.bcf" % args.prefix
 	fasta_snps = "%s.snps.fa" % args.prefix
 
 	merged = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads).merge()
