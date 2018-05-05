@@ -37,9 +37,11 @@ def main(args):
 		bam_qc.plot_cov(seq,cov_png,primers=args.primers)
 	bam_qc.extract_gc_skew(gc_file)
 	if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
-	variants = bam.gbcf(primers=args.primers)
-	#stats["hom_variants"] = len([x for x in variants if x[5]=="1/1"])
-	#stats["het_variants"] = len([x for x in variants if x[5]=="0/1"])
+	variants = bam.gbcf(primers=args.primers,chunk_size=args.window)
+	bcfstats = variants.load_stats()
+	stats["hom_variants"] = bcfstats["PSC"][prefix]["nNonRefHom"]
+	stats["het_variants"] = bcfstats["PSC"][prefix]["nHets"]
+	stats["hom_ref"] = bcfstats["PSC"][prefix]["nRefHom"
 	json.dump(stats,open(stats_file,"w"))
 
 
@@ -52,6 +54,7 @@ parser.add_argument('--threads',"-t",type=int,default=1, help='First read file')
 parser.add_argument('--bed_cov',"-b",default=None, help='First read file')
 parser.add_argument('--primers',"-p",default=None, help='First read file')
 parser.add_argument('--centrifuge',"-c",default=None, help='First read file')
+parser.add_argument('--window',default=50000,type=int, help='First read file')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
