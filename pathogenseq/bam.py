@@ -64,6 +64,7 @@ class bam:
 			self.params["tmp"] = "%s:%s-%s" % (chrom,start,end)
 			self.params["pid"] = pid
 			log("Extracting reads for %s" % pid)
+			log("%s:%s-%s")
 			read_num = get_overlapping_reads(self.bam,chrom,start,end,tmp_bam,flank=30,threads=threads)
 			if read_num==0:
 				#cmd = "bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r %(tmp)s | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.%(pid)s.bcf -- -t a -n ." % self.params
@@ -170,7 +171,7 @@ class bam:
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
 		if primers:
-			rm_files([self.params["primer_bed_file"],self.params["non_primer_bcf"],self.params["primer_bcf"]])
+			rm_files([self.params["non_primer_bcf"],self.params["primer_bcf"]])#),self.params["primer_bed_file"]])
 
 		return bcf(self.params["bcf_file"],prefix=self.prefix)
 
