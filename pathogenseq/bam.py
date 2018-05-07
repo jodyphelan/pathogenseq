@@ -170,7 +170,7 @@ class bam:
 		cmd = "rm `%(cmd_split_chr)s  | awk '{print \"%(prefix)s_\"$2\".bcf*\"}'`" % self.params
 		run_cmd(cmd)
 		if primers:
-			rm_files([self.params["primer_bed_file"],self.params["non_primer_bcf"],self.params["primer_bcf"]])
+			rm_files([self.params["non_primer_bcf"],self.params["primer_bcf"]])
 
 		return bcf(self.params["bcf_file"],prefix=self.prefix)
 
