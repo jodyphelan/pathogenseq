@@ -41,7 +41,7 @@ def main(args):
 	bcfstats = variants.load_stats()
 	stats["hom_variants"] = bcfstats["PSC"][prefix]["nNonRefHom"]
 	stats["het_variants"] = bcfstats["PSC"][prefix]["nHets"]
-	stats["hom_ref"] = bcfstats["PSC"][prefix]["nRefHom"
+	stats["hom_ref"] = bcfstats["PSC"][prefix]["nRefHom"]
 	json.dump(stats,open(stats_file,"w"))
 
 
