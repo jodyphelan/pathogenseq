@@ -82,7 +82,7 @@ class bcf:
 	def del_pos2bed(self):
 		self.del_bed = "%s.del_pos.bed" % self.prefix
 		OUT = open(self.del_bed,"w")
-		cmd = "bcftools view -Ou -v indels %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % vars(self)
+		cmd = "bcftools view -Ou -v indels %(filename)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % vars(self)
 		sys.stderr.write(cmd)
 		j = 0
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
@@ -97,7 +97,49 @@ class bcf:
 
 		return self.del_bed
 
+	def load_variants(self,chrom=None,pos=None):
+		variants = defaultdict(lambda:defaultdict(lambda:defaultdict(dict)))
+		raw_variants = defaultdict(lambda:defaultdict(lambda:defaultdict(dict)))
+		if chrom and pos:
+			cmd = "bcftools view %s %s:%s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%IUPACGT:%%AD]\\n'  | sed 's/\.\/\./N/g'" % (self.filename,chrom,pos)
+		else:
+			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%IUPACGT:%%AD]\\n' %s  | sed 's/\.\/\./N/g'" % self.filename
+		log(cmd)
+		for l in tqdm(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout):
+			print l.rstrip()
+			row = l.rstrip().split()
+			alts = row[3].split(",")
+			alleles = [row[2]]+alts
+			for i in range(len(self.samples)):
+				print "sample: %s-%s" % (i,self.samples[i])
+				call,ad = row[i+4].split(":")
+				print "call for %s is %s" % (self.samples[i],call)
+				if call=="N":
+					print "call for %s is %s...Going to next sample..." % (self.samples[i],call)
+					raw_variants[row[0]][row[1]][self.samples[i]]["N"] = 1.0
+					continue
+				ad = [int(x) if x!="." else 0 for x in ad.split(",")]
+				sum_ad = sum(ad)
+				print "Allelic depth for %s is %s" % (self.samples[i],ad)
+				for j in range(1,len(alleles)):
+					print "Depth for %s in %s is %s" % (alleles[j],self.samples[i],ad[j])
 
+					if ad[j]==0: continue
+					print "At position %s:%s assigning %s for %s with af:%.2f" % (row[0],row[1],alleles[j],self.samples[i],ad[j]/sum_ad)
+					raw_variants[row[0]][row[1]][self.samples[i]][alleles[j]] = ad[j]/sum_ad
+			print "\n"
+		print raw_variants
+		for tchrom in raw_variants:
+			print raw_variants[tchrom].keys()
+			for tpos in raw_variants[tchrom]:
+				print raw_variants[tchrom][tpos]
+				variants[tchrom][int(tpos)] = raw_variants[tchrom][tpos]
+		if chrom and pos and len(variants)==0:
+			log("Variant not found",True)
+		if chrom and pos:
+			return variants[chrom][int(pos)]
+		else:
+			return variants
 
 	def load_variants_alt(self,chrom=None,pos=None):
 		variants = defaultdict(lambda:defaultdict(dict))
@@ -421,6 +463,102 @@ dev.off()
 #		for record in tqdm(vcf_reader):
 #			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
 
+	def load_csq_alt(self,ann_file=None,changes=False,use_genomic=True,use_gene=True):
+		ann = defaultdict(dict)
+		if ann_file:
+			for l in tqdm(open(ann_file)):
+				#chrom pos gene gene/codon_pos
+				row = l.rstrip().split()
+				ann[row[0]][int(row[1])] = (row[2],row[3])
+
+		nuc_variants = self.load_variants()
+		prot_dict = defaultdict(lambda:defaultdict(dict))
+		prot_variants = defaultdict(lambda:defaultdict(dict))
+		change_num2pos = defaultdict(lambda:defaultdict(set))
+		ref_codons = defaultdict(lambda:defaultdict(dict))
+		variants = {s:[] for s in self.samples}
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ\\t%%AD]\\n' %s" % self.filename
+		sys.stderr.write("%s\n"%cmd)
+		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
+			row = line.rstrip().split()
+			chrom = row[0]
+			pos = int(row[1])
+			ref = row[2]
+			alt = row[3]
+			if chrom in ann and pos in ann[chrom]:
+				ann_pos = int(ann[chrom][pos][1])
+				ann_gene = ann[chrom][pos][0]
+			else:
+				ann_pos = None
+			if len(row)==4:
+				if chrom in ann and pos in ann[chrom]:
+					cng = "%s%s>%s" % (ann_pos,ref,alt)
+					for sample in self.samples:
+						if alt in nuc_variants[chrom][pos][sample]:
+							variants[sample].append({"gene_id":ann_gene,"chr":chrom,"genome_pos":pos,"type":"non_coding","change":cng,freq:nuc_variants[chrom][pos][sample][alt]})
+						prot_variants[ann_gene][ann_pos][sample] = "%s%s>%s" % (ann_pos,ref,alt)
+						prot_dict[ann_gene][ann_pos][sample] = nuc_variants[chrom][pos][sample]
+						ref_codons[ann_gene][ann_pos] = ref
+				continue
+
+			for i in range(4,len(row)-3,4):
+				sample = row[i]
+				info = row[i+1].split("|") if row[i+1]!="." else row[i+2].split("|")
+				if row[i+1][0]=="@": continue
+				if info[-1]=="pseudogene": continue
+				gene = info[1]
+				if info[0]=="intron":continue
+				if info[0]=="frameshift&start_lost" or info[0]=="missense&inframe_altering" or info[0]=="missense" or info[0]=="*missense" or info[0]=="start_lost" or info[0]=="*start_lost" or info[0]=="*stop_lost" or info[0]=="stop_lost" or info[0]=="stop_gained" or info[0]=="*stop_gained":
+					change_num,ref_aa,alt_aa = parse_mutation(info[5])
+					change_num2pos[gene][change_num].add((chrom,pos))
+					ref_codons[gene][change_num] = ref_aa
+					prot_variants[gene][change_num][row[i]] = info[5]
+					prot_dict[gene][change_num][sample] = alt_aa
+
+				elif info[0]=="stop_lost&frameshift" or info[0]=="inframe_insertion" or info[0]=="*inframe_insertion" or info[0]=="inframe_deletion" or info[0]=="*inframe_deletion" or info[0]=="frameshift" or info[0]=="*frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
+					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6])
+					change_num2pos[gene][change_num].add((chrom,pos))
+					ref_codons[gene][change_num] = ref_nuc
+					change = "%s%s>%s" % (ann_pos,ref_nuc,alt_nuc) if ann_pos else None
+					if use_genomic and use_gene and change:
+						prot_variants[gene][change_num][row[i]] = change
+					elif use_genomic:
+						prot_variants[gene][change_num][row[i]] = info[6]
+					elif use_gene and change:
+						prot_variants[gene][change_num][row[i]] = change
+					else:
+						prot_variants[gene][change_num][row[i]] = info[5]
+					prot_dict[gene][change_num][sample] = alt_nuc
+				elif info[0]=="non_coding":
+					if chrom in ann and pos in ann[chrom]:
+						gene = ann[chrom][pos][0]
+						gene_pos = ann[chrom][pos][1]
+						prot_variants[gene][gene_pos][sample] = "%s%s>%s" % (gene_pos,ref,alt)
+						prot_dict[gene][gene_pos][sample] = alt
+						ref_codons[gene][gene_pos] = ref
+				else:
+					sys.stderr.write(line)
+					sys.stderr.write("Unknown variant type...Exiting!\n")
+					quit(1)
+
+
+		for gene in prot_variants:
+			for change_num in prot_variants[gene]:
+				for s in set(self.samples)-set(prot_variants[gene][change_num].keys()):
+					if "N" in  [nuc_variants[chrom][pos][s] for chrom,pos in change_num2pos[gene][change_num]]:
+						prot_variants[gene][change_num][s] = "?"
+						prot_dict[gene][change_num][s] = "?"
+					else:
+						pass
+						prot_dict[gene][change_num][s] = ref_codons[gene][change_num]
+#			if nuc_variants[row[0]][int(row[1])][s]=="N":
+#					prot_dict[gene][change_num] = "?"
+
+
+
+		for locus in prot_variants:
+			prot_variants[locus] = prot_variants[locus].values()
+		return prot_variants if changes else prot_dict
 
 	def load_csq(self,ann_file=None,changes=False,use_genomic=True,use_gene=True):
 		ann = defaultdict(dict)
