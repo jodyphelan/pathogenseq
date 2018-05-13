@@ -12,6 +12,7 @@ from tqdm import tqdm
 # from bokeh.layouts import column
 from ete3 import Tree
 from colour import Color
+from mutation_db import *
 
 re_seq = re.compile("([0-9\-]*)([A-Z\*]+)")
 re_I = re.compile("([A-Z\*]+)")
@@ -28,13 +29,13 @@ def parse_mutation(x):
 
 
 
-def load_variants(filename):
-	variants = defaultdict(lambda:defaultdict(dict))
-	vcf_reader = vcf.Reader(open(filename))
-	for rec in tqdm(vcf_reader):
-		for s in rec.samples:
-			variants[rec.CHROM][rec.POS][s.sample] = s.gt_bases.split("/")[0] if s["GT"]!="./." else "N"
-	return variants
+# def load_variants(filename):
+# 	variants = defaultdict(lambda:defaultdict(dict))
+# 	vcf_reader = vcf.Reader(open(filename))
+# 	for rec in tqdm(vcf_reader):
+# 		for s in rec.samples:
+# 			variants[rec.CHROM][rec.POS][s.sample] = s.gt_bases.split("/")[0] if s["GT"]!="./." else "N"
+# 	return variants
 
 
 def get_missing_positions(bcf_file):
@@ -101,38 +102,27 @@ class bcf:
 		variants = defaultdict(lambda:defaultdict(lambda:defaultdict(dict)))
 		raw_variants = defaultdict(lambda:defaultdict(lambda:defaultdict(dict)))
 		if chrom and pos:
-			cmd = "bcftools view %s %s:%s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%IUPACGT:%%AD]\\n'  | sed 's/\.\/\./N/g'" % (self.filename,chrom,pos)
+			cmd = "bcftools view %s %s:%s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n'  | sed 's/\.\/\./N\/N/g'" % (self.filename,chrom,pos)
 		else:
-			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%IUPACGT:%%AD]\\n' %s  | sed 's/\.\/\./N/g'" % self.filename
+			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n' %s  | sed 's/\.\/\./N\/N/g'" % self.filename
 		log(cmd)
 		for l in tqdm(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout):
-			print l.rstrip()
 			row = l.rstrip().split()
 			alts = row[3].split(",")
 			alleles = [row[2]]+alts
 			for i in range(len(self.samples)):
-				print "sample: %s-%s" % (i,self.samples[i])
-				call,ad = row[i+4].split(":")
-				print "call for %s is %s" % (self.samples[i],call)
-				if call=="N":
-					print "call for %s is %s...Going to next sample..." % (self.samples[i],call)
+				calls,ad = row[i+4].split(":")
+				call1,call2 = calls.split("/")
+				if calls=="N/N":
 					raw_variants[row[0]][row[1]][self.samples[i]]["N"] = 1.0
 					continue
 				ad = [int(x) if x!="." else 0 for x in ad.split(",")]
 				sum_ad = sum(ad)
-				print "Allelic depth for %s is %s" % (self.samples[i],ad)
 				for j in range(1,len(alleles)):
-					print "Depth for %s in %s is %s" % (alleles[j],self.samples[i],ad[j])
-
 					if ad[j]==0: continue
-					print "At position %s:%s assigning %s for %s with af:%.2f" % (row[0],row[1],alleles[j],self.samples[i],ad[j]/sum_ad)
 					raw_variants[row[0]][row[1]][self.samples[i]][alleles[j]] = ad[j]/sum_ad
-			print "\n"
-		print raw_variants
 		for tchrom in raw_variants:
-			print raw_variants[tchrom].keys()
 			for tpos in raw_variants[tchrom]:
-				print raw_variants[tchrom][tpos]
 				variants[tchrom][int(tpos)] = raw_variants[tchrom][tpos]
 		if chrom and pos and len(variants)==0:
 			log("Variant not found",True)
@@ -274,21 +264,11 @@ class bcf:
 			cmd = "bcftools view %(filename)s -Ov -o %(vcf)s" % vars(self)
 			run_cmd(cmd)
 
-	def get_variants(self):
-		if nofile(self.vcf): self.bcf2vcf()
-		vcf_reader = vcf.Reader(open(self.vcf,"r"))
-		results = defaultdict(lambda:defaultdict(dict))
-		for record in vcf_reader:
-			for s in record.samples:
-				results[record.CHROM][record.POS][s.sample] = s.gt_bases.split("/")[0]
-		return results
-
 	def get_venn_diagram_data(self,samples,outfile):
 		samples = samples.split(",")
 		if len(samples)>4:
-			print(samples)
-			print("Can't handle more than 4 samples...Exiting!")
-			quit()
+			log(samples)
+			log("Can't handle more than 4 samples...Exiting!",True)
 		if nofile(self.vcf): self.bcf2vcf()
 		vcf_reader = vcf.Reader(open(self.vcf,"r"))
 		results = defaultdict(int)
@@ -313,8 +293,7 @@ class bcf:
 				data["overlap_"+tmp_str] += 1
 		for i,si in enumerate(samples):
 			if si not in self.samples:
-				print("Can't find %s in samples...Exiting" % si)
-				quit()
+				log("Can't find %s in samples...Exiting" % si,True)
 			data["id_%s"%i] = si
 			data["tot_snps_%s"%i] = tot_snps[si]
 		data["outfile"] = outfile
@@ -393,7 +372,6 @@ dev.off()
 			else:
 				switch = False
 			meta = tmp[-1] if switch else ";".join(sorted(list(set(results[s]))))
-#			print("%s\t%s" % (s,meta))
 			if outfile:
 				O.write("%s\t%s\n" % (s,meta))
 		if outfile:
@@ -426,7 +404,7 @@ dev.off()
 			return bcf(out_file)
 	def odds_ratio(self,bed_file,meta_file,ann_file):
 		drugs,meta = load_tsv(meta_file)
-		print drugs
+		log(drugs)
 		bed_dict = load_bed(bed_file,columns=[5,6],key1=4,key2=5)
 		subset_bcf_name = "%s.subset.bcf" % self.prefix
 		subset_bcf = self.bed_subset(bed_file,subset_bcf_name)
@@ -438,28 +416,22 @@ dev.off()
 				for var in bed_dict[gene][drug_combo][1].split(";"):
 					for drug in bed_dict[gene][drug_combo][0].split(";"):
 						if drug not in drugs: continue
-						# print("Looking at mutation %s in %s for drug %s" % (var,gene,drug))
 
 						tbl = [[0.5,0.5],[0.5,0.5]]
 						change_num,ref_aa,alt_aa = parse_mutation(var)
 
 						if gene not in variants: continue
-							# print "%s not in variants"%gene;continue
 						if change_num not in variants[gene]:	continue
-							# print "%s not in variants[%s]"%(change_num,gene);continue
 						try:
 							tbl[0][0] += len([s for s in meta.keys() if variants[gene][change_num][s]==alt_aa and meta[s][drug]=="1"])
 							tbl[1][0] += len([s for s in meta.keys() if variants[gene][change_num][s]==alt_aa and meta[s][drug]=="0"])
 							tbl[0][1] += len([s for s in meta.keys() if variants[gene][change_num][s]==ref_aa and meta[s][drug]=="1"])
 							tbl[1][1] += len([s for s in meta.keys() if variants[gene][change_num][s]==ref_aa and meta[s][drug]=="0"])
 						except:
-							print gene
-							print change_num
-							print variants[gene][change_num]
-							import pdb; pdb.set_trace()
+							pass
 						if tbl[0][0]+tbl[1][0]==1: continue
 						OR = (tbl[0][0]/tbl[0][1])/(tbl[1][0]/tbl[1][1])
-						print "%s\t%s\t%s\t%s\t%s" % (var,gene,drug,OR,tbl)
+						log("%s\t%s\t%s\t%s\t%s" % (var,gene,drug,OR,tbl))
 #		for record in tqdm(vcf_reader):
 #			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
 
@@ -477,88 +449,61 @@ dev.off()
 		change_num2pos = defaultdict(lambda:defaultdict(set))
 		ref_codons = defaultdict(lambda:defaultdict(dict))
 		variants = {s:[] for s in self.samples}
-		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ\\t%%AD]\\n' %s" % self.filename
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ\\t%%TGT\\t%%AD]\\n' %s" % self.filename
 		sys.stderr.write("%s\n"%cmd)
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = line.rstrip().split()
 			chrom = row[0]
 			pos = int(row[1])
 			ref = row[2]
-			alt = row[3]
+			alts = row[3].split(",")
+			alleles = [ref]+alts
 			if chrom in ann and pos in ann[chrom]:
 				ann_pos = int(ann[chrom][pos][1])
 				ann_gene = ann[chrom][pos][0]
 			else:
 				ann_pos = None
 			if len(row)==4:
-				if chrom in ann and pos in ann[chrom]:
-					cng = "%s%s>%s" % (ann_pos,ref,alt)
-					for sample in self.samples:
-						if alt in nuc_variants[chrom][pos][sample]:
-							variants[sample].append({"gene_id":ann_gene,"chr":chrom,"genome_pos":pos,"type":"non_coding","change":cng,freq:nuc_variants[chrom][pos][sample][alt]})
-						prot_variants[ann_gene][ann_pos][sample] = "%s%s>%s" % (ann_pos,ref,alt)
-						prot_dict[ann_gene][ann_pos][sample] = nuc_variants[chrom][pos][sample]
-						ref_codons[ann_gene][ann_pos] = ref
+				for alt in alts:
+					if chrom in ann and pos in ann[chrom]:
+						cng = "%s%s>%s" % (ann_pos,ref,alt)
+						for sample in self.samples:
+							if sample in nuc_variants[chrom][pos] and alt in nuc_variants[chrom][pos][sample]:
+								variants[sample].append({"sample":sample,"gene_id":ann_gene,"chr":chrom,"genome_pos":pos,"type":"non_coding","change":cng,"freq":nuc_variants[chrom][pos][sample][alt]})
 				continue
 
-			for i in range(4,len(row)-3,4):
+			for i in range(4,len(row)-4,5):
 				sample = row[i]
 				info = row[i+1].split("|") if row[i+1]!="." else row[i+2].split("|")
+				call1,call2 = row[i+3].split("/")
+				ad = [int(x) if x!="." else 0 for x in row[i+4].split(",")]
+
+				adr = {alleles[i]:d/sum(ad) for i,d in enumerate(ad)}
 				if row[i+1][0]=="@": continue
 				if info[-1]=="pseudogene": continue
 				gene = info[1]
 				if info[0]=="intron":continue
 				if info[0]=="frameshift&start_lost" or info[0]=="missense&inframe_altering" or info[0]=="missense" or info[0]=="*missense" or info[0]=="start_lost" or info[0]=="*start_lost" or info[0]=="*stop_lost" or info[0]=="stop_lost" or info[0]=="stop_gained" or info[0]=="*stop_gained":
-					change_num,ref_aa,alt_aa = parse_mutation(info[5])
-					change_num2pos[gene][change_num].add((chrom,pos))
-					ref_codons[gene][change_num] = ref_aa
-					prot_variants[gene][change_num][row[i]] = info[5]
-					prot_dict[gene][change_num][sample] = alt_aa
+					variants[sample].append({"sample":sample,"gene_id":gene,"chr":chrom,"genome_pos":pos,"type":info[0],"change":info[5],"freq":adr[call2]})
 
 				elif info[0]=="stop_lost&frameshift" or info[0]=="inframe_insertion" or info[0]=="*inframe_insertion" or info[0]=="inframe_deletion" or info[0]=="*inframe_deletion" or info[0]=="frameshift" or info[0]=="*frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
 					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6])
-					change_num2pos[gene][change_num].add((chrom,pos))
-					ref_codons[gene][change_num] = ref_nuc
 					change = "%s%s>%s" % (ann_pos,ref_nuc,alt_nuc) if ann_pos else None
-					if use_genomic and use_gene and change:
-						prot_variants[gene][change_num][row[i]] = change
-					elif use_genomic:
-						prot_variants[gene][change_num][row[i]] = info[6]
-					elif use_gene and change:
-						prot_variants[gene][change_num][row[i]] = change
-					else:
-						prot_variants[gene][change_num][row[i]] = info[5]
-					prot_dict[gene][change_num][sample] = alt_nuc
+					variants[sample].append({"sample":sample,"gene_id":gene,"chr":chrom,"genome_pos":pos,"type":info[0],"change":change,"freq":adr[call2]})
 				elif info[0]=="non_coding":
 					if chrom in ann and pos in ann[chrom]:
 						gene = ann[chrom][pos][0]
 						gene_pos = ann[chrom][pos][1]
-						prot_variants[gene][gene_pos][sample] = "%s%s>%s" % (gene_pos,ref,alt)
-						prot_dict[gene][gene_pos][sample] = alt
-						ref_codons[gene][gene_pos] = ref
+						change = "%s%s>%s" % (gene_pos,ref,call2)
+						variants[sample].append({"sample":sample,"gene_id":gene,"chr":chrom,"genome_pos":pos,"type":info[0],"change":change,"freq":adr[call2]})
 				else:
 					sys.stderr.write(line)
 					sys.stderr.write("Unknown variant type...Exiting!\n")
 					quit(1)
 
 
-		for gene in prot_variants:
-			for change_num in prot_variants[gene]:
-				for s in set(self.samples)-set(prot_variants[gene][change_num].keys()):
-					if "N" in  [nuc_variants[chrom][pos][s] for chrom,pos in change_num2pos[gene][change_num]]:
-						prot_variants[gene][change_num][s] = "?"
-						prot_dict[gene][change_num][s] = "?"
-					else:
-						pass
-						prot_dict[gene][change_num][s] = ref_codons[gene][change_num]
-#			if nuc_variants[row[0]][int(row[1])][s]=="N":
-#					prot_dict[gene][change_num] = "?"
+		return variants
 
-
-
-		for locus in prot_variants:
-			prot_variants[locus] = prot_variants[locus].values()
-		return prot_variants if changes else prot_dict
 
 	def load_csq(self,ann_file=None,changes=False,use_genomic=True,use_gene=True):
 		ann = defaultdict(dict)
@@ -784,7 +729,7 @@ DATA
 			if l[:2]=="##": OUT.write(l); continue
 			row = l.rstrip().split()
 			for i in range(9,len(row)):
-				if row[i] not in idx: print "%s not found in index file...Exiting!" % row[i]; quit(1)
+				if row[i] not in idx: log("%s not found in index file...Exiting!" % row[i],True)
 				row[i] = idx[row[i]]
 			OUT.write("%s\n" % "\t".join(row))
 		OUT.close()
@@ -794,7 +739,6 @@ DATA
 
 	def filt_variants(self,outfile,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1):
 		add_arguments_to_self(self,locals())
-		print vars(self)
 		self.bed_include = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
 		self.bed_exclude = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
 		"""Extract all variant positions"""
