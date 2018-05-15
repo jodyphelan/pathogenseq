@@ -5,7 +5,7 @@ import argparse
 
 def main(args):
 	bam = ps.bam(bam_file=args.bam,ref_file=args.ref,prefix=args.prefix,threads=args.threads)
-	bam.gbcf(threads=args.threads,platform=args.platform,primers=args.primers,call_method=args.method,vtype=args.vtype,min_dp=args.min_dp)
+	bam.gbcf(threads=args.threads,platform=args.platform,primers=args.primers,call_method=args.method,vtype=args.vtype,min_dp=args.min_dp,mpileup_options=args.mpileup_options)
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('bam', help='First read file')
@@ -17,7 +17,7 @@ parser.add_argument('--platform','-p', type=str,default="illumina",choices=["ill
 parser.add_argument('--primers', type=str,default=None,help='Mapping tool to use')
 parser.add_argument('--method', type=str,default="optimise",choices=["optimise","high","low"],help='Mapping tool to use')
 parser.add_argument('--min_dp', type=int,default=10,help='Minimum depth required to call an allele')
-
+parser.add_argument('--mpileup_options',default=None,type=str, help='First read file')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
