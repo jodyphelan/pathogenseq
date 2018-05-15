@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import csv
+import sys
 import os
 import pathogenseq.files as psf
 infile = sys.argv[1]
