@@ -5,8 +5,9 @@ import csv
 import argparse
 
 def main(args):
-
-	O = open(args.out_script,"w")
+	out_script = "%s.run.sh" % args.prefix
+	O = open(out_script,"w")
+	samples = []
 	for row in csv.DictReader(open(args.sample_file)):
 		params = {}
 		params["ref_file"] = "%s/%s" % (args.ref_dir,row["Reference"])
@@ -14,6 +15,7 @@ def main(args):
 		params["r1"] = "%s/%s" % (args.fastq_dir,row["ReadF"])
 		ps.filecheck(params["r1"])
 		params["prefix"] = row["ID"]
+		samples.append[row["ID"]]
 		params["threads"] = args.threads
 		params["centrifuge"] = "--centrifuge %s" % args.centrifuge if args.centrifuge else ""
 
@@ -28,10 +30,11 @@ def main(args):
 		else:
 			O.write("minION_pipeline.py %(ref_file)s %(r1)s %(prefix)s -t %(threads)s %(primers)s %(centrifuge)s\n" % params)
 	O.close()
+	open("%s.samples.txt","w").write("\t".join(samples))
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('sample_file', help='First read file')
-parser.add_argument('out_script', help='First read file')
+parser.add_argument('prefix', help='First read file')
 parser.add_argument('--platform','-m',choices=["illumina","minION"],default="illumina", help='First read file')
 parser.add_argument('--ref_dir','-r',default=".",type=str, help='First read file')
 parser.add_argument('--fastq_dir','-f',default=".",type=str, help='First read file')

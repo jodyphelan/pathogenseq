@@ -94,7 +94,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000,mpileup_options=None):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -135,12 +135,13 @@ class bam:
 			self.params["mpileup_options"] = "-ABq0 -Q0 -a DP,AD"
 		elif platform=="minION":
 			if vtype=="snps":
-				self.params["mpileup_options"] = "-IBq8 -a DP,AD"
+				self.params["mpileup_options"] = "-Iq8 -a DP,AD"
 			else:
-				self.params["mpileup_options"] = "-qB8 -a DP,AD"
+				self.params["mpileup_options"] = "-q8 -a DP,AD"
 		else:
 			log("Please choose a valid platform...Exiting!",ext=True)
-
+		if mpileup_options:
+			self.params["mpileup_options"] = mpileup_options
 
 		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s  | bcftools +setGT -Ob -o %(prefix)s_{2}.bcf -- -t q -i 'FMT/DP<%(min_dp)s' -n .\"" % self.params
 		run_cmd(cmd)
