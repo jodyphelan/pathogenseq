@@ -80,7 +80,8 @@ setup(
 		 'scripts/illumina_pipeline.py',
 		 'scripts/generate_run_file.py',
 		 'scripts/vcf2itol.py',
-		 'scripts/csv2fasta.py'
+		 'scripts/csv2fasta.py',
+		 'scripts/rename_fq.py'
 		],
 	data_files = [(sys.prefix,["pathogenseq.conf"])],
 
