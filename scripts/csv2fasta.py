@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import csv
-
+import sys
 infile = sys.argv[1]
 outfile = sys.argv[2]
 OUT = open(outfile,"w")
