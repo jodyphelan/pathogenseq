@@ -79,7 +79,8 @@ setup(
 		 'scripts/combine_dict_list.py',
 		 'scripts/illumina_pipeline.py',
 		 'scripts/generate_run_file.py',
-		 'scripts/vcf2itol.py'
+		 'scripts/vcf2itol.py',
+		 'scripts/csv2fasta.py'
 		],
 	data_files = [(sys.prefix,["pathogenseq.conf"])],
 
