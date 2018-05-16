@@ -30,7 +30,7 @@ def main(args):
 		else:
 			O.write("minION_pipeline.py %(ref_file)s %(r1)s %(prefix)s -t %(threads)s %(primers)s %(centrifuge)s\n" % params)
 	O.close()
-	open("%s.samples.txt","w").write("\t".join(samples))
+	open("%s.samples.txt" % args.prefix,"w").write("\t".join(samples))
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('sample_file', help='First read file')
