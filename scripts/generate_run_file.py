@@ -15,7 +15,7 @@ def main(args):
 		params["r1"] = "%s/%s" % (args.fastq_dir,row["ReadF"])
 		ps.filecheck(params["r1"])
 		params["prefix"] = row["ID"]
-		samples.append[row["ID"]]
+		samples.append(row["ID"])
 		params["threads"] = args.threads
 		params["centrifuge"] = "--centrifuge %s" % args.centrifuge if args.centrifuge else ""
 

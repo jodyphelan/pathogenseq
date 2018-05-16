@@ -39,6 +39,7 @@ def main(args):
 	if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
 	variants = bam.pileup2vcf(indels=False)
 	bcf = bam.gbcf(threads=threads,platform="minION",primers=args.primers,chunk_size=args.window)
+	bcf.generate_consensus(ref)
 	bcfstats = bcf.load_stats()
 	stats["hom_variants"] = bcfstats["PSC"][prefix]["nNonRefHom"]
 	stats["het_variants"] = bcfstats["PSC"][prefix]["nHets"]
