@@ -28,6 +28,9 @@ for var in dr_muts:
 	for drug in var["annotation"]:
 		var["drug"] = drug
 		new_results["small_variants_dr"].append(json.loads(json.dumps(var)))
-new_results["small_variants_other"] = other_muts
+for var in dr_muts:
+	var["gene"] = lt2gene[var["gene_id"]]
+	new_results["small_variants_dr"].append(var)
+
 
 json.dump(new_results,open(outfile,"w"))
