@@ -116,7 +116,7 @@ class mapping:
 		prefix = self.params["prefix"]
 		self.params["bwa_prefix"] = "bwa mem -t %(threads)s -c 100 -R '@RG\tID:%(prefix)s\tSM:%(prefix)s\tPL:%(platform)s' -M -T 50" % self.params
 		self.params["minimap2_prefix"] = "minimap2 -t %(threads)s -R '@RG\tID:%(prefix)s\tSM:%(prefix)s\tPL:%(platform)s' -a" % self.params
-		self.params["bowtie2_prefix"] = "bowtie2 -p %(threads)s --rg-id '%(prefix)s' --rg '@RG\tID:%(prefix)s\tSM:%(prefix)s\tPL:%(platform)s'" % self.params
+		self.params["bowtie2_prefix"] = "bowtie2 -p %(threads)s --rg-id '%(prefix)s' --rg 'SM:%(prefix)s\tPL:%(platform)s'" % self.params
 		self.params["bam_file"] = "%s.bam" % prefix
 		if self.params["platform"]=="minION" and self.mapper!="minimap2":
 			print "minION data not compatible with %s...Switching to minimap2" % self.mapper
