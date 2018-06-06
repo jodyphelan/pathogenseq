@@ -116,6 +116,9 @@ class bcf:
 				if calls=="N/N":
 					raw_variants[row[0]][row[1]][self.samples[i]]["N"] = 1.0
 					continue
+				elif calls=="%s/%s" % (row[2],row[2]) and ad==".":
+					raw_variants[row[0]][row[1]][self.samples[i]][row[2]] = 1.0
+					continue
 				ad = [int(x) if x!="." else 0 for x in ad.split(",")]
 				sum_ad = sum(ad)
 				for j in range(1,len(alleles)):
@@ -489,9 +492,9 @@ dev.off()
 				elif info[0]=="frameshift&start_lost" or info[0]=="missense&inframe_altering" or info[0]=="missense" or info[0]=="*missense" or info[0]=="start_lost" or info[0]=="*start_lost" or info[0]=="*stop_lost" or info[0]=="stop_lost" or info[0]=="stop_gained" or info[0]=="*stop_gained":
 					variants[sample].append({"sample":sample,"gene_id":gene,"chr":chrom,"genome_pos":pos,"type":info[0],"change":info[5],"freq":adr[call2]})
 
-				elif info[0]=="stop_lost&frameshift" or info[0]=="inframe_insertion" or info[0]=="*inframe_insertion" or info[0]=="inframe_deletion" or info[0]=="*inframe_deletion" or info[0]=="frameshift" or info[0]=="*frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
+				elif info[0]=="synonymous&stop_retained" or info[0]=="stop_lost&frameshift" or info[0]=="inframe_insertion" or info[0]=="*inframe_insertion" or info[0]=="inframe_deletion" or info[0]=="*inframe_deletion" or info[0]=="frameshift" or info[0]=="*frameshift" or info[0]=="synonymous" or info[0]=="*synonymous" or info[0]=="stop_retained":
 					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6])
-					change = "%s%s>%s" % (ann_pos,ref_nuc,alt_nuc) if ann_pos else None
+					change = "%s%s>%s" % (ann_pos,ref_nuc,alt_nuc) if ann_pos else "%s%s>%s" % (pos,ref_nuc,alt_nuc)
 					variants[sample].append({"sample":sample,"gene_id":gene,"chr":chrom,"genome_pos":pos,"type":info[0],"change":change,"freq":adr[call2]})
 				elif info[0]=="non_coding":
 					if chrom in ann and pos in ann[chrom]:
@@ -501,6 +504,7 @@ dev.off()
 						variants[sample].append({"sample":sample,"gene_id":gene,"chr":chrom,"genome_pos":pos,"type":info[0],"change":change,"freq":adr[call2]})
 				else:
 					sys.stderr.write(line)
+					sys.stderr.write(info[0]+"\n")
 					sys.stderr.write("Unknown variant type...Exiting!\n")
 					quit(1)
 
