@@ -123,13 +123,16 @@ class qc_fastq:
 			self.params["cf_filt_fq_1"] = "%(prefix)s_1.centrifuge_filt.fastq.gz" % self.params
 			self.params["cf_filt_fq_2"] = "%(prefix)s_2.centrifuge_filt.fastq.gz" % self.params
 			self.params["tmp_file"] = get_random_file()
-			O = open(self.params["tmp_file"],"w")
+			read_names = set()
 			for l in open(self.params["centrifuge_log"]):
 				#K00250:202:HNN53BBXX:8:1101:6066:998    NC_016947.1     1138382 21377   21377   235     302     4
 				row = l.rstrip().split()
 				if row[2] in taxa:
 					num_mtb+=1
-					O.write("%s\n" % row[0])
+					read_names.add(row[0])
+
+			O = open(self.params["tmp_file"],"w")
+			O.write("\n".join(list(read_names)))
 			O.close()
 			cmd = "seqtk subseq %(fq1)s %(tmp_file)s | pigz -p %(threads)s -c > %(cf_filt_fq_1)s" % self.params
 			run_cmd(cmd)
