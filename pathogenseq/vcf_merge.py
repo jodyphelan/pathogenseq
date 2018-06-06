@@ -50,7 +50,7 @@ class vcf_merge:
 		vcf_merge: A vcf_merge class object
 	"""
 
-	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4):
+	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4,min_dp=10):
 		add_arguments_to_self(self,locals())
 		self.samples = []
 		filecheck(sample_file)
@@ -75,7 +75,7 @@ class vcf_merge:
 		for i,tmp_samples in enumerate(chunks):
 			self.tmp_bcf = "%s.%s.tmp.bcf" % (self.prefix,i)
 			self.vcf_files = " ".join(["%s/%s.%s" % (self.vcf_dir,x,self.vcf_ext) for x in tmp_samples])
-			cmd = "bcftools merge --threads 2 -g %(ref_file)s -o %(tmp_bcf)s -O b %(vcf_files)s && bcftools index --threads 2 %(tmp_bcf)s" % vars(self)
+			cmd = "bcftools merge --threads 2 -g %(ref_file)s %(vcf_files)s | bcftools filter -e 'FMT/DP<=%(min_dp)s' -o %(tmp_bcf)s -O b && bcftools index --threads 2 %(tmp_bcf)s" % vars(self)
 			X.write("%s\n"%cmd)
 			tmp_bcfs.append(self.tmp_bcf)
 		X.close()
