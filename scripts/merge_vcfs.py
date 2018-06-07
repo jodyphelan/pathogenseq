@@ -14,7 +14,7 @@ def main(args):
 	bcf_masked_filt = "%s.mix_masked.bcf" % args.prefix
 	fasta_snps = "%s.snps.fa" % args.prefix
 
-	merged = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads).merge()
+	merged = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads,args.min_dp).merge()
 
 	vcf = merged.extract_variants(bcf_variant_pos,min_dp=args.min_dp,bed_include=args.bed_include,bed_exclude=args.bed_exclude)
 
@@ -45,6 +45,7 @@ parser.add_argument('--mappability_filter',action="store_true", help='Reference 
 parser.add_argument('--mappability_file','-m', help='Reference Sequence')
 parser.add_argument('--min_dp', default=10, type=int, help='Reference Sequence')
 parser.add_argument('--keep_samples', default=None,help='Reference Sequence')
+parser.add_argument('--min_dp', default=10,type=int,help='Minimum number of reads required for a non-missing call')
 parser.add_argument('--fmiss', default=0.1,type=float,help='The maximum fraction of missing data to keep SNP position')
 parser.add_argument('--miss_cut', default=0.15,type=float,help='Reference Sequence')
 parser.add_argument('--mix_cut',default=0.15,type=float, help='Reference Sequence')
