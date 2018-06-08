@@ -191,7 +191,6 @@ class bam:
 		out_cmd = "bcftools view -T ^%(del_bed)s -g miss -O b -o %(missing_bcf_file)s" % self.params
 		cmd = "%s %s %s" % (view_cmd,mix_cmd,out_cmd)
 		run_cmd(cmd)
-		print "#################     %(bcf_file)s ############" % self.params
 		out_cmd = "bcftools view -g ^miss -c 1 -O b -o %(bcf_file)s" % self.params
 		cmd = "%s %s %s" % (view_cmd,mix_cmd,out_cmd)
 		run_cmd(cmd)
