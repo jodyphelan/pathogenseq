@@ -143,7 +143,7 @@ class bam:
 		if mpileup_options:
 			self.params["mpileup_options"] = mpileup_options
 		self.params["missing_cmd"] = "| bcftools filter -e 'FMT/DP<=%(min_dp)s' -Ou" if low_dp_as_missing else ""
-		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s %(missing_cmd) |  bcftools view -Ob -o %(prefix)s_{2}.bcf \"" % self.params
+		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s %(missing_cmd)s | bcftools view -Ob -o %(prefix)s_{2}.bcf \"" % self.params
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
