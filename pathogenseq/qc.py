@@ -148,7 +148,7 @@ class qc_fastq:
 			if row[0]=="name": continue
 			if int(row[5])>top_num_reads:
 				top_hit = row[0].replace(" ","_")
-				top_num_reads = int(row[5])
+				top_num_reads = int(row[4])
 
 		if filter_fastq:
 			tmp = [top_hit,num_mtb/self.read_num]

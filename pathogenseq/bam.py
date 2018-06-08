@@ -177,14 +177,13 @@ class bam:
 
 	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
 		self.params["min_dp"] = min_dp
-		self.params["bcf_file"] = "%s.bcf" % self.prefix
 		self.params["bed_file"] = bed_file
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
 		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
 		self.params["missing_bcf_file"] = "%s.missing.bcf" % self.prefix
 		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
 		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file)
-
+		self.params["bcf_file"] = "%s.bcf" % self.prefix
 
 		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()
 		view_cmd = "bcftools view %(gbcf_file)s |" % self.params
@@ -192,7 +191,7 @@ class bam:
 		out_cmd = "bcftools view -T ^%(del_bed)s -g miss -O b -o %(missing_bcf_file)s" % self.params
 		cmd = "%s %s %s" % (view_cmd,mix_cmd,out_cmd)
 		run_cmd(cmd)
-
+		print "#################     %(bcf_file)s ############" % self.params
 		out_cmd = "bcftools view -g ^miss -c 1 -O b -o %(bcf_file)s" % self.params
 		cmd = "%s %s %s" % (view_cmd,mix_cmd,out_cmd)
 		run_cmd(cmd)
