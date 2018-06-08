@@ -142,7 +142,7 @@ class bam:
 			log("Please choose a valid platform...Exiting!",ext=True)
 		if mpileup_options:
 			self.params["mpileup_options"] = mpileup_options
-		self.params["missing_cmd"] = "| bcftools filter -e 'FMT/DP<=%(min_dp)s' -Ou" if low_dp_as_missing else ""
+		self.params["missing_cmd"] = "| bcftools filter -e 'FMT/DP<%(min_dp)s' -Ou -S ." % self.params if low_dp_as_missing else ""
 		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s %(missing_cmd)s | bcftools view -Ob -o %(prefix)s_{2}.bcf \"" % self.params
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
@@ -175,14 +175,14 @@ class bam:
 
 		return bcf(self.params["bcf_file"],prefix=self.prefix)
 
-	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False,low_dp_as_missing=True):
+	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
 		self.params["min_dp"] = min_dp
 		self.params["bed_file"] = bed_file
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
 		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
 		self.params["missing_bcf_file"] = "%s.missing.bcf" % self.prefix
 		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
-		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file)
+		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file,low_dp_as_missing=True)
 		self.params["bcf_file"] = "%s.bcf" % self.prefix
 
 		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()

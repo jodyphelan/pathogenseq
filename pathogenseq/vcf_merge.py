@@ -75,7 +75,7 @@ class vcf_merge:
 		for i,tmp_samples in enumerate(chunks):
 			self.tmp_bcf = "%s.%s.tmp.bcf" % (self.prefix,i)
 			self.vcf_files = " ".join(["%s/%s.%s" % (self.vcf_dir,x,self.vcf_ext) for x in tmp_samples])
-			cmd = "bcftools merge --threads 2 -g %(ref_file)s %(vcf_files)s | bcftools filter -e 'FMT/DP<=%(min_dp)s' -o %(tmp_bcf)s -O b && bcftools index --threads 2 %(tmp_bcf)s" % vars(self)
+			cmd = "bcftools merge --threads 2 -g %(ref_file)s %(vcf_files)s | bcftools filter -e 'FMT/DP<%(min_dp)s' -o %(tmp_bcf)s -O b -S . && bcftools index --threads 2 %(tmp_bcf)s" % vars(self)
 			X.write("%s\n"%cmd)
 			tmp_bcfs.append(self.tmp_bcf)
 		X.close()
