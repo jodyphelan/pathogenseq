@@ -94,7 +94,7 @@ class bam:
 		else:
 			print "Using high depth approach"
 			return "high"
-	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000,mpileup_options=None):
+	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000,mpileup_options=None,low_dp_as_missing=False):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -142,8 +142,8 @@ class bam:
 			log("Please choose a valid platform...Exiting!",ext=True)
 		if mpileup_options:
 			self.params["mpileup_options"] = mpileup_options
-
-		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s | bcftools view -Ob -o %(prefix)s_{2}.bcf \"" % self.params
+		self.params["missing_cmd"] = "| bcftools filter -e 'FMT/DP<=%(min_dp)s' -Ou" if low_dp_as_missing else ""
+		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s %(missing_cmd) |  bcftools view -Ob -o %(prefix)s_{2}.bcf \"" % self.params
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)
@@ -175,7 +175,7 @@ class bam:
 
 		return bcf(self.params["bcf_file"],prefix=self.prefix)
 
-	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
+	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False,low_dp_as_missing=True):
 		self.params["min_dp"] = min_dp
 		self.params["bed_file"] = bed_file
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
