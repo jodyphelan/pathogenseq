@@ -281,6 +281,8 @@ class qc_bam:
 		plot.set_xlabel("Genome Position (%sb)" % n)
 		plot.set_ylabel("Median Coverage (Window size:%s)" % window)
 		if plot_median:
+			ymax = max(y) if max(y)>chrom_med_dp else chrom_med_dp
+			plot.set_ylim(top=ymax+ymax*0.05)
 			plot.axhline(xmin=0,xmax=1,y=chrom_med_dp,color="orange",linestyle="dashed")
 		if offset:
 			plot.axvline(ymin=0,ymax=0.05,x=start/d,color="orange")
