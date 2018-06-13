@@ -190,8 +190,9 @@ def rm_files(x,verbose=True):
 	Remove a files in a list format
 	"""
 	for f in x:
-		if verbose: print("Removing %s" % f)
-		os.remove(f)
+		if os.path.isfile(f):
+			if verbose: print("Removing %s" % f)
+			os.remove(f)
 
 def file_len(filename):
 	"""
