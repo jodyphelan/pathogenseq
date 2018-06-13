@@ -81,8 +81,8 @@ class bam:
 		run_cmd(cmd)
 		cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` | bcftools sort -Ob -o %(primer_bcf)s" % self.params
 		run_cmd(cmd)
-		rm_files(["%s.bcf" % x for x in primer_ids])
-		rm_files(["%s.bam" % x for x in primer_ids])
+		rm_files(["%s.%s.bcf" % (self.prefix,x) for x in primer_ids])
+		rm_files(["%s.%s.bam" % (self.prefix,x) for x in primer_ids])
 	def get_calling_params(self):
 		dp = []
 		cmd = "samtools depth %(bam_file)s" % self.params
