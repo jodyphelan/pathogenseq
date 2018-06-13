@@ -157,7 +157,7 @@ def run_cmd(cmd,verbose=1):
 		print("Command Failed! Please Check!")
 		exit(1)
 
-def index_bam(bamfile,threads=4,overwrite=False):
+def index_bam(bamfile,threads=4,overwrite=True):
 	"""
 	Indexing a bam file
 	"""
@@ -170,7 +170,7 @@ def index_bcf(bcf,threads=4):
 	"""
 	Indexing a bcf file
 	"""
-	if filecheck(bcf) and  nofile(bcf+".csi"):
+	if filecheck(bcf):
 		cmd = "bcftools index --threads %s %s" % (threads,bcf)
 		run_cmd(cmd)
 def verify_fq(filename):
