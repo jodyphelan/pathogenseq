@@ -82,7 +82,8 @@ setup(
 		 'scripts/vcf2itol.py',
 		 'scripts/csv2fasta.py',
 		 'scripts/rename_fq.py',
-		 'scripts/profiler2tbprofiler.py'
+		 'scripts/profiler2tbprofiler.py',
+		 'scripts/select_reference.py'
 		],
 	data_files = [(sys.prefix,["pathogenseq.conf"])],
 
