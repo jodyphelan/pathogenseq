@@ -41,7 +41,7 @@ parser.add_argument('--ref_dir','-r',default=".",type=str, help='First read file
 parser.add_argument('--fastq_dir','-f',default=".",type=str, help='First read file')
 parser.add_argument('--primer_dir',"-p",default=".",type=str, help='First read file')
 parser.add_argument('--threads',"-t",type=int,default=1, help='First read file')
-parser.add_argument('--mapper',"-m",type=str,choices=["bwa","minimap2","bowtie2"],default=bwa, help='First read file')
+parser.add_argument('--mapper',"-m",type=str,choices=["bwa","minimap2","bowtie2"],default="bwa", help='First read file')
 parser.add_argument('--centrifuge','-c',type=str,default=None)
 parser.set_defaults(func=main)
 
