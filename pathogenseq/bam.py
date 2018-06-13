@@ -54,9 +54,11 @@ class bam:
 		self.params["threads"] = threads
 	def generate_primer_bcf(self,threads=4,flank=30):
 		self.params["failed_primers"] = "%(prefix)s.failed_primers.bed" % self.params
+		primer_ids = []
 		FAILED = open(self.params["failed_primers"],"w")
 		for l in tqdm(open(self.params["primer_bed_file"])):
 			chrom,start,end,pid = l.rstrip().split()[:4]
+			primer_ids.append(pid)
 			start = int(start)
 			end = int(end)
 			tmp_bcf = "%s.%s.bcf" % (self.prefix,pid)
@@ -79,6 +81,8 @@ class bam:
 		run_cmd(cmd)
 		cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` | bcftools sort -Ob -o %(primer_bcf)s" % self.params
 		run_cmd(cmd)
+		rm_files(["%s.bcf" % x for x in primer_ids])
+		rm_files(["%s.bam" % x for x in primer_ids])
 	def get_calling_params(self):
 		dp = []
 		cmd = "samtools depth %(bam_file)s" % self.params

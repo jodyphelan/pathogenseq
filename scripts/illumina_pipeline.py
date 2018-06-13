@@ -26,7 +26,7 @@ def main(args):
 	stats["mean_read_len"] = fq_qc.mean_read_len
 	stats["median_read_len"] = fq_qc.median_read_len
 	stats["read_num"] = fq_qc.read_num
-	bam = fq.illumina()
+	bam = fq.illumina(mapper=args.mapper)
 	bam_qc = bam.get_bam_qc()
 	stats["med_dp"] = bam_qc.med_dp
 	stats["pct_reads_mapped"] = bam_qc.pct_reads_mapped
@@ -51,6 +51,7 @@ parser.add_argument('r1', help='First read file')
 parser.add_argument('r2', help='First read file')
 parser.add_argument('prefix', help='First read file')
 parser.add_argument('--threads',"-t",type=int,default=1, help='First read file')
+parser.add_argument('--mapper',"-m",type=str,choices=["bwa","minimap2","bowtie2"],default=bwa, help='First read file')
 parser.add_argument('--bed_cov',"-b",default=None, help='First read file')
 parser.add_argument('--primers',"-p",default=None, help='First read file')
 parser.add_argument('--centrifuge',"-c",default=None, help='First read file')

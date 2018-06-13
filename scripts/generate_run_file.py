@@ -17,6 +17,7 @@ def main(args):
 		params["prefix"] = row["ID"]
 		samples.append(row["ID"])
 		params["threads"] = args.threads
+		params["mapper"] = args.mapper
 		params["centrifuge"] = "--centrifuge %s" % args.centrifuge if args.centrifuge else ""
 
 		if "Primers" in row and row["Primers"]!="NA":
@@ -26,7 +27,7 @@ def main(args):
 		if args.platform=="illumina":
 			params["r2"] = "%s/%s" % (args.fastq_dir,row["ReadR"])
 			ps.filecheck(params["r2"])
-			O.write("illumina_pipeline.py %(ref_file)s %(r1)s %(r2)s %(prefix)s -t %(threads)s %(primers)s %(centrifuge)s\n" % params)
+			O.write("illumina_pipeline.py %(ref_file)s %(r1)s %(r2)s %(prefix)s -t %(threads)s -m %(mapper)s %(primers)s %(centrifuge)s\n" % params)
 		else:
 			O.write("minION_pipeline.py %(ref_file)s %(r1)s %(prefix)s -t %(threads)s %(primers)s %(centrifuge)s\n" % params)
 	O.close()
@@ -40,6 +41,7 @@ parser.add_argument('--ref_dir','-r',default=".",type=str, help='First read file
 parser.add_argument('--fastq_dir','-f',default=".",type=str, help='First read file')
 parser.add_argument('--primer_dir',"-p",default=".",type=str, help='First read file')
 parser.add_argument('--threads',"-t",type=int,default=1, help='First read file')
+parser.add_argument('--mapper',"-m",type=str,choices=["bwa","minimap2","bowtie2"],default=bwa, help='First read file')
 parser.add_argument('--centrifuge','-c',type=str,default=None)
 parser.set_defaults(func=main)
 
