@@ -79,7 +79,7 @@ class bam:
 		run_cmd(cmd)
 		cmd = "cat %(failed_primers)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1}:{2}-{3} | bcftools call %(vtype)s -m | bcftools +setGT -Ob -o %(prefix)s.{4}.bcf -- -t a -n .\"" % self.params
 		run_cmd(cmd)
-		cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` | bcftools sort -Ob -o %(primer_bcf)s" % self.params
+		cmd = "bcftools concat `cut -f4 %(primer_bed_file)s | awk '{print \"%(prefix)s.\"$1\".bcf\"}'` -d all | bcftools sort -Ob -o %(primer_bcf)s" % self.params
 		run_cmd(cmd)
 		rm_files(["%s.%s.bcf" % (self.prefix,x) for x in primer_ids])
 		rm_files(["%s.%s.bam" % (self.prefix,x) for x in primer_ids])
