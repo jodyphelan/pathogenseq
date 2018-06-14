@@ -83,6 +83,7 @@ class bam:
 		run_cmd(cmd)
 		rm_files(["%s.%s.bcf" % (self.prefix,x) for x in primer_ids])
 		rm_files(["%s.%s.bam" % (self.prefix,x) for x in primer_ids])
+		rm_files(["%s.%s.bam.bai" % (self.prefix,x) for x in primer_ids])
 	def get_calling_params(self):
 		dp = []
 		cmd = "samtools depth %(bam_file)s" % self.params

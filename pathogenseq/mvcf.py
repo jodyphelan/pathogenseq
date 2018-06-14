@@ -847,6 +847,6 @@ DATA
 			self.final_fa = "%(prefix)s.%(tmp_sample)s.fasta" % vars(self)
 			FA = open(self.final_fa,"w")
 			for seq in fa_dict:
-				FA.write(">%s_%s\n%s" % (self.tmp_sample,seq,fa_dict[seq]))
+				FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
 			FA.close()
 			rm_files([self.tmp_file,self.tmp_fa])
