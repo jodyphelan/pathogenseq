@@ -34,12 +34,18 @@ def cmd_out(cmd,verbose=1):
 		exit(1)
 	stderr.close()
 
-def get_random_file(prefix = None):
+def get_random_file(prefix = None,extension=None):
 	randint = rand_generator.randint(1,999999)
 	if prefix:
-		return "%s.%s.txt" % (prefix,randint)
+		if extension:
+			return "%s.%s.%s" % (prefix,randint,extension)
+		else:
+			return "%s.%s.txt" % (prefix,randint)
 	else:
-		return "%s.tmp.txt" % (randint)
+		if extension:
+			return "%s.tmp.%s" % (randint,extension)
+		else:
+			return "%s.tmp.txt" % (randint)
 
 def log(msg,ext=False):
 	sys.stderr.write(str(msg)+"\n")

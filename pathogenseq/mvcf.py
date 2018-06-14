@@ -833,7 +833,7 @@ DATA
 		add_arguments_to_self(self,locals())
 		for s in self.samples:
 			self.tmp_sample = s
-			cmd = "bcftools view -s %(tmp_sample)s -i 'GT==\"./.\"' %(filename)s | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
+			cmd = "bcftools view -s %(tmp_sample)s  %(filename)s -Ou | bcftools filter -e 'GT=\"het\"' -S . -Ou | bcftools view -i 'GT==\"./.\"' -Ou | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
 			self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
 			TMP = open(self.tmp_file,"w")
 			for l in cmd_out(cmd):
