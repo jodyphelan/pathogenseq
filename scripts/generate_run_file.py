@@ -29,6 +29,7 @@ def main(args):
 			ps.filecheck(params["r2"])
 			O.write("illumina_pipeline.py %(ref_file)s %(r1)s %(r2)s %(prefix)s -t %(threads)s -m %(mapper)s %(primers)s %(centrifuge)s\n" % params)
 		else:
+			self.params["window"] = "--window %s" % args.window if args.window else ""
 			O.write("minION_pipeline.py %(ref_file)s %(r1)s %(prefix)s -t %(threads)s %(primers)s %(centrifuge)s\n" % params)
 	O.close()
 	open("%s.samples.txt" % args.prefix,"w").write("\n".join(samples))
@@ -43,6 +44,7 @@ parser.add_argument('--primer_dir',"-p",default=".",type=str, help='First read f
 parser.add_argument('--threads',"-t",type=int,default=1, help='First read file')
 parser.add_argument('--mapper',type=str,choices=["bwa","minimap2","bowtie2"],default="bwa", help='First read file')
 parser.add_argument('--centrifuge','-c',type=str,default=None)
+parser.add_argument('--window',default=None,type=int, help='First read file')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
