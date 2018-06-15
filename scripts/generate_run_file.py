@@ -29,7 +29,7 @@ def main(args):
 			ps.filecheck(params["r2"])
 			O.write("illumina_pipeline.py %(ref_file)s %(r1)s %(r2)s %(prefix)s -t %(threads)s -m %(mapper)s %(primers)s %(centrifuge)s\n" % params)
 		else:
-			self.params["window"] = "--window %s" % args.window if args.window else ""
+			params["window"] = "--window %s" % args.window if args.window else ""
 			O.write("minION_pipeline.py %(ref_file)s %(r1)s %(prefix)s -t %(threads)s %(primers)s %(centrifuge)s\n" % params)
 	O.close()
 	open("%s.samples.txt" % args.prefix,"w").write("\n".join(samples))
