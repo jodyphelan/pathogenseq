@@ -850,3 +850,26 @@ DATA
 				FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
 			FA.close()
 			rm_files([self.tmp_file,self.tmp_fa])
+	def distance(self,outfile):
+		add_arguments_to_self(self,locals())
+		matrix = [[0 for x in self.samples] for s in self.samples]
+		def get_matrix_seqs(x):
+			c=0
+			for i in range(x):
+				for j in range(c):
+					yield (i,j)
+				c+=1
+
+		cmd = "bcftools query -f '[\\t%%GT]\\n' %(filename)s" % vars(self)
+		idx = list(get_matrix_seqs(len(self.samples)))
+		for l in cmd_out(cmd):
+			row = l.strip().split()
+			for i,j in idx:
+				if row[i]=="./." or row[j]=="./.": continue
+				if row[i]!=row[j]:
+					matrix[i][j]+=1
+		OUT = open(outfile,"w")
+		OUT.write("\t".join(self.samples)+"\n")
+		OUT.write("\n".join(["\t".join([str(d) for d in matrix[j]]) for j in range(len(self.samples))]))
+		OUT.close()
+		return {"sample":self.samples,"matrix":matrix}
