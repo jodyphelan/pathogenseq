@@ -868,6 +868,8 @@ DATA
 				if row[i]=="./." or row[j]=="./.": continue
 				if row[i]!=row[j]:
 					matrix[i][j]+=1
+		for i,j in idx:
+			matrix[j][i] = matrix[i][j]
 		OUT = open(outfile,"w")
 		OUT.write("\t".join(self.samples)+"\n")
 		OUT.write("\n".join(["\t".join([str(d) for d in matrix[j]]) for j in range(len(self.samples))]))
