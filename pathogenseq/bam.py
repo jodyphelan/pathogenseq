@@ -140,9 +140,9 @@ class bam:
 			self.params["mpileup_options"] = "-ABq0 -Q0 -a DP,AD"
 		elif platform=="minION":
 			if vtype=="snps":
-				self.params["mpileup_options"] = "-Iq8 -a DP,AD"
+				self.params["mpileup_options"] = "-BIq8 -a DP,AD"
 			else:
-				self.params["mpileup_options"] = "-q8 -a DP,AD"
+				self.params["mpileup_options"] = "-Bq8 -a DP,AD"
 		else:
 			log("Please choose a valid platform...Exiting!",ext=True)
 		if mpileup_options:
