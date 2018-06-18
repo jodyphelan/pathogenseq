@@ -862,7 +862,7 @@ DATA
 
 		cmd = "bcftools query -f '[\\t%%GT]\\n' %(filename)s" % vars(self)
 		idx = list(get_matrix_seqs(len(self.samples)))
-		for l in cmd_out(cmd):
+		for l in tqdm(cmd_out(cmd)):
 			row = l.strip().split()
 			for i,j in idx:
 				if row[i]=="./." or row[j]=="./.": continue
