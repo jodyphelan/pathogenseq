@@ -207,9 +207,9 @@ def variants2vcf(var_file,seq1_file,seq2_file,prefix,vcf_file):
 				if pos!=npos+1:
 					OUT.write("%s\t%s\t.\t%s\t.\t.\t.\tEND=%s;MinDP=20\tGT:DP\t0/0:%s\n" % (nseq1_chrom,npos+1,seq1_dict.get_seq(seq1_chrom,npos),pos-1,good_dp))
 			var = variants[seq1_chrom][pos]
-			if pos==165608: print var
+			if pos==165608: log(var)
 			if var[0]=="N" or var[0]=="n" or var[1]=="N" or var[1]=="n":
-				if pos==165608: print var
+				if pos==165608: log(var)
 				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\t.\tGT:DP\t%s:%s\n" % (seq1_chrom,pos,var[0],".","./.","."))
 			else:
 				OUT.write("%s\t%s\t.\t%s\t%s\t255\t.\t.\tGT:DP\t%s:%s\n" % (seq1_chrom,pos,var[0],var[1],var[2],var[3]))

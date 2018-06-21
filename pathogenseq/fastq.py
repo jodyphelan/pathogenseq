@@ -31,7 +31,7 @@ class fastq:
 		if r1 and filecheck(r1):
 			self.params["r1"] = r1
 		else:
-			print "Provide at least one fastq file...Exiting\n";quit()
+			log("Provide at least one fastq file...Exiting\n",True)
 		if r2 and filecheck(r2):
 			self.params["r2"] = r2
 			self.paired = True
@@ -95,8 +95,7 @@ class mapping:
 		elif mapper=="bowtie2": bowtie_index(ref_file)
 		self.params = {}
 		if (paired1 and not paired2) or (paired2 and not paired1):
-			print "Please provide two paired end reads...Exiting"
-			quit()
+			log("Please provide two paired end reads...Exiting",True)
 		self.paired = True if paired1 and paired2 else False
 		if paired1 and filecheck(paired1): self.params["paired1"] = paired1
 		if paired2 and filecheck(paired2): self.params["paired2"] = paired2
@@ -105,8 +104,7 @@ class mapping:
 		self.params["threads"] = threads
 		self.params["platform"] = platform
 		if mapper!="bowtie2" and mapper!="bwa" and mapper!="minimap2":
-			print "Please specify correct mapper...Exiting"
-			quit()
+			log("Please specify correct mapper...Exiting",True)
 		self.mapper = mapper
 		if filecheck(ref_file): self.params["ref_file"] = ref_file
 
@@ -119,7 +117,7 @@ class mapping:
 		self.params["bowtie2_prefix"] = "bowtie2 -p %(threads)s --rg-id '%(prefix)s' --rg 'SM:%(prefix)s\tPL:%(platform)s'" % self.params
 		self.params["bam_file"] = "%s.bam" % prefix
 		if self.params["platform"]=="minION" and self.mapper!="minimap2":
-			print "minION data not compatible with %s...Switching to minimap2" % self.mapper
+			log("minION data not compatible with %s...Switching to minimap2" % self.mapper)
 			self.mapper = "minimap2"
 		if self.paired:
 			self.params["bam_pair"] = "%s.pair.bam" % prefix

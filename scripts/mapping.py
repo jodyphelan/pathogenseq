@@ -4,7 +4,7 @@ import argparse
 
 def main(args):
 	if not args.prefix:
-		print "Please specify prefix with -p"
+		pathogenseq.log("Please specify prefix with -p")
 		quit(1)
 	x= pathogenseq.fastq(args.prefix,args.ref,args.r1,args.r2,threads=args.threads)
 	x.illumina(mapper=args.mapper)

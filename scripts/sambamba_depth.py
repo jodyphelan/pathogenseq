@@ -3,8 +3,8 @@ import pathogenseq as ps
 import sys
 
 if len(sys.argv)!=5:
-	print "sambamba_depth.py <ref> <bam> <prefix> <threads>"
-	quit(1)
+	ps.log("sambamba_depth.py <ref> <bam> <prefix> <threads>",True)
+
 
 ref_file = sys.argv[1]
 bam_file = sys.argv[2]

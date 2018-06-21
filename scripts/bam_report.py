@@ -5,25 +5,25 @@ import json
 
 def main(args):
     if not args.bam:
-        print "Please provide bam file"
+        ps.log("Please provide bam file")
         quit()
     else:
          ps.filecheck(args.bam)
     if not args.ref:
-        print "Please provide reference"
+        ps.log("Please provide reference")
         quit()
     else:
         ps.filecheck(args.ref)
         fasta = ps.fasta(args.ref)
     if not args.prefix:
-        print "Please provide prefix"
+        ps.log("Please provide prefix")
         quit()
     if args.gff and args.bed:
-        print "Please provide either a GFF file or BED file but not both...Exiting!"
+        ps.log("Please provide either a GFF file or BED file but not both...Exiting!")
         quit()
     if args.gff:
         if not args.gffkey:
-            print "Please provide the key to look for in the GFF file...Exiting!"
+            ps.log("Please provide the key to look for in the GFF file...Exiting!")
             quit()
         else:
             ps.filecheck(args.gff)

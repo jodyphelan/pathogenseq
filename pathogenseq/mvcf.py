@@ -643,17 +643,17 @@ dev.off()
 				if nuc1!="?" and nuc2!="?" and nuc1!="N" and nuc2!="N":
 					if nuc1!=nuc2:
 						num_transitions+=1
-						print "%s>%s" % (nuc1,nuc2)
+						log("%s>%s" % (nuc1,nuc2))
 			if num_transitions>1:
-				print "Site: %s" % i
-				print "Number of transitions: %s" % num_transitions
-				print "Location: %s" % (reduced[i][1])
+				log("Site: %s" % i)
+				log("Number of transitions: %s" % num_transitions)
+				log("Location: %s" % (reduced[i][1]))
 				for node in t.traverse("postorder"):
 					nuc = fdict[node.name][i]
 					node.add_features(nuc=nuc)
 					#p = probs[node.name][i][nuc] if node.name in probs else 1.0
 					#node.add_features(prob=p)
-				print t.get_ascii(attributes=["name", "nuc"], show_internal=True)
+				log(t.get_ascii(attributes=["name", "nuc"], show_internal=True))
 
 	def itol_from_bcf(self,mutation_file,amino_acid=False):
 		if amino_acid:

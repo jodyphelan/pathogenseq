@@ -75,13 +75,11 @@ def load_bed(filename,columns,key1,key2=None):
 		row = l.rstrip().split()
 		if key2:
 			if max(columns+[key1,key2])>len(row):
-				print "Can't access a column in BED file. The largest column specified is too big"
-				quit(1)
+				log("Can't access a column in BED file. The largest column specified is too big",True)
 			results[row[key1-1]][row[key2-1]] = tuple([row[int(x)-1] for x in columns])
 		else:
 			if max(columns+[key1])>len(row):
-				print "Can't access a column in BED file. The largest column specified is too big"
-				quit(1)
+				log("Can't access a column in BED file. The largest column specified is too big",True)
 			results[row[key1-1]]= tuple([row[int(x)-1] for x in columns])
 	return results
 
@@ -100,17 +98,17 @@ def split_bed(bed_file,size,reformat=False):
 				loc = "%s:%s-%s" % (chrom,tmps,tmpe)
 				loc_str = "%s_%s_%s" % (chrom,tmps,tmpe)
 				if reformat:
-					print "%s\t%s" % (loc,loc_str)
+					log("%s\t%s" % (loc,loc_str))
 				else:
-					print loc
+					log(loc)
 				tmps=tmpe+1
 		else:
 			loc = "%s:%s-%s" % (chrom,start,end)
 			loc_str = "%s_%s_%s" % (chrom,start,end)
 			if reformat:
-				print "%s\t%s" % (loc,loc_str)
+				log("%s\t%s" % (loc,loc_str))
 			else:
-				print loc
+				log(loc)
 def filecheck(filename):
 	"""
 	Check if file is there and quit if it isn't
@@ -251,5 +249,5 @@ def which(program):
 def programs_check(programs):
 	for p in programs:
 		if which(p)==None:
-			print "Can't find %s in path... Exiting." % p
+			log("Can't find %s in path... Exiting." % p)
 			quit(1)

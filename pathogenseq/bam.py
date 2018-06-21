@@ -87,17 +87,17 @@ class bam:
 	def get_calling_params(self):
 		dp = []
 		cmd = "samtools depth %(bam_file)s" % self.params
-		print "Optimising call method"
+		log("Optimising call method")
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
 			arr = l.rstrip().split()
 			dp.append(int(arr[2]))
 		med_dp = np.median(dp)
-		print "Median depth: %s" % med_dp
+		log("Median depth: %s" % med_dp)
 		if med_dp<30:
-			print "Using low depth approach"
+			log("Using low depth approach")
 			return "low"
 		else:
-			print "Using high depth approach"
+			log("Using high depth approach")
 			return "high"
 	def gbcf(self,call_method="optimise",min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000,mpileup_options=None,low_dp_as_missing=False):
 		"""

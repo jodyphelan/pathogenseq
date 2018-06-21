@@ -22,15 +22,15 @@ class phylo:
 		self.params["prefix"] = prefix
 	def examl(self):
 		programs_check(["raxmlHPC","parse-examl","examl"])
-		print "Converting to phylip"
+		log("Converting to phylip")
 		self.params["phylip_file"] = "%s.phylip" % self.params["prefix"]
 		self.fasta.write_philip(self.params["phylip_file"])
-		print "Creating starting tree"
+		log("Creating starting tree")
 		cmd = "raxmlHPC -y -m GTRCAT -p 12345 -s %(fa_file)s  -n StartingTree -T %(threads)s" % self.params
 		run_cmd(cmd)
-		print "Creating binary file"
+		log("Creating binary file")
 		cmd = "parse-examl -s %(phylip_file)s -n %(prefix)s -m DNA" % self.params
 		run_cmd(cmd)
-		print "Running EXaML"
+		log("Running EXaML")
 		cmd = "examl -s %(prefix)s.binary -n examl -m PSR -D -t RAxML_parsimonyTree.StartingTree" % self.params
 		run_cmd(cmd)

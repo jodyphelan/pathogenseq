@@ -13,6 +13,6 @@ for s in samples:
 	for x in results[s]:
 		keys.add(x)
 
-print "sample\t%s"%"\t".join(keys)
+print("sample\t%s"%"\t".join(keys))
 for s in samples:
-	print "%s\t%s" % (s,"\t".join([str(results[s][k]) if k in results[s] else "-" for k in keys]))
+	print("%s\t%s" % (s,"\t".join([str(results[s][k]) if k in results[s] else "-" for k in keys])))

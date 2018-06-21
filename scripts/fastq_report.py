@@ -5,13 +5,13 @@ import json
 
 def main(args):
     if not args.r1:
-        print "Please provide at least one fastq file with -1...Exiting"
+        ps.log("Please provide at least one fastq file with -1...Exiting")
         quit()
     else:
         ps.filecheck(args.r1)
     if args.r2: ps.filecheck(args.r2)
     if not args.prefix:
-        print "Please provide a file output prefix...Exiting"
+        ps.log("Please provide a file output prefix...Exiting")
         quit()
 
     stats = {}
