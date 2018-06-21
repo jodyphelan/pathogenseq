@@ -166,7 +166,7 @@ def index_bam(bamfile,threads=4,overwrite=True):
 	Indexing a bam file
 	"""
 	if filecheck(bamfile):
-	 	if nofile(bamfile+".bai") or overwrite:
+		if nofile(bamfile+".bai") or overwrite:
 			cmd = "samtools index -@ %s %s" % (threads,bamfile)
 			run_cmd(cmd)
 
@@ -230,21 +230,21 @@ def download_from_ena(acc):
 	run_cmd(cmd)
 
 def which(program):
-    import os
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+	import os
+	def is_exe(fpath):
+		return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
+	fpath, fname = os.path.split(program)
+	if fpath:
+		if is_exe(program):
+			return program
+	else:
+		for path in os.environ["PATH"].split(os.pathsep):
+			exe_file = os.path.join(path, program)
+			if is_exe(exe_file):
+				return exe_file
 
-    return None
+	return None
 
 def programs_check(programs):
 	for p in programs:
