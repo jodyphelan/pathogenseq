@@ -20,15 +20,15 @@ default_conf = {
 }
 
 class InstallCommand(Command):
-    description = "Installs the foo."
-    user_options = [
-        ('arch=', "a", 'Specify the arch'),
-    ]
-    def initialize_options(self):
-        self.arch = "Linux"
-    def finalize_options(self):
-        assert self.arch in ('Linux', 'osX'), 'Invalid Arch!'
-    def run(self):
+	description = "Installs the foo."
+	user_options = [
+		('arch=', "a", 'Specify the arch'),
+	]
+	def initialize_options(self):
+		self.arch = "Linux"
+	def finalize_options(self):
+		assert self.arch in ('Linux', 'osX'), 'Invalid Arch!'
+	def run(self):
 		subprocess.call("bash install_prerequisites.sh",shell=True)
 		cwd = os.path.dirname(os.path.realpath(__file__))
 		new_conf = default_conf
@@ -37,13 +37,13 @@ class InstallCommand(Command):
 		json.dump(new_conf,open("pathogenseq.conf","w"))
 
 class init_conf(Command):
-    description = "Installs the foo."
-    user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-    def run(self):
+	description = "Installs the foo."
+	user_options = []
+	def initialize_options(self):
+		pass
+	def finalize_options(self):
+		pass
+	def run(self):
 		json.dump(default_conf,open("pathogenseq.conf","w"))
 
 setup(
