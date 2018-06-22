@@ -98,17 +98,17 @@ def split_bed(bed_file,size,reformat=False):
 				loc = "%s:%s-%s" % (chrom,tmps,tmpe)
 				loc_str = "%s_%s_%s" % (chrom,tmps,tmpe)
 				if reformat:
-					log("%s\t%s" % (loc,loc_str))
+					sys.stdout.write("%s\t%s" % (loc,loc_str))
 				else:
-					log(loc)
+					sys.stdout.write(loc)
 				tmps=tmpe+1
 		else:
 			loc = "%s:%s-%s" % (chrom,start,end)
 			loc_str = "%s_%s_%s" % (chrom,start,end)
 			if reformat:
-				log("%s\t%s" % (loc,loc_str))
+				sys.stdout.write("%s\t%s" % (loc,loc_str))
 			else:
-				log(loc)
+				sys.stdout.write(loc)
 def filecheck(filename):
 	"""
 	Check if file is there and quit if it isn't
