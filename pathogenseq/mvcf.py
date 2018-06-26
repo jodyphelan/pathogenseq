@@ -83,7 +83,7 @@ class bcf:
 	def del_pos2bed(self):
 		self.del_bed = "%s.del_pos.bed" % self.prefix
 		OUT = open(self.del_bed,"w")
-		cmd = "bcftools view -Ou -v indels %(filename)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % vars(self)
+		cmd = "bcftools view --threads %(threads)s -Ou -v indels %(filename)s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\n' | awk 'length($3)>1'" % vars(self)
 		sys.stderr.write(cmd)
 		j = 0
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
@@ -102,7 +102,7 @@ class bcf:
 		variants = defaultdict(lambda:defaultdict(lambda:defaultdict(dict)))
 		raw_variants = defaultdict(lambda:defaultdict(lambda:defaultdict(dict)))
 		if chrom and pos:
-			cmd = "bcftools view %s %s:%s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n'  | sed 's/\.\/\./N\/N/g'" % (self.filename,chrom,pos)
+			cmd = "bcftools view --threads %(threads)s %s %s:%s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n'  | sed 's/\.\/\./N\/N/g'" % (self.filename,chrom,pos)
 		else:
 			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n' %s  | sed 's/\.\/\./N\/N/g'" % self.filename
 		log(cmd)
@@ -138,7 +138,7 @@ class bcf:
 		variants = defaultdict(lambda:defaultdict(dict))
 		raw_variants = defaultdict(lambda:defaultdict(dict))
 		if chrom and pos:
-			cmd = "bcftools view %s %s:%s | bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g'" % (self.filename,chrom,pos)
+			cmd = "bcftools view --threads %(threads)s %s %s:%s | bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g'" % (self.filename,chrom,pos)
 		else:
 			cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n' %s  | sed 's/\.\/\./N/g'" % self.filename
 		log(cmd)
@@ -203,7 +203,7 @@ class bcf:
 			self.tmp_file = "%s.tmp.txt" % self.prefix
 			open(self.tmp_file,"w").write("\n".join(meta[m]))
 			self.tmp_bcf = "%s.%s.bcf" % (self.prefix,m)
-			cmd = "bcftools view -S %(tmp_file)s %(bcf)s -Ob -o %(tmp_bcf)s" % vars(self)
+			cmd = "bcftools view --threads %(threads)s -S %(tmp_file)s %(bcf)s -Ob -o %(tmp_bcf)s" % vars(self)
 			run_cmd(cmd)
 
 	def annotate(self,ref_file,gff_file):
@@ -231,7 +231,7 @@ class bcf:
 		self.cmd_split_chr = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % vars(self) if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % vars(self)
 		self.tmp_file = "%s.tmp.txt" % self.prefix
 		self.threads = threads
-		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view %(filename)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % vars(self)
+		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view --threads %(threads)s %(filename)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % vars(self)
 		run_cmd(cmd)
 		cmd = "paste `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'` > %(tmp_file)s" % vars(self)
 		run_cmd(cmd)
@@ -264,7 +264,7 @@ class bcf:
 
 	def bcf2vcf(self):
 		if nofile(self.vcf):
-			cmd = "bcftools view %(filename)s -Ov -o %(vcf)s" % vars(self)
+			cmd = "bcftools view --threads %(threads)s %(filename)s -Ov -o %(vcf)s" % vars(self)
 			run_cmd(cmd)
 
 	def get_venn_diagram_data(self,samples,outfile):
@@ -337,15 +337,15 @@ dev.off()
 		self.tmp_file = "%(prefix)s.temp.bcf" % vars(self)
 		self.tmp2_file = "%(prefix)s.temp2.bcf" % vars(self)
 		self.outfile = outfile
-		cmd = "bcftools view -Ou -v snps %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\n' | awk '{print $1\"\t\"$2-1\"\t\"$2}' > %(targets_file)s" % vars(self)
+		cmd = "bcftools view --threads %(threads)s -Ou -v snps %(bcf)s | bcftools query -f '%%CHROM\\t%%POS\\n' | awk '{print $1\"\t\"$2-1\"\t\"$2}' > %(targets_file)s" % vars(self)
 		run_cmd(cmd)
-		cmd = "bcftools view -T %(targets_file)s %(new_bcf)s -Ob -o %(tmp_file)s" % vars(self)
+		cmd = "bcftools view --threads %(threads)s -T %(targets_file)s %(new_bcf)s -Ob -o %(tmp_file)s" % vars(self)
 		run_cmd(cmd)
 		index_bcf(self.tmp_file,self.threads)
-		cmd = "bcftools view -T %(targets_file)s %(bcf)s -Ob -o %(tmp2_file)s" % vars(self)
+		cmd = "bcftools view --threads %(threads)s -T %(targets_file)s %(bcf)s -Ob -o %(tmp2_file)s" % vars(self)
 		run_cmd(cmd)
 		index_bcf(self.tmp2_file,self.threads)
-		cmd = "bcftools merge --threads %(threads)s -Ou  %(tmp2_file)s %(tmp_file)s | bcftools view -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % vars(self)
+		cmd = "bcftools merge --threads %(threads)s -Ou  %(tmp2_file)s %(tmp_file)s | bcftools view --threads %(threads)s -i 'F_MISSING<0.5' -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 
 	def annotate_from_bed(self,bed_file,outfile=None,nested=False):
@@ -399,9 +399,9 @@ dev.off()
 		cmd = "awk '{print $1\"\\t\"$2-1\"\\t\"$3}' %s > %s" % (bed_file,temp_bed)
 		run_cmd(cmd)
 		if vcf:
-			cmd = "bcftools view -R %s %s -o %s " % (temp_bed,self.filename,out_file)
+			cmd = "bcftools view --threads %(threads)s -R %s %s -o %s " % (temp_bed,self.filename,out_file)
 		else:
-			cmd = "bcftools view -R %s %s -Ob -o %s " % (temp_bed,self.filename,out_file)
+			cmd = "bcftools view --threads %(threads)s -R %s %s -Ob -o %s " % (temp_bed,self.filename,out_file)
 		run_cmd(cmd)
 		if not vcf:
 			return bcf(out_file)
@@ -614,7 +614,7 @@ dev.off()
 			row = l.rstrip().split()
 			variants[i] = (row[0],row[1])
 		self.reduced_bcf = "%(prefix)s.reduced.bcf" % vars(self)
-		cmd = "bcftools view -c 3 %(bcf)s -Ob -o %(reduced_bcf)s" % vars(self)
+		cmd = "bcftools view --threads %(threads)s -c 3 %(bcf)s -Ob -o %(reduced_bcf)s" % vars(self)
 		run_cmd(cmd)
 		reduced = {}
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(reduced_bcf)s" % vars(self)
@@ -732,7 +732,7 @@ DATA
 		new_bcf_file = "%(prefix)s.reheader.bcf" % vars(self)
 		tmp_header = "%(prefix)s.tmp.header" % vars(self)
 		OUT = open(tmp_header,"w")
-		for l in subprocess.Popen("bcftools view -h %(bcf)s" % vars(self),shell=True,stdout=subprocess.PIPE).stdout:
+		for l in subprocess.Popen("bcftools view --threads %(threads)s -h %(bcf)s" % vars(self),shell=True,stdout=subprocess.PIPE).stdout:
 			if l[:2]=="##": OUT.write(l); continue
 			row = l.rstrip().split()
 			for i in range(9,len(row)):
@@ -746,17 +746,17 @@ DATA
 
 	def filt_variants(self,outfile,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1):
 		add_arguments_to_self(self,locals())
-		self.bed_include = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
-		self.bed_exclude = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
+		self.bed_include = "bcftools view --threads %(threads)s -T %s -Ou |" % bed_include if bed_include!=None else ""
+		self.bed_exclude = "bcftools view --threads %(threads)s -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
 		"""Extract all variant positions"""
-		cmd = "bcftools view %(filename)s -Ou | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(outfile)s -O b" % vars(self)
+		cmd = "bcftools view --threads %(threads)s %(filename)s -Ou | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(outfile)s -O b" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
 
 	def extract_variants(self,outfile,min_dp=10,bed_include=None,bed_exclude=None,threads=4):
 		add_arguments_to_self(self,locals())
-		self.bed_include = "bcftools view -T %s -Ou |" % bed_include if bed_include!=None else ""
-		self.bed_exclude = "bcftools view -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
+		self.bed_include = "bcftools view --threads %(threads)s -T %s -Ou |" % bed_include if bed_include!=None else ""
+		self.bed_exclude = "bcftools view --threads %(threads)s -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'FMT/DP<%(min_dp)s' -n . | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0' -o %(outfile)s -O b" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
@@ -772,7 +772,7 @@ DATA
 			if float(arr[3])<1:
 				O.write(l)
 		O.close()
-		cmd = "bcftools view -T ^%(non_uniq_bed)s %(filename)s -O b -o %(outfile)s" % vars(self)
+		cmd = "bcftools view --threads %(threads)s -T ^%(non_uniq_bed)s %(filename)s -O b -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
 
@@ -786,7 +786,7 @@ DATA
 			self.keep_samples = [x.rstrip() for x in open(keep_samples).readlines()]
 		else:
 			self.keep_samples = []
-		num_calls = int(subprocess.Popen("bcftools view %(filename)s -H | wc -l" % vars(self),shell=True,stdout=subprocess.PIPE).communicate()[0].rstrip())
+		num_calls = int(subprocess.Popen("bcftools view --threads %(threads)s %(filename)s -H | wc -l" % vars(self),shell=True,stdout=subprocess.PIPE).communicate()[0].rstrip())
 
 		miss = {}
 		mix = {}
@@ -819,21 +819,21 @@ DATA
 		HQ.close()
 		LQ.close()
 		QF.close()
-		cmd = "bcftools view -S %(hq_sample_file)s -a -c 1 -o %(outfile)s -O b %(filename)s" % vars(self)
+		cmd = "bcftools view --threads %(threads)s -S %(hq_sample_file)s -a -c 1 -o %(outfile)s -O b %(filename)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
 
 	def mask_mixed(self,outfile):
 		"""Create a BCF file with mixed called masked as missing"""
 		add_arguments_to_self(self,locals())
-		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view -Ob -o %(outfile)s" % vars(self)
+		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view --threads %(threads)s -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
 	def generate_consensus(self,ref):
 		add_arguments_to_self(self,locals())
 		for s in self.samples:
 			self.tmp_sample = s
-			cmd = "bcftools view -s %(tmp_sample)s  %(filename)s -Ou | bcftools filter -e 'GT=\"het\"' -S . -Ou | bcftools view -i 'GT==\"./.\"' -Ou | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
+			cmd = "bcftools view --threads %(threads)s -s %(tmp_sample)s  %(filename)s -Ou | bcftools filter -e 'GT=\"het\"' -S . -Ou | bcftools view --threads %(threads)s -i 'GT==\"./.\"' -Ou | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
 			self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
 			TMP = open(self.tmp_file,"w")
 			for l in cmd_out(cmd):
