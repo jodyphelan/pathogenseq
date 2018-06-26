@@ -851,7 +851,7 @@ DATA
 				FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
 			FA.close()
 			rm_files([self.tmp_file,self.tmp_fa])
-	def distance(self,outfile):
+	def distance_alt(self,outfile):
 		add_arguments_to_self(self,locals())
 		matrix = [[0 for x in self.samples] for s in self.samples]
 		def get_matrix_seqs(x):
@@ -874,5 +874,33 @@ DATA
 		OUT = open(outfile,"w")
 		OUT.write("\t".join(self.samples)+"\n")
 		OUT.write("\n".join(["\t".join([str(d) for d in matrix[j]]) for j in range(len(self.samples))]))
+		OUT.close()
+		return {"sample":self.samples,"matrix":matrix}
+	def distance(self,outfile):
+		add_arguments_to_self(self,locals())
+		matrix = [[0 for x in self.samples] for s in self.samples]
+		sample_idx = {s:self.samples.index(s) for s in self.samples}
+		cmd = "bcftools query -i'GT!=\"ref\"' -f '[\\t%%SAMPLE:%%GT]\\n' %(filename)s" % vars(self)
+		for l in tqdm(cmd_out(cmd)):
+			alt_samples = defaultdict(set)
+			miss_samples = set()
+			row = l.strip().split()
+			for x in row:
+				s,c = x.split(":")
+				if c=="./.":
+					miss_samples.add(s)
+				else:
+					alt_samples[c].add(s)
+			for c in alt_samples:
+				others  = (set(self.samples)-alt_samples[c]) - miss_samples
+				for s in alt_samples[c]:
+					idx = sample_idx[s]
+					for x in others:
+						matrix[idx][sample_idx[x]]+=1
+						matrix[sample_idx[x]][idx]+=1
+		OUT = open(outfile,"w")
+		OUT.write("\t".join(self.samples)+"\n")
+		OUT.write("\n".join(["\t".join([str(d) for d in matrix[j]]) for j in range(len(self.samples))]))
+		OUT.write("\n")
 		OUT.close()
 		return {"sample":self.samples,"matrix":matrix}
