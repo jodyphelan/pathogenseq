@@ -1,7 +1,7 @@
 import sys
 import subprocess
-from files import *
-from fasta import *
+from .files import *
+from .fasta import *
 
 class phylo:
 	"""Class for running phylogenetic anaysis

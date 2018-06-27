@@ -3,9 +3,9 @@ import sys
 import subprocess
 import json
 import os
-from files import *
-from fasta import *
-from mvcf import *
+from .files import *
+from .fasta import *
+from .mvcf import *
 
 
 def split_list(l, n):

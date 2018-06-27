@@ -1,5 +1,5 @@
 from Bio import AlignIO
-from utils import *
+from .utils import *
 from tqdm import tqdm
 
 def mauve_call_variants(ref_file,query_file,prefix):

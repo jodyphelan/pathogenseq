@@ -1,7 +1,9 @@
 from __future__ import division
 import sys
 import subprocess
-from files import *
+from .files import *
+from .fasta import *
+from .fastq import *
 import numpy as np
 import gzip
 import matplotlib as mpl
@@ -10,8 +12,7 @@ import matplotlib.pyplot as plt
 plt.ioff()
 import json
 import re
-from fasta import *
-from fastq import *
+
 from collections import defaultdict
 ################################
 ########## Functions ###########
@@ -21,7 +22,7 @@ def gsize_convert(x):
 	d = {"G":1e9,"M":1e6,"K":1e3}
 	num = float(x[:-1])
 	char = x[-1]
-	if char not in d: print "%s not a valid value";quit()
+	if char not in d: log("%s not a valid value");quit()
 	return num*d[char]
 
 
@@ -34,7 +35,7 @@ def get_genome_cov(bam_file,ref_file,min_dp):
 	log(samtools_cmd)
 	for l in subprocess.Popen(samtools_cmd,shell=True,stdout=subprocess.PIPE).stdout:
 		arr = l.rstrip().split()
-		if arr[0] not in ref_cov: print "Can't find %s in FASTA...Have you used the correct reference sequence?";quit()
+		if arr[0] not in ref_cov: log("Can't find %s in FASTA...Have you used the correct reference sequence?");quit()
 		ref_cov[arr[0]][int(arr[1])-1] = int(arr[2])
 	all_genome = []
 	for s in fdict:
@@ -353,7 +354,7 @@ class qc_bam:
 			if l[0]=="#": continue
 			arr = l.rstrip().split()
 			if "%s="%key not in l:
-				print "Warining: %s not found in %s" % (key,l)
+				log("Warining: %s not found in %s" % (key,l))
 				continue
 			name = key_re.search(l).group(1)
 			regions.append((arr[0],arr[3],arr[4],name))

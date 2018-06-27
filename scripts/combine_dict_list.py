@@ -11,4 +11,4 @@ for pre in prefixes:
 	j = json.load(open(f))
 	for d in j:
 		for x in j[d]:
-			print "%s\t%s\t%s" % (pre,d,x)
+			print("%s\t%s\t%s" % (pre,d,x))

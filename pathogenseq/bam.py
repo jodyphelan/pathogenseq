@@ -1,11 +1,13 @@
 from __future__ import division
-from files import *
+from .files import *
+from .utils import *
+from .mvcf import *
+from .qc import *
 from collections import defaultdict
 import re
 import numpy as np
-from qc import *
-from utils import *
-from mvcf import *
+
+
 import vcf
 import pysam
 from tqdm import tqdm

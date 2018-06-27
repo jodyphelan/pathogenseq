@@ -3,7 +3,7 @@ import sys
 import pathogenseq as ps
 
 if len(sys.argv)!=4:
-	print "examl.py <snps.fasta> <prefix> <threads>"
+	print("examl.py <snps.fasta> <prefix> <threads>")
 	quit()
 
 snps_file = sys.argv[1]

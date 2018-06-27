@@ -1,6 +1,6 @@
 import sys
 import re
-from files import *
+from .files import *
 from collections import OrderedDict
 class fasta:
 	"""

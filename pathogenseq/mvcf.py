@@ -1,8 +1,9 @@
 from __future__ import division
 import sys
 import subprocess
-from files import *
-from fasta import *
+from .files import *
+from .fasta import *
+from .mutation_db import *
 import vcf
 from collections import defaultdict
 import itertools
@@ -12,7 +13,7 @@ from tqdm import tqdm
 # from bokeh.layouts import column
 from ete3 import Tree
 from colour import Color
-from mutation_db import *
+
 
 re_seq = re.compile("([0-9\-]*)([A-Z\*]+)")
 re_I = re.compile("([A-Z\*]+)")
@@ -880,11 +881,15 @@ DATA
 				for sj in set(self.samples)-miss_samples:
 					miss_matrix[sample_idx[si]][sample_idx[sj]]+=1
 					miss_matrix[sample_idx[sj]][sample_idx[si]]+=1
+				for sj in miss_samples:
+					if si==sj: continue
+					if sample_idx[si]>sample_idx[sj]:
+						miss_matrix[sample_idx[si]][sample_idx[sj]]+=1
 		for i in range(len(self.samples)):
 			for j in range(len(self.samples)):
 				if j>=i: continue
 				scaler = num_snps / (num_snps-miss_matrix[i][j])
-				print "Num SNPs: %s, %s-%s, missing: %s, non missing: %s, abs_dist: %s scale factor: %s, scaled_dist: %s" % (num_snps,self.samples[i],self.samples[j],miss_matrix[i][j],num_snps-miss_matrix[i][j],matrix[i][j],scaler,matrix[i][j]*scaler)
+				#log("Num SNPs: %s, %s-%s, missing: %s, non missing: %s, abs_dist: %s scale factor: %s, scaled_dist: %s" % (num_snps,self.samples[i],self.samples[j],miss_matrix[i][j],num_snps-miss_matrix[i][j],matrix[i][j],scaler,matrix[i][j]*scaler))
 
 				matrix[i][j] = matrix[i][j]*scaler
 				matrix[j][i] = matrix[i][j]

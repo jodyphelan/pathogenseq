@@ -1,10 +1,11 @@
 from __future__ import division
 import subprocess
-from files import *
+from .files import *
+from .qc import *
+from .bam import *
 import os
 import numpy as np
-from qc import *
-from bam import *
+
 class fastq:
 	"""
 	Class for performing mapping to reference.

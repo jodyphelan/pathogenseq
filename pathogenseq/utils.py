@@ -1,5 +1,5 @@
 import re
-from fasta import *
+from .fasta import *
 indelre = re.compile("(\w)[\+\-](\d+)(\w+)")
 gap_char = "-"
 
