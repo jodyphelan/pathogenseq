@@ -47,7 +47,7 @@ def mdist(filename,reffile,outfile,threads=4):
 	fa = fasta(reffile)
 	jobs = [(filename,x) for x in fa.splitchr(50000,verbose=False)]
 	results = []
-	with multiprocessing.Pool(1) as p:
+	with multiprocessing.Pool(threads) as p:
 		results = p.starmap(mdist_worker,jobs)
 	num_snps = 0
 	for r in results:
