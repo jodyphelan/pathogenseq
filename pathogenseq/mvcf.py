@@ -851,37 +851,15 @@ DATA
 				FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
 			FA.close()
 			rm_files([self.tmp_file,self.tmp_fa])
-	def distance_alt(self,outfile):
-		add_arguments_to_self(self,locals())
-		matrix = [[0 for x in self.samples] for s in self.samples]
-		def get_matrix_seqs(x):
-			c=0
-			for i in range(x):
-				for j in range(c):
-					yield (i,j)
-				c+=1
-
-		cmd = "bcftools query -f '[\\t%%GT]\\n' %(filename)s" % vars(self)
-		idx = list(get_matrix_seqs(len(self.samples)))
-		for l in tqdm(cmd_out(cmd)):
-			row = l.strip().split()
-			for i,j in idx:
-				if row[i]=="./." or row[j]=="./.": continue
-				if row[i]!=row[j]:
-					matrix[i][j]+=1
-		for i,j in idx:
-			matrix[j][i] = matrix[i][j]
-		OUT = open(outfile,"w")
-		OUT.write("\t".join(self.samples)+"\n")
-		OUT.write("\n".join(["\t".join([str(d) for d in matrix[j]]) for j in range(len(self.samples))]))
-		OUT.close()
-		return {"sample":self.samples,"matrix":matrix}
 	def distance(self,outfile):
 		add_arguments_to_self(self,locals())
 		matrix = [[0 for x in self.samples] for s in self.samples]
+		miss_matrix = [[0 for x in self.samples] for s in self.samples]
 		sample_idx = {s:self.samples.index(s) for s in self.samples}
 		cmd = "bcftools query -i'GT!=\"ref\"' -f '[\\t%%SAMPLE:%%GT]\\n' %(filename)s" % vars(self)
+		num_snps = 0
 		for l in tqdm(cmd_out(cmd)):
+			num_snps+=1
 			alt_samples = defaultdict(set)
 			miss_samples = set()
 			row = l.strip().split()
@@ -898,6 +876,18 @@ DATA
 					for x in others:
 						matrix[idx][sample_idx[x]]+=1
 						matrix[sample_idx[x]][idx]+=1
+			for si in miss_samples:
+				for sj in set(self.samples)-miss_samples:
+					miss_matrix[sample_idx[si]][sample_idx[sj]]+=1
+					miss_matrix[sample_idx[sj]][sample_idx[si]]+=1
+		for i in range(len(self.samples)):
+			for j in range(len(self.samples)):
+				if j>=i: continue
+				scaler = num_snps / (num_snps-miss_matrix[i][j])
+				print "Num SNPs: %s, %s-%s, missing: %s, non missing: %s, abs_dist: %s scale factor: %s, scaled_dist: %s" % (num_snps,self.samples[i],self.samples[j],miss_matrix[i][j],num_snps-miss_matrix[i][j],matrix[i][j],scaler,matrix[i][j]*scaler)
+
+				matrix[i][j] = matrix[i][j]*scaler
+				matrix[j][i] = matrix[i][j]
 		OUT = open(outfile,"w")
 		OUT.write("\t".join(self.samples)+"\n")
 		OUT.write("\n".join(["\t".join([str(d) for d in matrix[j]]) for j in range(len(self.samples))]))
