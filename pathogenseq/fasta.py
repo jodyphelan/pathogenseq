@@ -246,9 +246,9 @@ class fasta:
 				splits.append(loc)
 				if verbose:
 					if reformat:
-						sys.stdout.write("%s\t%s" % (loc,loc_str))
+						sys.stdout.write("%s\t%s\n" % (loc,loc_str))
 					else:
-						sys.stdout.write(loc)
+						sys.stdout.write("%s\n" % loc)
 				start+=size
 				end+=size
 			if start==0: start=1
@@ -257,9 +257,9 @@ class fasta:
 			loc_str = "%s_%s_%s" % (s,start,lengths[s])
 			if verbose:
 				if reformat:
-					sys.stdout.write("%s\t%s" % (loc,loc_str))
+					sys.stdout.write("%s\t%s\n" % (loc,loc_str))
 				else:
-					sys.stdout.write(loc)
+					sys.stdout.write("%s\n" % loc)
 		return splits
 	def find_primer_positions(self,primer_fasta):
 		tmp_file = get_random_file()
