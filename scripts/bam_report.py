@@ -31,7 +31,7 @@ def main(args):
 
     cov_json = "%s.cov.json" % args.prefix
     stats_json = "%s.bam_stats.json" % args.prefix
-    region_json = "%s.regionscov.json" % args.prefix
+    region_json = "%s.regions.cov.json" % args.prefix
 
     stats = {}
 
