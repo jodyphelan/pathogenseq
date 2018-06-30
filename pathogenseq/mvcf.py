@@ -157,9 +157,13 @@ class bcf:
 		else:
 			return variants
 
-	def load_stats(self):
+	def load_stats(self,convert=False,ref=None):
+		add_arguments_to_self(self,locals())
 		self.stats_file = "%s.stats.txt" % self.filename
-		cmd = "bcftools stats -v -s - %(filename)s > %(stats_file)s" % vars(self)
+		if convert:
+			cmd = "bcftools convert --gvcf2vcf --fasta-ref %(ref)s -Ou %(filename)s | bcftools stats -v -s - > %(stats_file)s" % vars(self)
+		else:
+			cmd = "bcftools stats -v -s - %(filename)s > %(stats_file)s" % vars(self)
 		run_cmd(cmd)
 		results = defaultdict(lambda:defaultdict(dict))
 		for l in open(self.stats_file):
