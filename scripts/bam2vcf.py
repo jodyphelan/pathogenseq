@@ -22,7 +22,7 @@ parser.add_argument('--threads','-t', type=int, default=1, help='Number of threa
 parser.add_argument('--platform','-p', type=str,default="illumina",choices=["illumina","minION"],help='Mapping tool to use')
 parser.add_argument('--primers', type=str,default=None,help='Mapping tool to use')
 parser.add_argument('--method', type=str,default="optimise",choices=["optimise","high","low"],help='Mapping tool to use')
-parser.add_argument('--min_dp', type=int,default=None,help='Minimum depth required to call an allele')
+parser.add_argument('--min_dp', type=int,default=10,help='Minimum depth required to call an allele')
 parser.add_argument('--mpileup_options',default=None,type=str, help='First read file')
 parser.add_argument('--high_cov_as_missing', action='store_true')
 parser.set_defaults(func=main)

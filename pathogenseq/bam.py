@@ -101,7 +101,7 @@ class bam:
 		else:
 			log("Using high depth approach")
 			return "high"
-	def gbcf(self,call_method="optimise",max_dp=None,min_dp=None,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000,mpileup_options=None):
+	def gbcf(self,call_method="optimise",max_dp=None,min_dp=None,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000,mpileup_options=None,low_dp_as_missing=False):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -150,7 +150,7 @@ class bam:
 			log("Please choose a valid platform...Exiting!",ext=True)
 		if mpileup_options:
 			self.params["mpileup_options"] = mpileup_options
-		self.params["min_dp_cmd"] = "| bcftools filter -e 'FMT/DP<%(min_dp)s' -Ou -S ." % self.params if min_dp else ""
+		self.params["min_dp_cmd"] = "| bcftools filter -e 'FMT/DP<%(min_dp)s' -Ou -S ." % self.params if low_dp_as_missing else ""
 		self.params["max_dp_cmd"] = "| bcftools filter -e 'FMT/DP>%(max_dp)s' -Ou -S ." % self.params if max_dp else ""
 		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s %(min_dp_cmd)s %(max_dp_cmd)s | bcftools view -Ob -o %(prefix)s_{2}.bcf \"" % self.params
 		run_cmd(cmd)
@@ -191,7 +191,7 @@ class bam:
 		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
 		self.params["missing_bcf_file"] = "%s.missing.bcf" % self.prefix
 		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
-		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file)
+		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file,low_dp_as_missing=True)
 		self.params["bcf_file"] = "%s.bcf" % self.prefix
 
 		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()
