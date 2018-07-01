@@ -4,12 +4,13 @@ import pathogenseq as ps
 import argparse
 
 def main(args):
+	bam = ps.bam(bam_file=args.bam,ref_file=args.ref,prefix=args.prefix,threads=args.threads)
 	if args.high_cov_as_missing:
 		bamqc = bam.get_bam_qc()
 		max_dp = bamqc.med_dp*3
 	else:
 		max_dp = None
-	bam = ps.bam(bam_file=args.bam,ref_file=args.ref,prefix=args.prefix,threads=args.threads)
+
 	bam.gbcf(threads=args.threads,max_dp=max_dp,platform=args.platform,primers=args.primers,call_method=args.method,vtype=args.vtype,min_dp=args.min_dp,mpileup_options=args.mpileup_options)
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
