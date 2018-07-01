@@ -111,6 +111,7 @@ class bam:
 			min_dp(int): Minimum depth required to group site into reference-block
 		"""
 		self.params["min_dp"] = min_dp
+		self.params["max_dp"] = max_dp
 		self.params["bcf_file"] = "%s.gbcf" % self.prefix
 		self.params["bed_file"] = bed_file
 		self.params["chunk_size"] = chunk_size
