@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import sys
 import pathogenseq as ps
 
 bcf = ps.bcf(sys.argv[1])
