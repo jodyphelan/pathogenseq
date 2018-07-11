@@ -708,7 +708,7 @@ DATA
 			OUT.close()
 
 	def compress_variants(self):
-		cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%GT]\\n' %(bcf)s" % vars(self)
+		cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%GT]\\n' %(filename)s" % vars(self)
 		results = defaultdict(list)
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
 			row = l.rstrip().split()
