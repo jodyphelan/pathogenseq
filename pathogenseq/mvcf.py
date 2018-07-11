@@ -903,3 +903,26 @@ DATA
 		OUT.write("\n")
 		OUT.close()
 		return {"sample":self.samples,"matrix":matrix}
+	def extract_dosage(self,outfile):
+		add_arguments_to_self(self,locals())
+		cmd = "bcftools query %(filename)s -f '%%CHROM\\t%%POS\\t%%REF\\t.\\t.[\\t%%AD]\\n'" % vars(self)
+
+		def process_ad(ad):
+			if ad==".":
+				return "%.3f" % 0
+			else:
+				dp = [int(x) if x!="." else 0 for x in ad.split(",")]
+				if sum(dp)==0:
+					return "NA"
+				if sum(dp[1:])!=0:
+					return "%.3f" % (dp[0]/sum(dp[1:]))
+				else:
+					return "%.3f" % 1
+		idx = range(5,5+len(self.samples))
+		O = open(self.outfile,"w")
+		O.write("chr\tpos\tref\tinfo\ttype\t%s\n" % ("\t".join(self.samples)))
+		for l in tqdm(cmd_out(cmd)):
+			row = l.rstrip().split()
+			row[5:] = [process_ad(x) for x in row[5:]]
+			O.write("%s\n" % "\t".join(row))
+		O.close()

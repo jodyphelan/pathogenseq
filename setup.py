@@ -85,7 +85,8 @@ setup(
 		 'scripts/profiler2tbprofiler.py',
 		 'scripts/select_reference.py',
 		 'scripts/bcf2dist.py',
-		 'scripts/bcf_sample_stats.py'
+		 'scripts/bcf_sample_stats.py',
+		 'scripts/extract_dosage.py'
 		],
 	data_files = [(sys.prefix,["pathogenseq.conf"])],
 
