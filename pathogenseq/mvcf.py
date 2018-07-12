@@ -914,8 +914,8 @@ DATA
 				dp = [int(x) if x!="." else 0 for x in ad.split(",")]
 				if sum(dp)==0:
 					return "NA"
-				if sum(dp[1:])!=0:
-					return "%.3f" % (dp[0]/sum(dp[1:]))
+				if sum(dp)!=0:
+					return "%.3f" % (dp[0]/sum(dp))
 				else:
 					return "%.3f" % 1
 		idx = range(5,5+len(self.samples))
