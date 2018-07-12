@@ -161,22 +161,28 @@ def run_cmd(cmd,verbose=1):
 		print("Command Failed! Please Check!")
 		exit(1)
 
-def index_bam(bamfile,threads=4,overwrite=True):
+def index_bam(bamfile,threads=4,overwrite=False):
 	"""
 	Indexing a bam file
 	"""
+	cmd = "samtools index -@ %s %s" % (threads,bamfile)
 	if filecheck(bamfile):
-		if nofile(bamfile+".bai") or overwrite:
-			cmd = "samtools index -@ %s %s" % (threads,bamfile)
+		if nofile(bamfile+".bai"):
+			run_cmd(cmd)
+		elif os.path.getmtime(bamfile+".bai")<os.path.getmtime(bamfile) or overwrite:
 			run_cmd(cmd)
 
-def index_bcf(bcf,threads=4):
+def index_bcf(bcffile,threads=4,overwrite=False):
 	"""
-	Indexing a bcf file
+	Indexing a bam file
 	"""
-	if filecheck(bcf):
-		cmd = "bcftools index -f --threads %s %s" % (threads,bcf)
-		run_cmd(cmd)
+	cmd = "bcftools index --threads %s -f %s" % (threads,bamfile)
+	if filecheck(bcffile):
+		if nofile(bcffile+".csi"):
+			run_cmd(cmd)
+		elif os.path.getmtime(bcffile+".csi")<os.path.getmtime(bcffile) or overwrite:
+			run_cmd(cmd)
+
 def verify_fq(filename):
 	"""
 	Return True if input is a valid fastQ file

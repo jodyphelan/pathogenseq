@@ -42,6 +42,8 @@ class bam:
 	"""
 	def __init__(self,bam_file,prefix,ref_file,platform="Illumina",threads=4):
 		self.params = {}
+		self.bam_file = bam_file
+		self.ref_file = ref_file
 		index_bam(bam_file,threads=threads)
 		if filecheck(bam_file):
 			self.params["bam_file"] = bam_file
@@ -425,3 +427,21 @@ class bam:
 			for i in range(len(fdict[s])):
 					O.write("%s\n" % cov[s][i])
 		O.close()
+	def get_bed_gt(self,bed_file):
+		add_arguments_to_self(self,locals())
+		cmd = "bcftools mpileup -f %(ref_file)s -R %(bed_file)s %(bam_file)s -a AD | bcftools call -m | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%GT\\t%%AD]\\n'" % vars(self)
+		results = defaultdict(lambda : defaultdict(dict))
+		for l in cmd_out(cmd):
+			#Chromosome	4348079	0/0	51
+			chrom,pos,ref,alt,gt,ad = l.rstrip().split()
+			pos =int(pos)
+			d = {}
+			alts = alt.split(",")
+			ad = [float(x) if x!="." else 1.0 for x in ad.split(",")]
+			if gt=="0/0":
+				d[ref] = 1.0
+			else:
+				for i,a in enumerate(alts):
+					d[a] = ad[i]/sum(ad)
+			results[chrom][pos] = d
+		return results

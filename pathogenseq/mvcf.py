@@ -4,7 +4,6 @@ import subprocess
 from .files import *
 from .fasta import *
 from .mutation_db import *
-import vcf
 from collections import defaultdict
 import itertools
 import json
