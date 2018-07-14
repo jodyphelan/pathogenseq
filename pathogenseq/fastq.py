@@ -52,9 +52,9 @@ class fastq:
 	def trim(self):
 		"""Perform trimming"""
 		if self.paired:
-			cmd = "java -jar ~/bin/trimmomatic.jar PE -threads %(threads)s -phred33 %(r1)s %(r2)s %(r1_tp)s %(r1_tu)s %(r2_tp)s %(r2_tu)s LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36" % self.params
+			cmd = "trimmomatic PE -threads %(threads)s -phred33 %(r1)s %(r2)s %(r1_tp)s %(r1_tu)s %(r2_tp)s %(r2_tu)s LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36" % self.params
 		else:
-			cmd = "java -jar ~/bin/trimmomatic.jar SE -threads %(threads)s -phred33 %(r1)s %(r1t)s LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36" % self.params
+			cmd = "trimmomatic SE -threads %(threads)s -phred33 %(r1)s %(r1t)s LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36" % self.params
 		run_cmd(cmd)
 	def illumina(self,mapper="bwa"):
 		self.trim()

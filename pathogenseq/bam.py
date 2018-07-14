@@ -437,11 +437,11 @@ class bam:
 			pos =int(pos)
 			d = {}
 			alts = alt.split(",")
-			ad = [float(x) if x!="." else 1.0 for x in ad.split(",")]
+			ad = [int(x) for x in ad.split(",")]
 			if gt=="0/0":
-				d[ref] = 1.0
+				d[ref] = ad[0]
 			else:
-				for i,a in enumerate(alts):
-					d[a] = ad[i]/sum(ad)
+				for i,a in enumerate([ref]+alts):
+					d[a] = ad[i]
 			results[chrom][pos] = d
 		return results

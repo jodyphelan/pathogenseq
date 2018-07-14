@@ -14,6 +14,12 @@ def main(args):
 	results = {"variants":[],"missing":missing_pos}
 	for sample in csq:
 		results["variants"]  = csq[sample]
+	if args.barcode:
+		mutations = bam.get_bed_gt(args.barcode)
+		barcode = ps.barcode(mutations,"lineages.bed")
+		results["barcode"] = barcode
+
+
 	json.dump(results,open(outfile,"w"))
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -22,7 +28,8 @@ parser.add_argument('ref', help='Reference Sequence')
 parser.add_argument('gff', help='GFF file')
 parser.add_argument('bed', help='BED file')
 parser.add_argument('prefix', help='Prefix for files')
-parser.add_argument('--ann','-a',type=str,default=None, help='ANN file')
+parser.add_argument('--ann','-a',type=str,default=None, help='Annotation file')
+parser.add_argument('--barcode','-b',type=str,default=None, help='Barcode bed file')
 parser.add_argument('--threads','-t', type=int,default=1,help='Number of threads')
 parser.add_argument('--call_method','-c', type=str,default="low",choices=["low","high","optimise"],help='Number of threads')
 parser.add_argument('--min_depth','-d', type=int,default=10,help='Number of threads')

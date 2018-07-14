@@ -69,14 +69,17 @@ def load_tsv(filename):
 	columns = [c.upper() for c in set(row)-set(["sample"])]
 	return columns,meta
 
-def load_bed(filename,columns,key1,key2=None):
+def load_bed(filename,columns,key1,key2=None,intasint=False):
 	results = defaultdict(lambda: defaultdict(tuple))
 	for l in open(filename):
 		row = l.rstrip().split()
 		if key2:
 			if max(columns+[key1,key2])>len(row):
 				log("Can't access a column in BED file. The largest column specified is too big",True)
-			results[row[key1-1]][row[key2-1]] = tuple([row[int(x)-1] for x in columns])
+			if key2==2 or key2==3:
+				results[row[key1-1]][int(row[key2-1])] = tuple([row[int(x)-1] for x in columns])
+			else:
+				results[row[key1-1]][row[key2-1]] = tuple([row[int(x)-1] for x in columns])
 		else:
 			if max(columns+[key1])>len(row):
 				log("Can't access a column in BED file. The largest column specified is too big",True)
@@ -176,7 +179,7 @@ def index_bcf(bcffile,threads=4,overwrite=False):
 	"""
 	Indexing a bam file
 	"""
-	cmd = "bcftools index --threads %s -f %s" % (threads,bamfile)
+	cmd = "bcftools index --threads %s -f %s" % (threads,bcffile)
 	if filecheck(bcffile):
 		if nofile(bcffile+".csi"):
 			run_cmd(cmd)
