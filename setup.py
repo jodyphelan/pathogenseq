@@ -12,6 +12,7 @@ setuptools.setup(
 	packages=["pathogenseq",],
 	license="MIT",
 	long_description="Pathogenseq variant calling pipeline",
+	install_requires=['numpy','pyvcf','tqdm','ete3','biopython','colour'],
 	scripts=
 		['scripts/bcf2consensus.py',
 		 'scripts/bam_report.py',
