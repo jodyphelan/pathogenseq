@@ -6,7 +6,10 @@ from .qc import *
 from collections import defaultdict
 import re
 import numpy as np
-
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+plt.ioff()
 
 import vcf
 import pysam
