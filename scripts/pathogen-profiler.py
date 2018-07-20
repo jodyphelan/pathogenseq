@@ -19,6 +19,8 @@ def main(args):
 		barcode = ps.barcode(mutations,"lineages.bed")
 		results["barcode"] = barcode
 
+	bcf.bed_consensus(args.bed,args.ref)
+
 
 	json.dump(results,open(outfile,"w"))
 

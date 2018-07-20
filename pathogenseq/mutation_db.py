@@ -33,7 +33,7 @@ def barcode(mutations,barcode_bed):
 			if chrom in mutations and pos in mutations[chrom]:
 				if marker[3] in mutations[chrom][pos]: tmp[0] = mutations[chrom][pos][marker[3]]
 				if marker[4] in mutations[chrom][pos]: tmp[1] = mutations[chrom][pos][marker[4]]
-
+			if  tmp==[0,0]: continue
 			barcode_support[marker[2]].append(tmp)
 	barcode_frac = defaultdict(float)
 	for l in barcode_support:

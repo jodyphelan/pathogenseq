@@ -445,3 +445,55 @@ class bam:
 					d[a] = ad[i]
 			results[chrom][pos] = d
 		return results
+	def bed_cov_plot(self,bed_file):
+		add_arguments_to_self(self,locals())
+		bed = load_bed(self.bed_file,[1,2,3,4],4)
+		for gene in bed:
+			start = int(bed[gene][1])
+			end = int(bed[gene][2])
+			region_size = end-start
+			offset = int(region_size*0.05)
+			new_start = start-offset
+			new_end = end+offset
+			if region_size<100000:
+				n,d = "K",1000
+			elif region_size>100000 and region_size<1000000000:
+				n,d = "M",1000000
+			else:
+				n,d = "G",1000000000
+			if region_size<10000:
+				window,step=2,1
+			elif region_size<100000:
+				window,step=100,50
+			elif region_size>100000 and region_size<1000000:
+				window,step=1000,500
+			log("Outputting coverage plot for region (%sbp) with window=%s and step=%s" % (region_size,window,step))
+			self.loc = "%s:%s-%s" % (bed[gene][0],start,end)
+			cmd = "samtools depth %(bame_file)s %(loc)s"
+			ref_dp = []
+			ref_pos = []
+			for l in cmd_out(cmd):
+				row = l.rstrip().split()
+				ref_dp.append(int(row[2]))
+				ref_pos.append(int(row[1]))
+			x = []
+			y = []
+			hw = int(window/2)
+			for i in range(hw,len(ref_dp)-hw):
+				x.append((i+new_start)/d)
+				y.append(int(np.median(ref_dp[i-hw:i+hw+1])))
+			fig = plt.figure()
+			plot = fig.add_subplot(111)
+			plot.plot(x,y)
+			plot.set_ylim(bottom=0)
+			if max(y)>200:
+				plot.set_yscale('symlog')
+			plot.set_xlabel("Genome Position (%sb)" % n)
+			plot.set_ylabel("Median Coverage (Window size:%s)" % window)
+			ymax = max(y) if max(y)>chrom_med_dp else chrom_med_dp
+			plot.set_ylim(top=ymax+ymax*0.05)
+			plot.axhline(xmin=0,xmax=1,y=chrom_med_dp,color="orange",linestyle="dashed")
+			plot.axvline(ymin=0,ymax=0.05,x=start/d,color="orange")
+			plot.axvline(ymin=0,ymax=0.05,x=end/d,color="orange")
+			imgfile = "%s_%s_cov.png" %(self.prefix,gene)
+			fig.savefig(imgfile)

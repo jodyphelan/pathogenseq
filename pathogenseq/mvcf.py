@@ -925,3 +925,13 @@ DATA
 			row[5:] = [process_ad(x) for x in row[5:]]
 			O.write("%s\n" % "\t".join(row))
 		O.close()
+	def bed_consensus(self,bed_file,ref_file):
+		add_arguments_to_self(self,locals())
+		bed = load_bed(self.bed_file,[1,2,3,4],4)
+		for gene in bed:
+			self.loc = "%s:%s-%s" % (bed[gene][0],bed[gene][1],bed[gene][2])
+			self.gene = gene
+			for s in self.samples:
+				self.samp = s.replace("/","\/")
+				cmd = "samtools faidx %(ref_file)s %(loc)s | bcftools consensus -s %(samp)s -H 2 %(filename)s | sed 's/%(loc)s/%(samp)s_%(gene)s %(loc)s/' > %(samp)s_%(gene)s.fasta" % vars(self)
+				run_cmd(cmd)

@@ -9,5 +9,6 @@ from .phylo import *
 from .mfa import *
 from .mutation_db import *
 from .mt_functions import *
-
+from .tex import *
+from .profiler import *
 name="pathogenseq"

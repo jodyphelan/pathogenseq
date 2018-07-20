@@ -6,10 +6,10 @@ from .fasta import *
 from .fastq import *
 import numpy as np
 import gzip
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-plt.ioff()
+#import matplotlib as mpl
+#mpl.use('Agg')
+#import matplotlib.pyplot as plt
+#plt.ioff()
 import json
 import re
 
@@ -361,8 +361,6 @@ class qc_bam:
 		return self.region_cov(regions)
 	def extract_gc_skew(self,filename,window=1000,step=500):
 		fa_dict = fasta(self.ref).fa_dict
-#		gc = []
-#		cov = []
 		hw = int(window/2)
 		results = defaultdict(list)
 		for s in fa_dict:
@@ -370,10 +368,4 @@ class qc_bam:
 				seq = fa_dict[s][i-hw:i+hw]
 				tmp = dict((c, seq.count(c)) for c in ["C","G"])
 				results[int((tmp["G"]+tmp["C"])/(window)*100)].append(int(np.median(self.ref_dp[s][i-hw:i+hw])))
-#				gc.append(int((tmp["G"]+tmp["C"])/(window)*100))
-#				cov.append(int(np.median(self.ref_dp[s][i-hw:i+hw])))
-#		O = open(filename,"w")
-#		for i in range(len(gc)):
-#			O.write("%s\t%s\n" % (gc[i],cov[i]))
-#		O.close()
 		json.dump(results,open(filename,"w"))

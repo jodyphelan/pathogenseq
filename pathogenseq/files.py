@@ -122,11 +122,35 @@ def filecheck(filename):
 	else:
 		return filename
 
+def foldercheck(filename):
+	"""
+	Check if file is there and quit if it isn't
+	"""
+	if not os.path.isdir(filename):
+		print("Can't find %s" % filename)
+		exit(1)
+	else:
+		return filename
+
+def debug(s):
+	sys.stderr.write("#"*40+"\n")
+	sys.stderr.write("%s\n" % s)
+	sys.stderr.write("#"*40+"\n")
+
 def nofile(filename):
 	"""
 	Return True if file does not exist
 	"""
 	if not os.path.isfile(filename):
+		return True
+	else:
+		return False
+
+def nofolder(filename):
+	"""
+	Return True if file does not exist
+	"""
+	if not os.path.isdir(filename):
 		return True
 	else:
 		return False
