@@ -43,7 +43,7 @@ def get_missing_positions(bcf_file):
 	results = []
 	for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
 		row = l.rstrip().split()
-		results.append((row[0],row[1]))
+		results.append((row[0],int(row[1])))
 	return results
 
 

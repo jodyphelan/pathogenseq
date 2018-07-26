@@ -65,12 +65,12 @@ class fastq:
 		else:
 			psmapper = mapping(self.params["prefix"],self.params["ref_file"],unpaired=self.params["r1t"],mapper=mapper,threads=self.params["threads"])
 		psmapper.map()
-		rm_files([self.params["r1_tp"],self.params["r2_tp"],self.params["rtu"],self.params["r1_tu"],self.params["r2_tu"]])
-		return psmapper.get_bam()
+		rm_files([self.params["r1t"],self.params["r1_tp"],self.params["r2_tp"],self.params["rtu"],self.params["r1_tu"],self.params["r2_tu"]])
+		return psmapper.get_bam(platform="Illumina")
 	def minION(self,mapper="minimap2"):
 		psmapper = mapping(self.params["prefix"],self.params["ref_file"],unpaired=self.params["r1"],mapper=mapper,threads=self.params["threads"],platform="minION")
 		psmapper.map()
-		return psmapper.get_bam()
+		return psmapper.get_bam(platform="minION")
 	def get_fastq_qc(self):
 		return qc_fastq(self.params["prefix"],self.params["r1"],self.params["r2"])
 
@@ -177,11 +177,11 @@ class mapping:
 			qc_bam: A qc_bam object
 		"""
 		return qc_bam(self.params["bam_file"],self.params["ref_file"],cov_thresholds)
-	def get_bam(self):
+	def get_bam(self,platform):
 		"""
 		Get a bam class object
 
 		Returns:
 			bam: A bam class object
 		"""
-		return bam(self.params["bam_file"],self.params["prefix"],self.params["ref_file"])
+		return bam(self.params["bam_file"],self.params["prefix"],self.params["ref_file"],platform=platform)

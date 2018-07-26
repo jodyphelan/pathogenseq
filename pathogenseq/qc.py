@@ -26,13 +26,16 @@ def gsize_convert(x):
 	return num*d[char]
 
 
-def get_genome_cov(bam_file,ref_file,min_dp):
+def get_genome_cov(bam_file,ref_file,min_dp,bed_file=None):
 	fdict = fasta(ref_file).fa_dict
 	ref_cov = {}
 	for s in fdict:
 		ref_cov[s] = [0 for x in range(len(fdict[s]))]
-	samtools_cmd = "samtools depth -aa --reference %s %s" % (ref_file,bam_file)
-	log(samtools_cmd)
+	if bed_file:
+		samtools_cmd = "samtools view -bL %s %s | samtools depth -aa --reference %s -" % (bed_file,bam_file,ref_file)
+	else:
+		samtools_cmd = "samtools depth -aa --reference %s %s" % (ref_file,bam_file)
+	log("\nRunning command:\n%s" % samtools_cmd)
 	for l in subprocess.Popen(samtools_cmd,shell=True,stdout=subprocess.PIPE).stdout:
 		arr = l.rstrip().split()
 		if arr[0] not in ref_cov: log("Can't find %s in FASTA...Have you used the correct reference sequence?");quit()
@@ -216,13 +219,13 @@ class qc_bam:
 		qc_bam: A qc_bam class object
 	"""
 
-	def __init__(self,bam,ref,cov_thresholds=[1,5,10],threads=4):
+	def __init__(self,bam,ref,cov_thresholds=[1,5,10],threads=4,bed_file=None):
 		self.bam = None
 		self.ref = None
 		self.threads = threads
 		if filecheck(bam): self.bam = bam
 		if filecheck(ref): self.ref = ref
-		self.genome_cov,self.med_dp,self.ref_dp = get_genome_cov(bam,ref,cov_thresholds)
+		self.genome_cov,self.med_dp,self.ref_dp = get_genome_cov(bam,ref,cov_thresholds,bed_file=bed_file)
 		self.num_reads_mapped,self.pct_reads_mapped = flagstat(bam)
 
 	def plot_cov(self,chrom,imgfile,start=None,end=None,window=10000,step=5000,optimise=True,plot_median=True,primers=None):

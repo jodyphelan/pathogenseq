@@ -10,4 +10,5 @@ from .mfa import *
 from .mutation_db import *
 from .mt_functions import *
 from .profiler import *
+from .tex import *
 name="pathogenseq"

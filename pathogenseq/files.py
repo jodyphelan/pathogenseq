@@ -175,14 +175,17 @@ def run_cmd(cmd,verbose=1):
 	cmd = "set -u pipefail; " + cmd
 	if verbose==2:
 		sys.stderr.write("\nRunning command:\n%s\n" % cmd)
+		stdout = open("/dev/stdout","w")
 		stderr = open("/dev/stderr","w")
 	elif verbose==1:
 		sys.stderr.write("\nRunning command:\n%s\n" % cmd)
+		stdout = open("/dev/null","w")
 		stderr = open("/dev/null","w")
 	else:
+		stdout = open("/dev/null","w")
 		stderr = open("/dev/null","w")
 
-	res = subprocess.call(cmd,shell=True,stderr = stderr)
+	res = subprocess.call(cmd,shell=True,stderr = stderr,stdout = stdout)
 	stderr.close()
 	if res!=0:
 		print("Command Failed! Please Check!")

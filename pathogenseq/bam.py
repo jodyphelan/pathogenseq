@@ -58,6 +58,7 @@ class bam:
 			self.ref_fa = fasta(self.params["ref_file"])
 			self.ref_fa_dict = self.ref_fa.fa_dict
 		self.params["platform"] = platform
+		self.platform = platform
 		self.params["threads"] = threads
 	def generate_primer_bcf(self,threads=4,flank=30):
 		self.params["failed_primers"] = "%(prefix)s.failed_primers.bed" % self.params
@@ -106,7 +107,7 @@ class bam:
 		else:
 			log("Using high depth approach")
 			return "high"
-	def gbcf(self,call_method="optimise",max_dp=None,min_dp=10,threads=4,vtype="snps",bed_file=None,platform="illumina",primers=None,overlap_search=True,chunk_size=50000,mpileup_options=None,low_dp_as_missing=False):
+	def gbcf(self,prefix=None,call_method="optimise",max_dp=None,min_dp=10,threads=4,vtype="snps",bed_file=None,primers=None,overlap_search=True,chunk_size=50000,mpileup_options=None,low_dp_as_missing=False):
 		"""
 		Create a gVCF file (for a description see:https://sites.google.com/site/gvcftools/home/about-gvcf)
 
@@ -117,7 +118,7 @@ class bam:
 		"""
 		self.params["min_dp"] = min_dp
 		self.params["max_dp"] = max_dp
-		self.params["bcf_file"] = "%s.gbcf" % self.prefix
+		self.params["bcf_file"] = "%s.gbcf" % (prefix if prefix else self.prefix)
 		self.params["bed_file"] = bed_file
 		self.params["chunk_size"] = chunk_size
 		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % self.params if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % self.params
@@ -140,13 +141,14 @@ class bam:
 		else: sys.stderr.write("Please provide valid vtype: [snps|indels|both]...Exiting!"); quit(1)
 		self.params["primer_cmd"] = " -T ^%(primer_bed_file)s" % self.params if primers else ""
 
-		if call_method=="optimise" and platform=="illumina": call_method = self.get_calling_params()
+		if call_method=="optimise" and self.platform=="Illumina": call_method = self.get_calling_params()
+		log("Variant calling optimised for %s" % self.platform)
 		self.params["mpileup_options"] = ""
-		if platform=="illumina" and  call_method=="high":
+		if self.platform=="Illumina" and  call_method=="high":
 			self.params["mpileup_options"] = "-B -a DP,AD"
-		elif platform=="illumina" and call_method=="low":
+		elif self.platform=="Illumina" and call_method=="low":
 			self.params["mpileup_options"] = "-ABq0 -Q0 -a DP,AD"
-		elif platform=="minION":
+		elif self.platform=="minION":
 			if vtype=="snps":
 				self.params["mpileup_options"] = "-BIq8 -a DP,AD"
 			else:
@@ -192,10 +194,9 @@ class bam:
 	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
 		self.params["min_dp"] = min_dp
 		self.params["bed_file"] = bed_file
-		self.params["cmd_split_chr"] = "splitchr.py %(ref_file)s 50000 --bed %(bed_file)s" % self.params if bed_file else "splitchr.py %(ref_file)s 50000" % self.params
 		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
 		self.params["missing_bcf_file"] = "%s.missing.bcf" % self.prefix
-		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
+#		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
 		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file,low_dp_as_missing=True)
 		self.params["bcf_file"] = "%s.bcf" % self.prefix
 
@@ -213,11 +214,8 @@ class bam:
 			self.params["gff_file"] = gff_file
 			self.params["ann_bcf_file"] = "%(prefix)s.csq.bcf" % self.params
 			cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf_file)s -Ob -o %(ann_bcf_file)s" % self.params
-
 			run_cmd(cmd)
 			final_bcf = self.params["ann_bcf_file"]
-
-
 		return bcf(final_bcf,prefix=self.prefix)
 	def create_dummy_low_dp_bcf(self,gff_file,min_dp=10,bed_file=None):
 		self.params["gff_file"] = gff_file
@@ -432,7 +430,7 @@ class bam:
 		O.close()
 	def get_bed_gt(self,bed_file):
 		add_arguments_to_self(self,locals())
-		cmd = "bcftools mpileup -f %(ref_file)s -R %(bed_file)s %(bam_file)s -a AD | bcftools call -m | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%GT\\t%%AD]\\n'" % vars(self)
+		cmd = "bcftools mpileup -f %(ref_file)s -R %(bed_file)s %(bam_file)s -BI -a AD | bcftools call -m | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%GT\\t%%AD]\\n'" % vars(self)
 		results = defaultdict(lambda : defaultdict(dict))
 		for l in cmd_out(cmd):
 			#Chromosome	4348079	0/0	51
@@ -455,7 +453,7 @@ class bam:
 			start = int(bed[gene][1])
 			end = int(bed[gene][2])
 			region_size = end-start
-			offset = int(region_size*0.05)
+			offset = int(region_size*0.15)
 			new_start = start-offset
 			new_end = end+offset
 			if region_size<100000:
@@ -471,8 +469,8 @@ class bam:
 			elif region_size>100000 and region_size<1000000:
 				window,step=1000,500
 			log("Outputting coverage plot for region (%sbp) with window=%s and step=%s" % (region_size,window,step))
-			self.loc = "%s:%s-%s" % (bed[gene][0],start,end)
-			cmd = "samtools depth %(bame_file)s %(loc)s"
+			self.loc = "%s:%s-%s" % (bed[gene][0],new_start,new_end)
+			cmd = "samtools depth %(bam_file)s -r %(loc)s" % vars(self)
 			ref_dp = []
 			ref_pos = []
 			for l in cmd_out(cmd):
@@ -489,13 +487,17 @@ class bam:
 			plot = fig.add_subplot(111)
 			plot.plot(x,y)
 			plot.set_ylim(bottom=0)
-			if max(y)>200:
+			if len(y)>0 and max(y)>200:
 				plot.set_yscale('symlog')
 			plot.set_xlabel("Genome Position (%sb)" % n)
 			plot.set_ylabel("Median Coverage (Window size:%s)" % window)
-			ymax = max(y) if max(y)>chrom_med_dp else chrom_med_dp
-			plot.set_ylim(top=ymax+ymax*0.05)
-			plot.axhline(xmin=0,xmax=1,y=chrom_med_dp,color="orange",linestyle="dashed")
+			region_med_dp = np.median(ref_dp)
+			if len(y)>0 and max(y)>region_med_dp:
+				ymax = max(y)
+			else:
+				ymax = region_med_dp
+			plot.set_ylim(top=ymax+ymax*0.05 if ymax>0 else 10)
+			plot.axhline(xmin=0,xmax=1,y=region_med_dp,color="orange",linestyle="dashed")
 			plot.axvline(ymin=0,ymax=0.05,x=start/d,color="orange")
 			plot.axvline(ymin=0,ymax=0.05,x=end/d,color="orange")
 			imgfile = "%s_%s_cov.png" %(self.prefix,gene)

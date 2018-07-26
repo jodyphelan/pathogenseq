@@ -9,9 +9,9 @@ from .mvcf import *
 
 
 def split_list(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+	"""Yield successive n-sized chunks from l."""
+	for i in range(0, len(l), n):
+		yield l[i:i + n]
 
 def create_mappability_file(ref_file,threads):
 	cmd = "gem-indexer -i %s -o genome" % ref_file
@@ -70,6 +70,7 @@ class vcf_merge:
 		X = open(self.tmp_file,"w")
 		chunk_size = 100
 		chunks = list(split_list(self.samples,chunk_size))
+		debug(str(chunks))
 		if len(chunks[-1])==1:
 			chunks[0] = chunks[0] + chunks.pop()
 		for i,tmp_samples in enumerate(chunks):
