@@ -48,7 +48,7 @@ def get_random_file(prefix = None,extension=None):
 			return "%s.tmp.txt" % (randint)
 
 def log(msg,ext=False):
-	sys.stderr.write(str(msg)+"\n")
+	sys.stderr.write("\n"+str(msg)+"\n")
 	if ext:
 		exit(1)
 
