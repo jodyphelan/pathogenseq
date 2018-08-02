@@ -140,7 +140,7 @@ class bam:
 		elif vtype=="both":	self.params["vtype"] = ""
 		else: sys.stderr.write("Please provide valid vtype: [snps|indels|both]...Exiting!"); quit(1)
 		self.params["primer_cmd"] = " -T ^%(primer_bed_file)s" % self.params if primers else ""
-
+		self.params["extra_cmd"] = ""
 		if call_method=="optimise" and self.platform=="Illumina": call_method = self.get_calling_params()
 		log("Variant calling optimised for %s" % self.platform)
 		self.params["mpileup_options"] = ""
@@ -149,6 +149,7 @@ class bam:
 		elif self.platform=="Illumina" and call_method=="low":
 			self.params["mpileup_options"] = "-ABq0 -Q0 -a DP,AD"
 		elif self.platform=="minION":
+			self.params["extra_cmd"] = "|  bcftools filter -e 'IMF < 0.7' -S 0 -Ou"
 			if vtype=="snps":
 				self.params["mpileup_options"] = "-BIq8 -a DP,AD"
 			else:
@@ -159,7 +160,7 @@ class bam:
 			self.params["mpileup_options"] = mpileup_options
 		self.params["min_dp_cmd"] = "| bcftools filter -e 'FMT/DP<%(min_dp)s' -Ou -S ." % self.params if low_dp_as_missing else ""
 		self.params["max_dp_cmd"] = "| bcftools filter -e 'FMT/DP>%(max_dp)s' -Ou -S ." % self.params if max_dp else ""
-		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s %(min_dp_cmd)s %(max_dp_cmd)s | bcftools view -Ob -o %(prefix)s_{2}.bcf \"" % self.params
+		cmd = "%(cmd_split_chr)s | parallel --progress --col-sep '\\t' -j %(threads)s \"bcftools mpileup  -f %(ref_file)s %(bam_file)s %(mpileup_options)s -r {1} | bcftools call %(primer_cmd)s %(vtype)s -mg %(min_dp)s | bcftools norm -f %(ref_file)s %(min_dp_cmd)s %(max_dp_cmd)s %(extra_cmd)s | bcftools view -Ob -o %(prefix)s_{2}.bcf \"" % self.params
 		run_cmd(cmd)
 		cmd = "%(cmd_split_chr)s | awk '{print \"%(prefix)s_\"$2\".bcf\"}' | parallel -j  %(threads)s \"bcftools index {}\"" % self.params
 		run_cmd(cmd)

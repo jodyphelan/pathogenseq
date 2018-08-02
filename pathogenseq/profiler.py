@@ -28,8 +28,9 @@ def profiler(conf_file,prefix,r1=None,r2=None,bam_file=None,call_method="low",mi
         else:
             log("Using %s\nPlease ensure that this BAM was made using the same reference as in the database.\nIf you are not sure what reference was used it is best to remap the reads." % bam_file)
             bam_obj = bam(bam_file,prefix,conf["ref"],platform=platform)
-        bcf = bam_obj.call_variants(call_method=call_method,gff_file=conf["gff"],bed_file=conf["bed"],mixed_as_missing=False if platform == "Illumina" else True,threads=threads,min_dp=min_depth)
-        csq = bcf.load_csq_alt(ann_file=conf["ann"],changes=True)
+        bcf_obj = bam_obj.call_variants(call_method=call_method,gff_file=conf["gff"],bed_file=conf["bed"],mixed_as_missing=False if platform == "Illumina" else True,threads=threads,min_dp=min_depth)
+        #bcf_obj = bcf(prefix+".csq.bcf")
+        csq = bcf_obj.load_csq_alt(ann_file=conf["ann"],changes=True)
         bamqc = qc_bam(bam_obj.bam_file,conf["ref"],bed_file=conf["bed"])
 
         tmp_bcf = "%s.missing.bcf" % prefix
