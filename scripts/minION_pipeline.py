@@ -38,7 +38,7 @@ def main(args):
 	bam_qc.extract_gc_skew(gc_file)
 	if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
 	variants = bam.pileup2vcf(indels=False)
-	bcf = bam.gbcf(threads=threads,platform="minION",primers=args.primers,chunk_size=args.window)
+	bcf = bam.gbcf(threads=threads,primers=args.primers,chunk_size=args.window)
 	bcf.generate_consensus(ref)
 	bcfstats = bcf.load_stats()
 	stats["hom_variants"] = bcfstats["PSC"][prefix]["nNonRefHom"]
