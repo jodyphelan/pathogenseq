@@ -18,8 +18,8 @@ def main(args):
 		mutations = bam.get_bed_gt(args.barcode)
 		barcode = ps.barcode(mutations,"lineages.bed")
 		results["barcode"] = barcode
-
-	bcf.bed_consensus(args.bed,args.ref)
+	if args.seq:
+		bcf.bed_consensus(args.bed,args.ref)
 
 
 	json.dump(results,open(outfile,"w"))
@@ -30,6 +30,7 @@ parser.add_argument('ref', help='Reference Sequence')
 parser.add_argument('gff', help='GFF file')
 parser.add_argument('bed', help='BED file')
 parser.add_argument('prefix', help='Prefix for files')
+parser.add_argument('--seq',action='store_true', help='Annotation file')
 parser.add_argument('--ann','-a',type=str,default=None, help='Annotation file')
 parser.add_argument('--barcode','-b',type=str,default=None, help='Barcode bed file')
 parser.add_argument('--threads','-t', type=int,default=1,help='Number of threads')
