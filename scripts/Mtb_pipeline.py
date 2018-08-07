@@ -28,7 +28,7 @@ newfastqqc = ps.qc_fastq(prefix,fr1,fr2,threads=threads)
 
 fastq = ps.fastq(prefix,ref,fr1,fr2,threads=threads)
 
-fastq.illumina(mapper="minimap2")
+fastq.illumina(mapper="bowtie2")
 
 bam_file = "%s.bam" % prefix
 
