@@ -20,7 +20,7 @@ def main(args):
 
 	fastq = ps.fastq(prefix,ref,r1,r2,threads=threads)
 
-	fastq.illumina(mapper="minimap2")
+	fastq.illumina(mapper="bowtie2")
 
 	bam_file = "%s.bam" % prefix
 
