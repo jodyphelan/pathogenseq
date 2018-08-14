@@ -499,7 +499,7 @@ dev.off()
 					change_num,ref_nuc,alt_nuc =  parse_mutation(info[6])
 					change = "%s%s>%s" % (ann_pos,ref_nuc,alt_nuc) if ann_pos else "%s%s>%s" % (pos,ref_nuc,alt_nuc)
 					variants[sample].append({"sample":sample,"gene_id":gene,"chr":chrom,"genome_pos":pos,"type":info[0],"change":change,"freq":adr[call2]})
-				elif info[0]=="*stop_lost" or info[0]=="stop_lost" or info[0]=="frameshift" or info[0]=="*frameshift" or info[0]=="stop_lost&frameshift" or info[0]=="non_coding" or info[0]=="*stop_lost&frameshift" or info[0]=="*stop_lost&inframe_deletion" or info[0]=="frameshift&start_lost":
+				elif info[0]=="*stop_lost&frameshift" or info[0]=="*stop_lost" or info[0]=="stop_lost" or info[0]=="frameshift" or info[0]=="*frameshift" or info[0]=="stop_lost&frameshift" or info[0]=="non_coding" or info[0]=="*stop_lost&frameshift" or info[0]=="*stop_lost&inframe_deletion" or info[0]=="frameshift&start_lost":
 					if chrom in ann and pos in ann[chrom]:
 						gene = ann[chrom][pos][0]
 						gene_pos = ann[chrom][pos][1]
@@ -735,7 +735,7 @@ DATA
 		new_bcf_file = "%(prefix)s.reheader.bcf" % vars(self)
 		tmp_header = "%(prefix)s.tmp.header" % vars(self)
 		OUT = open(tmp_header,"w")
-		for l in subprocess.Popen("bcftools view --threads %(threads)s -h %(bcf)s" % vars(self),shell=True,stdout=subprocess.PIPE).stdout:
+		for l in subprocess.Popen("bcftools view --threads %(threads)s -h %(filename)s" % vars(self),shell=True,stdout=subprocess.PIPE).stdout:
 			if l[:2]=="##": OUT.write(l); continue
 			row = l.rstrip().split()
 			for i in range(9,len(row)):
@@ -743,7 +743,7 @@ DATA
 				row[i] = idx[row[i]]
 			OUT.write("%s\n" % "\t".join(row))
 		OUT.close()
-		cmd = "bcftools reheader -h %s %s > %s" % (tmp_header,self.bcf,new_bcf_file)
+		cmd = "bcftools reheader -h %s %s > %s" % (tmp_header,self.filename,new_bcf_file)
 		run_cmd(cmd)
 		rm_files([tmp_header])
 
