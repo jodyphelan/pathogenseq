@@ -43,5 +43,7 @@ setuptools.setup(
 		 'scripts/bcf2dist.py',
 		 'scripts/bcf_sample_stats.py',
 		 'scripts/extract_dosage.py',
+		 'scripts/bcf2matrix.py',
+		 'scripts/reheader_bcf.py',
 		],
 )
