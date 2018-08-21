@@ -442,6 +442,8 @@ class bam:
 			ad = [int(x) for x in ad.split(",")]
 			if gt=="0/0":
 				d[ref] = ad[0]
+			elif gt=="./.":
+				d[ref] = 0
 			else:
 				for i,a in enumerate([ref]+alts):
 					d[a] = ad[i]
