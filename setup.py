@@ -45,5 +45,6 @@ setuptools.setup(
 		 'scripts/extract_dosage.py',
 		 'scripts/bcf2matrix.py',
 		 'scripts/reheader_bcf.py',
+		 'scripts/bcf2mean_genotype.py',
 		],
 )

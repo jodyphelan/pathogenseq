@@ -934,3 +934,24 @@ DATA
 				self.samp = s.replace("/","\/")
 				cmd = "samtools faidx %(ref_file)s %(loc)s | bcftools consensus -s %(samp)s -H 2 %(filename)s | sed 's/%(loc)s/%(samp)s_%(gene)s %(loc)s/' > %(samp)s_%(gene)s.fasta" % vars(self)
 				run_cmd(cmd)
+	def get_mean_genotype(self,outfile=None):
+		add_arguments_to_self(self,locals())
+		if self.outfile==None:
+			self.outfile = self.prefix+".geno"
+		O = open(self.outfile,"w")
+		for l in cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT]\\n' %(filename)s" % vars(self)):
+			row = l.rstrip().split()
+			alts = row[3].split(",")
+			for alt in alts:
+				ref = "%s/%s" % (row[2],row[2])
+				tmp = "%s/%s" % (alt,alt)
+				genos = []
+				for x in row[4:]:
+					if x==ref:
+						genos.append("0")
+					elif x==tmp:
+						genos.append("1")
+					else:
+						genos.append("NA")
+				O.write("%s, %s, %s, %s\n" % (row[0]+"_"+row[1]+"_"+alt,row[2],alt,", ".join(genos)))
+		O.close()
