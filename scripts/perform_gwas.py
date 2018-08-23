@@ -24,7 +24,7 @@ def main(args):
 		P = open(pheno_file,"w")
 		P.write("\n".join([meta[s][pheno] if pheno in meta[s] else "NA" for s in bcf.samples]))
 		P.close()
-		X.write("gemma -p %s -g %s -gk 1 -o %s && gemma  -lmm 1 -p %s -g %s  -k output/%s.cXX.txt  -o %s\n" % (pheno_file,geno_file,pheno,pheno_file,geno_file,pheno,pheno))
+		X.write("gemma -p %s -g %s -gk 1 -o %s -maf 0.00005 -miss 0.99 && gemma  -lmm 1 -p %s -g %s  -k output/%s.cXX.txt  -o %s -maf 0.00005 -miss 0.99\n" % (pheno_file,geno_file,pheno,pheno_file,geno_file,pheno,pheno))
 	X.close()
 
 	if args.preprocess:
