@@ -4,7 +4,7 @@ import csv
 
 def main(args):
 	bcf = ps.bcf(args.bcf)
-	#bcf.get_mean_genotype()
+	bcf.get_mean_genotype()
 	geno_file = bcf.prefix+".geno"
 	meta = {}
 	for s in bcf.samples:

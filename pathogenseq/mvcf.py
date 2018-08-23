@@ -939,7 +939,7 @@ DATA
 		if self.outfile==None:
 			self.outfile = self.prefix+".geno"
 		O = open(self.outfile,"w")
-		for l in cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT]\\n' %(filename)s" % vars(self)):
+		for l in tqdm(cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT]\\n' %(filename)s" % vars(self))):
 			row = l.rstrip().split()
 			alts = row[3].split(",")
 			for alt in alts:
