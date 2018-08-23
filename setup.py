@@ -46,5 +46,6 @@ setuptools.setup(
 		 'scripts/bcf2matrix.py',
 		 'scripts/reheader_bcf.py',
 		 'scripts/bcf2mean_genotype.py',
+		 'scripts/perform_gwas.py',
 		],
 )
