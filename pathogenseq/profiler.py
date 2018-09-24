@@ -43,10 +43,10 @@ def profiler(conf_file,prefix,r1=None,r2=None,bam_file=None,call_method="low",mi
             start = int(start)
             end = int(end)
             for i in range(start,end):
-                if [chrom,i] in missing_pos or bamqc.ref_dp[chrom][i]==0:
+                if (chrom,i) in missing_pos or bamqc.ref_dp[chrom][i]==0:
                      miss_pos+=1
             miss_gene[gene] = miss_pos/(end-start)
-        results = {"variants":[],"missing":miss_gene,"qc":{"pct_reads_mapped":bamqc.pct_reads_mapped,"num_reads_mapped":bamqc.num_reads_mapped}}
+        results = {"variants":[],"missing":miss_gene,"missing_pos":missing_pos,"qc":{"pct_reads_mapped":bamqc.pct_reads_mapped,"num_reads_mapped":bamqc.num_reads_mapped}}
         for sample in csq:
             results["variants"]  = csq[sample]
 
