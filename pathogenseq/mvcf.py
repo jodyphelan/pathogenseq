@@ -658,14 +658,16 @@ dev.off()
 					#node.add_features(prob=p)
 				log(t.get_ascii(attributes=["name", "nuc"], show_internal=True))
 
-	def itol_from_bcf(self,mutation_file,amino_acid=False):
+	def itol_from_bcf(self,mutation_file,amino_acid=False,supress_ref=False,supress_missing=False):
 		if amino_acid:
 			all_csq = self.load_csq()
+		ref = ""
 		for l in open(mutation_file):
 			mutation = l.rstrip()
 			if amino_acid:
 				gene,variant = mutation.split("__")
 				change_num,ref_aa,alt_aa = parse_mutation(variant)
+				ref = ref_aa
 				if gene in all_csq and change_num in all_csq[gene]:
 					variant_dict = all_csq[gene][change_num]
 				else:
@@ -673,11 +675,14 @@ dev.off()
 			else:
 				chrom,pos = mutation.split("__")
 				variant_dict = self.load_variants_alt(chrom,pos)
+				for l in cmd_out("bcftools view %s %s:%s | bcftools query -f '%%REF'" % (self.filename,chrom,pos)):
+					ref = l.rstrip()
 
-			num_var = len(set(variant_dict.values()))
+			num_var = len(set(variant_dict.values())) if not supress_ref else len(set([d for d in variant_dict.values() if d!=ref]))
+			tmp_col = {"A":"#c15959","C":"#77ad78","G":"#3b3561","T":"#76bed0","N":"#c5c5c5"}
 
 			cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),num_var))]
-			col_dict = {d:cols[i] for i,d in enumerate(set(variant_dict.values()))}
+			col_dict = {d:cols[i] for i,d in enumerate(set(variant_dict.values()))} if amino_acid else {d:tmp_col[d] for d in list(set(variant_dict.values())) if d!=ref}
 			shape_line = "\t".join(["1" for x in range(num_var)])
 			col_line = "\t".join(col_dict.values())
 			lab_line = "\t".join(col_dict.keys())
@@ -701,8 +706,9 @@ DATA
 					if variant_dict[s]==alt_aa:
 						OUT.write("%s\t%s\n" % (s,col_dict[variant_dict[s]]))
 				else:
+					if supress_ref and variant_dict[s]==ref: continue
+					if supress_missing and variant_dict[s]=="N": continue
 					OUT.write("%s\t%s\n" % (s,col_dict[variant_dict[s]]))
-
 			OUT.close()
 
 	def compress_variants(self):
