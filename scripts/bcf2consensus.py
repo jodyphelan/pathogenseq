@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import sys
 import pathogenseq as ps
+import argparse
 
 def main(args):
 	bcf_file,ref_file = sys.argv[1:]
