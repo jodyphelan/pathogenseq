@@ -48,5 +48,7 @@ setuptools.setup(
 		 'scripts/bcf2mean_genotype.py',
 		 'scripts/perform_gwas.py',
 		 'scripts/bcf2itol.py',
+		 'scripts/bcf2ann.py',
+		 'scripts/merge_bams.py',
 		],
 )
