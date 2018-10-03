@@ -2,7 +2,7 @@ import pathogenseq as ps
 import sys
 import argparse
 
-def merge_sample(sample,cram=False,reference=None):
+def merge_sample(sample,cram=False,reference=None,threads=20):
 	cram_flag = "-CT %s" % reference if cram else ""
 	extension = ".cram" if cram else ".bam"
 	samples = sample.split("_")
@@ -16,9 +16,9 @@ def merge_sample(sample,cram=False,reference=None):
 	header = sample+".header"
 	cmd = "samtools view %s -H | sed 's/%s/%s/g' > %s" % (first_bam,samples[0],sample,header)
 	ps.run_cmd(cmd)
-	cmd = "samtools merge -@ 40 %s %s" % (temp_bam,bams)
+	cmd = "samtools merge -@ %s %s %s" % (threads,temp_bam,bams)
 	ps.run_cmd(cmd)
-	cmd = "samtools reheader %s %s | samtools view -@ 40 %s > %s" % (header,temp_bam,cram_flag,final_bam)
+	cmd = "samtools reheader %s %s | samtools view -@ %s %s > %s" % (header,temp_bam,threads,cram_flag,final_bam)
 	ps.run_cmd(cmd)
 	cmd = "rm %s %s" % (header,temp_bam)
 	ps.run_cmd(cmd)
@@ -41,11 +41,11 @@ def main(args):
 
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--samples_file',default=None,help='Sample file')
-parser.add_argument('--sample',default=None,help='Individual sample')
-parser.add_argument('--reference',type=str,default=None,help='Cram file')
-parser.add_argument('--cram',action="store_true",help='Cram file')
-
+parser.add_argument('--samples_file','-f',default=None,help='Sample file')
+parser.add_argument('--sample','-s',default=None,help='Individual sample')
+parser.add_argument('--reference','-r',type=str,default=None,help='Cram file')
+parser.add_argument('--cram','-c',action="store_true",help='Cram file')
+parser.add_argument('--threads','-t',default=20,type=int,help='Cram file')
 
 parser.set_defaults(func=main)
 
