@@ -983,7 +983,7 @@ DATA
 		O.close()
 	def get_snp_ann(self,outfile=None):
 		add_arguments_to_self(self,locals())
-		print "chrom\tpos\tref\talt\tgene\tchange\tconsequence"
+		print("chrom\tpos\tref\talt\tgene\tchange\tconsequence")
 		for l in cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\t%%ALT[\\t%%IUPACGT:%%TBCSQ{1}]\\n' %(filename)s" % vars(self)):
 			# print l.rstrip()
 			row = l.rstrip().split()
@@ -1003,4 +1003,4 @@ DATA
 						changes[allele] = info.split("|")[5]
 				change = ",".join(changes[a] if a in changes else "-" for a in alt.split(","))
 				changetype = ",".join(changetypes[a] if a in changetypes else "-" for a in alt.split(","))
-			print "%s\t%s\t%s\t%s\t%s\t%s\t%s" % (chrom,pos,ref,alt,gene,change,changetype)
+			print("%s\t%s\t%s\t%s\t%s\t%s\t%s" % (chrom,pos,ref,alt,gene,change,changetype))
