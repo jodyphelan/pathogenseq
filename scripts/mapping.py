@@ -1,14 +1,14 @@
 #! /usr/bin/env python
-import pathogenseq
+import pathogenseq as ps
 import argparse
 
 def main(args):
 	if not args.prefix:
-		pathogenseq.log("Please specify prefix with -p")
+		ps.log("Please specify prefix with -p")
 		quit(1)
 	if not args.ref:
-		log("Please use --ref to provide a reference... Exiting",ext=T)
-	x= pathogenseq.fastq(args.prefix,args.ref,args.r1,args.r2,threads=args.threads)
+		ps.log("Please use --ref to provide a reference... Exiting",ext=T)
+	x= ps.fastq(args.prefix,args.ref,args.r1,args.r2,threads=args.threads)
 	x.illumina(mapper=args.mapper)
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
