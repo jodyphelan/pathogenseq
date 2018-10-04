@@ -961,3 +961,46 @@ DATA
 						genos.append("NA")
 				O.write("%s, %s, %s, %s\n" % (row[0]+"_"+row[1]+"_"+alt,row[2],alt,", ".join(genos)))
 		O.close()
+	def get_variant_matrix(self,outfile=None):
+		add_arguments_to_self(self,locals())
+		if self.outfile==None:
+			self.outfile = self.prefix+".variants.matrix"
+		csq = self.load_csq_alt()
+		var = set()
+		for s in csq:
+			for v in csq[s]:
+				var.add((v["gene_id"],v["change"]))
+		O = open(self.outfile,"w")
+		O.write("gene\tmutation\t%s\n" % ("\t".join(self.samples)))
+		for gene,change in sorted(var,key=lambda x:x[0]):
+			tmp = []
+			for s in self.samples:
+				if len([x for x in csq[s] if x["change"]==change and x["gene_id"]==gene])>0:
+					tmp.append("1")
+				else:
+					tmp.append("0")
+			O.write("%s\t%s\t%s\n" % (gene,change,"\t".join(tmp)))
+		O.close()
+	def get_snp_ann(self,outfile=None):
+		add_arguments_to_self(self,locals())
+		print "chrom\tpos\tref\talt\tgene\tchange\tconsequence"
+		for l in cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\t%%ALT[\\t%%IUPACGT:%%TBCSQ{1}]\\n' %(filename)s" % vars(self)):
+			# print l.rstrip()
+			row = l.rstrip().split()
+			chrom,pos,ref,alt = row[:4]
+			gene = "-"
+			change = "-"
+			changetype = "-"
+			if len(row)!=4:
+				changes = {}
+				changetypes = {}
+				for x in row[4:]:
+					allele,info = x.split(":")
+					if info[0]=="@": continue
+					gene = info.split("|")[1]
+					changetypes[allele] = info.split("|")[0]
+					if info.split("|")[0]!="non_coding":
+						changes[allele] = info.split("|")[5]
+				change = ",".join(changes[a] if a in changes else "-" for a in alt.split(","))
+				changetype = ",".join(changetypes[a] if a in changetypes else "-" for a in alt.split(","))
+			print "%s\t%s\t%s\t%s\t%s\t%s\t%s" % (chrom,pos,ref,alt,gene,change,changetype)
