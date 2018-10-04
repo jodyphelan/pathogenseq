@@ -36,8 +36,8 @@ def get_genome_cov(bam_file,ref_file,min_dp,bed_file=None):
 	else:
 		samtools_cmd = "samtools depth -aa --reference %s %s" % (ref_file,bam_file)
 	log("\nRunning command:\n%s" % samtools_cmd)
-	for l in subprocess.Popen(samtools_cmd,shell=True,stdout=subprocess.PIPE).stdout:
-		arr = l.rstrip().split()
+	for line in subprocess.Popen(samtools_cmd,shell=True,stdout=subprocess.PIPE).stdout:
+		arr = line.decode().rstrip().split()
 		if arr[0] not in ref_cov: log("Can't find %s in FASTA...Have you used the correct reference sequence?" % arr[0]);quit()
 		ref_cov[arr[0]][int(arr[1])-1] = int(arr[2])
 	all_genome = []
