@@ -27,17 +27,19 @@ def main(args):
 	stats["median_read_len"] = fq_qc.median_read_len
 	stats["read_num"] = fq_qc.read_num
 	bam = fq.illumina(mapper=args.mapper)
-	bam_qc = bam.get_bam_qc()
-	stats["med_dp"] = bam_qc.med_dp
-	stats["pct_reads_mapped"] = bam_qc.pct_reads_mapped
-	stats["genome_cov_1"] = bam_qc.genome_cov[1]
-	stats["genome_cov_10"] = bam_qc.genome_cov[10]
-	fasta = ps.fasta(ref).fa_dict
-	for seq in fasta:
-		cov_png = "%s.%s.cov.png" % (prefix,seq)
-		bam_qc.plot_cov(seq,cov_png,primers=args.primers)
-	bam_qc.extract_gc_skew(gc_file)
-	if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
+
+	if not args.nobamstats:
+		bam_qc = bam.get_bam_qc()
+		stats["med_dp"] = bam_qc.med_dp
+		stats["pct_reads_mapped"] = bam_qc.pct_reads_mapped
+		stats["genome_cov_1"] = bam_qc.genome_cov[1]
+		stats["genome_cov_10"] = bam_qc.genome_cov[10]
+		fasta = ps.fasta(ref).fa_dict
+		for seq in fasta:
+			cov_png = "%s.%s.cov.png" % (prefix,seq)
+			bam_qc.plot_cov(seq,cov_png,primers=args.primers)
+		bam_qc.extract_gc_skew(gc_file)
+		if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
 	variants = bam.gbcf(primers=args.primers,chunk_size=args.window)
 	bcfstats = variants.load_stats()
 	stats["hom_variants"] = bcfstats["PSC"][prefix]["nNonRefHom"]
@@ -57,6 +59,7 @@ parser.add_argument('--bed_cov',"-b",default=None, help='First read file')
 parser.add_argument('--primers',"-p",default=None, help='First read file')
 parser.add_argument('--centrifuge',"-c",default=None, help='First read file')
 parser.add_argument('--window',default=50000,type=int, help='First read file')
+parser.add_argument('--nobamstats',action="store_true", help='First read file')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
