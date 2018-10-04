@@ -1,6 +1,6 @@
 from __future__ import division
 import json
-from files import *
+from .files import *
 import math
 
 def stdev(arr):
@@ -51,4 +51,4 @@ def barcode(mutations,barcode_bed):
 			for i in range(5,bed_num_col-1):
 				tmp["info"].append(add_info[l][i])
 		final_results.append(tmp)
- 	return final_results
+	return final_results
