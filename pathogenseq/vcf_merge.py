@@ -50,7 +50,7 @@ class vcf_merge:
 		vcf_merge: A vcf_merge class object
 	"""
 
-	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4,min_dp=10,max_merge_threads=8):
+	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4,min_dp=10):
 		add_arguments_to_self(self,locals())
 		self.samples = []
 		filecheck(sample_file)
@@ -63,7 +63,7 @@ class vcf_merge:
 		self.merged_bcf = "%s.raw.bcf" % self.prefix
 	def merge(self):
 		"""Merge gVCF files"""
-		cmd = "cat %(sample_file)s | parallel -j %(max_merge_threads)s \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % vars(self)
+		cmd = "cat %(sample_file)s | parallel -j %(threads)s \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % vars(self)
 		run_cmd(cmd)
 		tmp_bcfs = []
 		self.tmp_file = "%s.cmd.xargs.txt" % self.prefix
@@ -82,7 +82,7 @@ class vcf_merge:
 		X.close()
 		tmp_threads = 1 if self.threads==1 else int(self.threads/2)
 		if tmp_threads>8: tmp_threads = 8 #Stop the max number of files being hit... assuming 1000 files is limit
-		cmd = "cat %s | parallel -j %s" % (self.tmp_file,tmp_threads)
+		cmd = "cat %s | parallel -j %s" % (self.tmp_file)
 		run_cmd(cmd)
 		if len(tmp_bcfs)>1:
 			self.vcf_files = " ".join(tmp_bcfs)
