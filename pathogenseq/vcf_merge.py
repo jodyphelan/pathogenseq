@@ -50,7 +50,7 @@ class vcf_merge:
 		vcf_merge: A vcf_merge class object
 	"""
 
-	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4,min_dp=10,max_merge_threads):
+	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4,min_dp=10,max_merge_threads=8):
 		add_arguments_to_self(self,locals())
 		self.samples = []
 		filecheck(sample_file)
