@@ -50,7 +50,7 @@ class vcf_merge:
 		vcf_merge: A vcf_merge class object
 	"""
 
-	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4,min_dp=10):
+	def __init__(self,sample_file,ref_file,prefix,vcf_dir=".",vcf_ext="gbcf",threads=4,min_dp=10,max_merge_threads):
 		add_arguments_to_self(self,locals())
 		self.samples = []
 		filecheck(sample_file)
@@ -63,7 +63,7 @@ class vcf_merge:
 		self.merged_bcf = "%s.raw.bcf" % self.prefix
 	def merge(self):
 		"""Merge gVCF files"""
-		cmd = "cat %(sample_file)s | parallel -j %(threads)s \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % vars(self)
+		cmd = "cat %(sample_file)s | parallel -j %(max_merge_threads)s \"if [ ! -f %(vcf_dir)s/{}.%(vcf_ext)s.csi ]; then bcftools index %(vcf_dir)s/{}.%(vcf_ext)s; fi;\"" % vars(self)
 		run_cmd(cmd)
 		tmp_bcfs = []
 		self.tmp_file = "%s.cmd.xargs.txt" % self.prefix

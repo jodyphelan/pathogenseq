@@ -14,7 +14,7 @@ def main(args):
 	bcf_masked_filt = "%s.mix_masked.bcf" % args.prefix
 	fasta_snps = "%s.snps.fa" % args.prefix
 
-	merged = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads,args.min_dp).merge()
+	merged = ps.vcf_merge(args.samples,args.ref,args.prefix,args.vcf_dir,args.vcf_ext,args.threads,args.min_dp,max_merge_threads=args.max_merge_threads).merge()
 
 	vcf = merged.extract_variants(bcf_variant_pos,min_dp=args.min_dp,bed_include=args.bed_include,bed_exclude=args.bed_exclude)
 
@@ -52,6 +52,7 @@ parser.add_argument('--bed_include',default=None, help='Reference Sequence')
 parser.add_argument('--bed_exclude', default=None,help='Reference Sequence')
 parser.add_argument('--vcf_dir', default=".",help='Reference Sequence')
 parser.add_argument('--vcf_ext', default="gbcf",help='Reference Sequence')
+parser.add_argument('--max_merge_threads',default=8,type=int, help='Reference Sequence')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
