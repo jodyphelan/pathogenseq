@@ -82,7 +82,7 @@ class vcf_merge:
 		X.close()
 		tmp_threads = 1 if self.threads==1 else int(self.threads/2)
 		if tmp_threads>8: tmp_threads = 8 #Stop the max number of files being hit... assuming 1000 files is limit
-		cmd = "cat %s | parallel -j %s" % (self.tmp_file)
+		cmd = "cat %s | parallel -j %s" % (self.tmp_file,tmp_threads)
 		run_cmd(cmd)
 		if len(tmp_bcfs)>1:
 			self.vcf_files = " ".join(tmp_bcfs)
