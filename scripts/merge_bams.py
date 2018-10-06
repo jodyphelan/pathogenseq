@@ -3,7 +3,7 @@ import sys
 import argparse
 
 def merge_sample(sample,cram=False,reference=None,threads=20):
-	cram_flag = "-CT %s" % reference if cram else ""
+	cram_flag = "-CT %s" % reference if cram else "-b"
 	extension = ".cram" if cram else ".bam"
 	samples = sample.split("_")
 
