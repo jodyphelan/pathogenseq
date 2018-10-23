@@ -42,7 +42,7 @@ def get_missing_positions(bcf_file):
 	cmd = "bcftools query -f '%%CHROM\\t%%POS\\n' %s" % bcf_file
 	results = []
 	for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
-		row = l.rstrip().split()
+		row = l.decode().rstrip().split()
 		results.append((row[0],int(row[1])))
 	return results
 
@@ -88,7 +88,7 @@ class bcf:
 		j = 0
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
 			j+=1
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			start_pos = int(row[1])+1
 			for i in range(start_pos,start_pos+len(row[2])-1):
 				OUT.write("%s\t%s\t%s\n" % (row[0],i-1,i))
@@ -107,7 +107,7 @@ class bcf:
 			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n' %s  | sed 's/\.\/\./N\/N/g'" % self.filename
 		log(cmd)
 		for l in tqdm(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			alts = row[3].split(",")
 			alleles = [row[2]]+alts
 			for i in range(len(self.samples)):
@@ -143,7 +143,7 @@ class bcf:
 			cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n' %s  | sed 's/\.\/\./N/g'" % self.filename
 		log(cmd)
 		for l in tqdm(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			for i in range(len(self.samples)):
 				raw_variants[row[0]][row[1]][self.samples[i]] = row[i+2]
 		for chrom in raw_variants:
@@ -201,7 +201,7 @@ class bcf:
 		meta = defaultdict(list)
 		for l in open(meta_file):
 			#sample	data
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			meta[row[1]].append(row[0])
 		for m in meta:
 			self.tmp_file = "%s.tmp.txt" % self.prefix
@@ -229,7 +229,7 @@ class bcf:
 			log("Choose valid format [old,new]...Exiting!",ext=True)
 		run_cmd(cmd,verbose=v)
 
-	def vcf_to_fasta_alt(self,outfile,ref_file,threads=4,chunk_size = 50000, bed_file=None):
+	def vcf_to_fasta(self,outfile,ref_file,threads=4,chunk_size = 50000, bed_file=None):
 		self.ref_file = ref_file
 		self.chunk_size = chunk_size
 		self.cmd_split_chr = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % vars(self) if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % vars(self)
@@ -243,7 +243,7 @@ class bcf:
 		run_cmd(cmd)
 		O = open(outfile,"w")
 		for i,l in enumerate(open(self.tmp_file)):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			if i==0: continue
 			s = self.samples[i-1]
 			seq = "".join(row).replace("./.","N")
@@ -251,20 +251,6 @@ class bcf:
 		O.close()
 
 
-	def vcf_to_fasta(self,filename,threads=4):
-		"""Create a fasta file from the SNPs"""
-		self.threads = threads
-		self.tmp_file = "%s.tmp.txt" % self.prefix
-		cmd = "bcftools query -f '%%POS[\\t%%IUPACGT]\\n' %(bcf)s |  datamash transpose > %(tmp_file)s" % vars(self)
-		run_cmd(cmd)
-		O = open(filename,"w")
-		for i,l in enumerate(open(self.tmp_file)):
-			row = l.rstrip().split()
-			if i==0: continue
-			s = self.samples[i-1]
-			seq = "".join(row).replace("./.","N")
-			O.write(">%s\n%s\n" % ( s,seq))
-		O.close()
 
 	def bcf2vcf(self):
 		if nofile(self.vcf):
@@ -358,7 +344,7 @@ dev.off()
 		bed_dict = defaultdict(dict)
 		for l in open(bed_file):
 			#chrom pos pos allele data
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			bed_dict[row[0]][int(row[1])] = (row[3],row[4])
 		vcf_reader = vcf.Reader(open(temp_vcf))
 		results = defaultdict(list)
@@ -459,7 +445,7 @@ dev.off()
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ\\t%%TGT\\t%%AD]\\n' %s" % self.filename
 		sys.stderr.write("%s\n"%cmd)
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
-			row = line.rstrip().split()
+			row = line.decode().rstrip().split()
 			chrom = row[0]
 			pos = int(row[1])
 			ref = row[2]
@@ -520,7 +506,7 @@ dev.off()
 		if ann_file:
 			for l in tqdm(open(ann_file)):
 				#chrom pos gene gene/codon_pos
-				row = l.rstrip().split()
+				row = l.decode().rstrip().split()
 				ann[row[0]][int(row[1])] = (row[2],row[3])
 
 		nuc_variants = self.load_variants_alt()
@@ -614,7 +600,7 @@ dev.off()
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(bcf)s" % vars(self)
 		variants = {}
 		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			variants[i] = (row[0],row[1])
 		self.reduced_bcf = "%(prefix)s.reduced.bcf" % vars(self)
 		cmd = "bcftools view --threads %(threads)s -c 3 %(bcf)s -Ob -o %(reduced_bcf)s" % vars(self)
@@ -622,7 +608,7 @@ dev.off()
 		reduced = {}
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(reduced_bcf)s" % vars(self)
 		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			reduced[i] = (row[0],row[1])
 		new_bcf = bcf(self.reduced_bcf)
 		self.fasta_file = "%(prefix)s.reduced.snps.fa" % vars(self)
@@ -715,7 +701,7 @@ DATA
 		cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%GT]\\n' %(filename)s" % vars(self)
 		results = defaultdict(list)
 		for l in subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout:
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			results[tuple(row[2:])].append([row[0],row[1]])
 		final_results = {}
 		for i,key in enumerate(results):
@@ -734,7 +720,7 @@ DATA
 	def reheader(self,index_file):
 		idx = {}
 		for l in open(index_file):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			if row[0] in idx: sys.stderr.write("Duplicate values in index file (%s)...Exiting!\n"%row[0]); quit(1)
 			idx[row[0]] = row[1]
 
@@ -743,7 +729,7 @@ DATA
 		OUT = open(tmp_header,"w")
 		for l in subprocess.Popen("bcftools view --threads %(threads)s -h %(filename)s" % vars(self),shell=True,stdout=subprocess.PIPE).stdout:
 			if l[:2]=="##": OUT.write(l); continue
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			for i in range(9,len(row)):
 				if row[i] not in idx: log("%s not found in index file...Exiting!" % row[i],True)
 				row[i] = idx[row[i]]
@@ -777,7 +763,7 @@ DATA
 		self.non_uniq_bed = "%s.genome.non_uniq.bed" % self.prefix
 		O = open(self.non_uniq_bed,"w")
 		for l in open(self.mappability_file):
-			arr = l.rstrip().split()
+			arr = l.decode().rstrip().split()
 			if float(arr[3])<1:
 				O.write(l)
 		O.close()
@@ -811,7 +797,7 @@ DATA
 		cmd =  "bcftools stats  %(filename)s -s - | grep ^PSC > %(bcftools_stats_file)s" % vars(self)
 		run_cmd(cmd)
 		for l in open(self.bcftools_stats_file):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			s = row[2]
 			miss[s] = (num_calls-sum([int(row[i]) for i in [3,4,5]]))/num_calls
 			mix[s] = int(row[5])/num_calls
@@ -846,7 +832,7 @@ DATA
 			self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
 			TMP = open(self.tmp_file,"w")
 			for l in cmd_out(cmd):
-				row = l.rstrip().split()
+				row = l.decode().rstrip().split()
 				TMP.write("%s\t%s\t%s\n" % (row[0],int(row[1])-1,row[1]))
 			TMP.close()
 			self.tmp_fa = "%(prefix)s.%(tmp_sample)s.tmp.fasta" % vars(self)
@@ -926,7 +912,7 @@ DATA
 		O = open(self.outfile,"w")
 		O.write("chr\tpos\tref\tinfo\ttype\t%s\n" % ("\t".join(self.samples)))
 		for l in tqdm(cmd_out(cmd)):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			row[5:] = [process_ad(x) for x in row[5:]]
 			O.write("%s\n" % "\t".join(row))
 		O.close()
@@ -946,7 +932,7 @@ DATA
 			self.outfile = self.prefix+".geno"
 		O = open(self.outfile,"w")
 		for l in tqdm(cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT]\\n' %(filename)s" % vars(self))):
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			alts = row[3].split(",")
 			for alt in alts:
 				ref = "%s/%s" % (row[2],row[2])
@@ -986,7 +972,7 @@ DATA
 		print("chrom\tpos\tref\talt\tgene\tchange\tconsequence")
 		for l in cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\t%%ALT[\\t%%IUPACGT:%%TBCSQ{1}]\\n' %(filename)s" % vars(self)):
 			# print l.rstrip()
-			row = l.rstrip().split()
+			row = l.decode().rstrip().split()
 			chrom,pos,ref,alt = row[:4]
 			gene = "-"
 			change = "-"

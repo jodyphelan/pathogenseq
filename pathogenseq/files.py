@@ -28,7 +28,7 @@ def cmd_out(cmd,verbose=1):
 	try:
 		res = subprocess.Popen(cmd,shell=True,stderr = stderr,stdout=subprocess.PIPE)
 		for l in res.stdout:
-			yield l.decode().rstrip().decode()
+			yield l.decode().rstrip()
 	except:
 		print("Command Failed! Please Check!")
 		exit(1)
