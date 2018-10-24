@@ -70,7 +70,6 @@ class vcf_merge:
 		X = open(self.tmp_file,"w")
 		chunk_size = 100
 		chunks = list(split_list(self.samples,chunk_size))
-		debug(str(chunks))
 		if len(chunks[-1])==1:
 			chunks[0] = chunks[0] + chunks.pop()
 		for i,tmp_samples in enumerate(chunks):

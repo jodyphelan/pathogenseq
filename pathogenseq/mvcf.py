@@ -201,7 +201,7 @@ class bcf:
 		meta = defaultdict(list)
 		for l in open(meta_file):
 			#sample	data
-			row = l.decode().rstrip().split()
+			row = l.rstrip().split()
 			meta[row[1]].append(row[0])
 		for m in meta:
 			self.tmp_file = "%s.tmp.txt" % self.prefix
@@ -243,7 +243,7 @@ class bcf:
 		run_cmd(cmd)
 		O = open(outfile,"w")
 		for i,l in enumerate(open(self.tmp_file)):
-			row = l.decode().rstrip().split()
+			row = l.rstrip().split()
 			if i==0: continue
 			s = self.samples[i-1]
 			seq = "".join(row).replace("./.","N")
@@ -344,7 +344,7 @@ dev.off()
 		bed_dict = defaultdict(dict)
 		for l in open(bed_file):
 			#chrom pos pos allele data
-			row = l.decode().rstrip().split()
+			row = l.rstrip().split()
 			bed_dict[row[0]][int(row[1])] = (row[3],row[4])
 		vcf_reader = vcf.Reader(open(temp_vcf))
 		results = defaultdict(list)
@@ -506,7 +506,7 @@ dev.off()
 		if ann_file:
 			for l in tqdm(open(ann_file)):
 				#chrom pos gene gene/codon_pos
-				row = l.decode().rstrip().split()
+				row = l.rstrip().split()
 				ann[row[0]][int(row[1])] = (row[2],row[3])
 
 		nuc_variants = self.load_variants_alt()
@@ -720,7 +720,7 @@ DATA
 	def reheader(self,index_file):
 		idx = {}
 		for l in open(index_file):
-			row = l.decode().rstrip().split()
+			row = l.rstrip().split()
 			if row[0] in idx: sys.stderr.write("Duplicate values in index file (%s)...Exiting!\n"%row[0]); quit(1)
 			idx[row[0]] = row[1]
 
@@ -763,7 +763,7 @@ DATA
 		self.non_uniq_bed = "%s.genome.non_uniq.bed" % self.prefix
 		O = open(self.non_uniq_bed,"w")
 		for l in open(self.mappability_file):
-			arr = l.decode().rstrip().split()
+			arr = l.rstrip().split()
 			if float(arr[3])<1:
 				O.write(l)
 		O.close()
@@ -797,7 +797,7 @@ DATA
 		cmd =  "bcftools stats  %(filename)s -s - | grep ^PSC > %(bcftools_stats_file)s" % vars(self)
 		run_cmd(cmd)
 		for l in open(self.bcftools_stats_file):
-			row = l.decode().rstrip().split()
+			row = l.rstrip().split()
 			s = row[2]
 			miss[s] = (num_calls-sum([int(row[i]) for i in [3,4,5]]))/num_calls
 			mix[s] = int(row[5])/num_calls
