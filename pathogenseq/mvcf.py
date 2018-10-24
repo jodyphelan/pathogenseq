@@ -728,8 +728,8 @@ DATA
 		tmp_header = "%(prefix)s.tmp.header" % vars(self)
 		OUT = open(tmp_header,"w")
 		for l in subprocess.Popen("bcftools view --threads %(threads)s -h %(filename)s" % vars(self),shell=True,stdout=subprocess.PIPE).stdout:
-			if l[:2]=="##": OUT.write(l); continue
-			row = l.decode().rstrip().split()
+			if l.decode()[:2]=="##": OUT.write(l.decode()); continue
+			row = l.decode().rstrip().split();
 			for i in range(9,len(row)):
 				if row[i] not in idx: log("%s not found in index file...Exiting!" % row[i],True)
 				row[i] = idx[row[i]]
