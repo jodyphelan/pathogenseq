@@ -50,5 +50,6 @@ setuptools.setup(
 		 'scripts/bcf2itol.py',
 		 'scripts/bcf2ann.py',
 		 'scripts/merge_bams.py',
+		 'scripts/reheader_bam.py',
 		],
 )
