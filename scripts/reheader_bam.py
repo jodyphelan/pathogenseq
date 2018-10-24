@@ -6,7 +6,7 @@ def reheader(bamfile,oldname,newname,threads):
 	cmd = "samtools view %s -H | sed 's/%s/%s/g' > %s" % (bamfile,oldname,newname,tmpfile)
 	ps.run_cmd(cmd)
 	newbamfile = "%s.reheader.bam" % (bamfile.replace(".bam",""))
-	cmd = "samtools reheader %s %s | samtools view -@ %s -b > %s" % (tmpfile,bamfile,newbamfile)
+	cmd = "samtools reheader %s %s | samtools view -@ %s -b > %s" % (tmpfile,bamfile,newbamfile,threads)
 	ps.run_cmd(cmd)
 
 def main(args):
