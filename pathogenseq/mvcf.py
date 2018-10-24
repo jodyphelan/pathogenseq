@@ -832,7 +832,7 @@ DATA
 			self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
 			TMP = open(self.tmp_file,"w")
 			for l in cmd_out(cmd):
-				row = l.decode().rstrip().split()
+				row = l.rstrip().split()
 				TMP.write("%s\t%s\t%s\n" % (row[0],int(row[1])-1,row[1]))
 			TMP.close()
 			self.tmp_fa = "%(prefix)s.%(tmp_sample)s.tmp.fasta" % vars(self)
