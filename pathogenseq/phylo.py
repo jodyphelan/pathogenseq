@@ -2,6 +2,26 @@ import sys
 import subprocess
 from .files import *
 from .fasta import *
+import ete3
+
+class tree:
+	def __init__(self,tree_file):
+		filecheck(tree_file)
+		self.tree_file = tree_file
+		self.tree = ete3.Tree(tree_file)
+	def rename_nodes(self,index_file,outfile,strict=False,append=False):
+		names = {}
+		for l in open(index_file):
+			row = l.rstrip().split()
+			names[row[0]] = row[1]
+		leaves = self.tree.get_leaves()
+		for leaf in leaves:
+			if leaf.name in names:
+				if append:
+					leaf.name = leaf.name+append+names[leaf.name]
+			elif strict:
+				log("%s not found in index file" % lead.name,True)
+		self.tree.write(format=1,outfile=outfile)
 
 class phylo:
 	"""Class for running phylogenetic anaysis

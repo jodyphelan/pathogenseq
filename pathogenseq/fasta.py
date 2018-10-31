@@ -274,6 +274,25 @@ class fasta:
 			results[row[0]] = {"chrom":row[1],"start":int(row[8]),"end":int(row[9]),"identities":int(row[3])}
 		rm_files([tmp_file])
 		return results
+	def add_meta_data(self,data_file,outfile,delimiter="_"):
+		data = {}
+		for l in open(data_file):
+			row = l.rstrip().split()
+			data[row[0]] = row[1]
+		new_seq_dict = {}
+		O = open(outfile,"w")
+		for s in self.fa_dict:
+			if s not in data: log("%s not in meta data file" % s,ext=True)
+			tmp = "%s%s%s" % (s,delimiter,data[s])
+			O.write(">%s\n%s\n" % (tmp,self.fa_dict[s]))
+		O.close()
+	def subset_fasta(self,seq_list,outfile):
+		seqs = [x.rstrip() for x in open(seq_list).readlines()]
+		O = open(outfile,"w")
+		for s in seqs:
+			if s not in self.fa_dict: log("%s not found in fasta file" % s,ext=True)
+			O.write(">%s\n%s\n" % s,self.fa_dict[s])
+		O.close()
 
 
 def revcom(s):

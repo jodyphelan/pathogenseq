@@ -51,5 +51,7 @@ setuptools.setup(
 		 'scripts/bcf2ann.py',
 		 'scripts/merge_bams.py',
 		 'scripts/reheader_bam.py',
+		 'scripts/fasta_add_data.py',
+		 'scripts/rename_tree_leaves.py',
 		],
 )
