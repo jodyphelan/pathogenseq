@@ -4,7 +4,8 @@ import pathogenseq as ps
 import argparse
 
 def main(args):
-	bcf_file,ref_file = sys.argv[1:]
+	bcf_file = args.bcf
+	ref_file = args.ref
 	bcf = ps.bcf(bcf_file)
 	bcf.generate_consensus(ref_file)
 

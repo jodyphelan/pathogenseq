@@ -972,7 +972,7 @@ DATA
 		print("chrom\tpos\tref\talt\tgene\tchange\tconsequence")
 		for l in cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\t%%ALT[\\t%%IUPACGT:%%TBCSQ{1}]\\n' %(filename)s" % vars(self)):
 			# print l.rstrip()
-			row = l.decode().rstrip().split()
+			row = l.rstrip().split()
 			chrom,pos,ref,alt = row[:4]
 			gene = "-"
 			change = "-"
