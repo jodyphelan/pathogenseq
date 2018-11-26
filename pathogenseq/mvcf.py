@@ -990,3 +990,23 @@ DATA
 				change = ",".join(changes[a] if a in changes else "-" for a in alt.split(","))
 				changetype = ",".join(changetypes[a] if a in changetypes else "-" for a in alt.split(","))
 			print("%s\t%s\t%s\t%s\t%s\t%s\t%s" % (chrom,pos,ref,alt,gene,change,changetype))
+	def get_bed_gt(self,bed_file,ref_file):
+		add_arguments_to_self(self,locals())
+		cmd = "bcftools convert --gvcf2vcf -f %(ref_file)s %(filename)s  | bcftools view -T %(bed_file)s  | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%GT\\t%%AD]\\n'" % vars(self)
+		results = defaultdict(lambda : defaultdict(dict))
+		for l in cmd_out(cmd):
+			#Chromosome	4348079	0/0	51
+			chrom,pos,ref,alt,gt,ad = l.rstrip().split()
+			pos =int(pos)
+			d = {}
+			alts = alt.split(",")
+			ad = [int(x) for x in ad.split(",")] if ad!="." else [100]
+			if gt=="0/0":
+				d[ref] = ad[0]
+			elif gt=="./.":
+				d[ref] = 0
+			else:
+				for i,a in enumerate([ref]+alts):
+					d[a] = ad[i]
+			results[chrom][pos] = d
+		return results

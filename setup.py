@@ -53,5 +53,6 @@ setuptools.setup(
 		 'scripts/reheader_bam.py',
 		 'scripts/fasta_add_data.py',
 		 'scripts/rename_tree_leaves.py',
+		 'scripts/bcf_genotype.py',
 		],
 )
