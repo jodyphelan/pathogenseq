@@ -845,7 +845,7 @@ DATA
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view --threads %(threads)s -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
-	def generate_consensus(self,ref,threads=self.threads):
+	def generate_consensus(self,ref,threads=4):
 		add_arguments_to_self(self,locals())
 		pool = mp.Pool(processes=threads)
 		results = [pool.apply_async(per_sample_bcf2fa, args=(x,self)) for s in self.samples]
