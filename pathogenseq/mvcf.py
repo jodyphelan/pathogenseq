@@ -848,7 +848,7 @@ DATA
 	def generate_consensus(self,ref,threads=4):
 		add_arguments_to_self(self,locals())
 		pool = mp.Pool(processes=threads)
-		results = [pool.apply_async(per_sample_bcf2fa, args=(x,self)) for s in self.samples]
+		results = [pool.apply_async(per_sample_bcf2fa, args=(s,self)) for s in self.samples]
 		output = [p.get() for p in results]
 
 	def distance(self,outfile):
