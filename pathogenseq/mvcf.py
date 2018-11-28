@@ -12,7 +12,7 @@ from tqdm import tqdm
 # from bokeh.layouts import column
 from ete3 import Tree
 from colour import Color
-
+import multiprocessing as mp
 
 re_seq = re.compile("([0-9\-]*)([A-Z\*]+)")
 re_I = re.compile("([A-Z\*]+)")
@@ -826,7 +826,8 @@ DATA
 		return bcf(self.outfile,threads=self.threads)
 	def generate_consensus(self,ref):
 		add_arguments_to_self(self,locals())
-		for s in self.samples:
+		mpqueue = mp.Queue()
+		def per_sample_bcf2fa(s,mpqueue):
 			self.tmp_sample = s
 			cmd = "bcftools view --threads %(threads)s -s %(tmp_sample)s  %(filename)s -Ou | bcftools filter -e 'GT=\"het\"' -S . -Ou | bcftools view --threads %(threads)s -i 'GT==\"./.\"' -Ou | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
 			self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
@@ -846,6 +847,15 @@ DATA
 				FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
 			FA.close()
 			rm_files([self.tmp_file,self.tmp_fa])
+			mpqueue.put(s)
+		processes = [mp.Process(target=per_sample_bcf2fa, args = (s,mpqueue)) for s in self.samples]
+		for p in processes:
+			p.start()
+
+		for p in processes:
+			p.join()
+		results = [mpqueue.get() for o in processes]
+		print(results)
 	def distance(self,outfile):
 		add_arguments_to_self(self,locals())
 		matrix = [[0 for x in self.samples] for s in self.samples]
