@@ -218,7 +218,8 @@ class bcf:
 		# show the results
 		show(sn)
 
-	def split_on_metadata(self,meta_file):
+	def split_on_metadata(self,meta_file,threads = 4):
+		self.threads = threads
 		meta = defaultdict(list)
 		for l in open(meta_file):
 			#sample	data
