@@ -218,7 +218,7 @@ class bcf:
 		# show the results
 		show(sn)
 
-	def split_on_metadata(self,meta_file,threads = 4):
+	def split_on_metadata(self,meta_file,remove_monomorphic = False, threads = 4):
 		self.threads = threads
 		meta = defaultdict(list)
 		for l in open(meta_file):
@@ -229,7 +229,8 @@ class bcf:
 			self.tmp_file = "%s.tmp.txt" % self.prefix
 			open(self.tmp_file,"w").write("\n".join(meta[m]))
 			self.tmp_bcf = "%s.%s.bcf" % (self.prefix,m)
-			cmd = "bcftools view --threads %(threads)s -S %(tmp_file)s %(filename)s -Ob -o %(tmp_bcf)s" % vars(self)
+			self.remove_monomorphic = "| bcftools view -c1 " if  remove_monomorphic else ""
+			cmd = "bcftools view --threads %(threads)s -S %(tmp_file)s %(filename)s %(remove_monomorphic)s -Ob -o %(tmp_bcf)s" % vars(self)
 			run_cmd(cmd)
 
 	def annotate(self,ref_file,gff_file):
