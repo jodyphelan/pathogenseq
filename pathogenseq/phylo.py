@@ -9,7 +9,7 @@ class tree:
 		filecheck(tree_file)
 		self.tree_file = tree_file
 		self.tree = ete3.Tree(tree_file)
-	def rename_nodes(self,index_file,outfile,strict=False,append=False):
+	def rename_nodes(self,index_file,outfile,strict=False,append="_"):
 		names = {}
 		for l in open(index_file):
 			row = l.rstrip().split()
@@ -17,10 +17,9 @@ class tree:
 		leaves = self.tree.get_leaves()
 		for leaf in leaves:
 			if leaf.name in names:
-				if append:
-					leaf.name = leaf.name+append+names[leaf.name]
+				leaf.name = leaf.name+append+names[leaf.name]
 			elif strict:
-				log("%s not found in index file" % lead.name,True)
+				log("%s not found in index file" % leaf.name,True)
 		self.tree.write(format=1,outfile=outfile)
 
 class phylo:

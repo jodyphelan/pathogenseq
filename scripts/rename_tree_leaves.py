@@ -12,7 +12,7 @@ parser.add_argument('tree',help='bcf file')
 parser.add_argument('index_file',help='reference file')
 parser.add_argument('outfile',help='reference file')
 parser.add_argument('--strict',action="store_true",help='reference file')
-parser.add_argument('--append',default=None,type=str,help='reference file')
+parser.add_argument('--append',default="_",type=str,help='reference file')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()

@@ -207,7 +207,7 @@ class bcf:
 			self.tmp_file = "%s.tmp.txt" % self.prefix
 			open(self.tmp_file,"w").write("\n".join(meta[m]))
 			self.tmp_bcf = "%s.%s.bcf" % (self.prefix,m)
-			cmd = "bcftools view --threads %(threads)s -S %(tmp_file)s %(bcf)s -Ob -o %(tmp_bcf)s" % vars(self)
+			cmd = "bcftools view --threads %(threads)s -S %(tmp_file)s %(filename)s -Ob -o %(tmp_bcf)s" % vars(self)
 			run_cmd(cmd)
 
 	def annotate(self,ref_file,gff_file):
