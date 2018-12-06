@@ -14,26 +14,7 @@ from ete3 import Tree
 from colour import Color
 import multiprocessing as mp
 
-def per_sample_bcf2fa(s,self):
-	self.tmp_sample = s
-	cmd = "bcftools view --threads %(threads)s -s %(tmp_sample)s  %(filename)s -Ou | bcftools filter -e 'GT=\"het\"' -S . -Ou | bcftools view --threads %(threads)s -i 'GT==\"./.\"' -Ou | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
-	self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
-	TMP = open(self.tmp_file,"w")
-	for l in cmd_out(cmd):
-		row = l.rstrip().split()
-		TMP.write("%s\t%s\t%s\n" % (row[0],int(row[1])-1,row[1]))
-	TMP.close()
-	self.tmp_fa = "%(prefix)s.%(tmp_sample)s.tmp.fasta" % vars(self)
-	cmd = "bcftools consensus -f %(ref)s %(filename)s -o %(tmp_fa)s -m %(tmp_file)s -s %(tmp_sample)s" % vars(self)
-	run_cmd(cmd)
-	fa_dict = fasta(self.tmp_fa).fa_dict
-	self.final_fa = "%(prefix)s.%(tmp_sample)s.fasta" % vars(self)
-	FA = open(self.final_fa,"w")
-	for seq in fa_dict:
-		log("Writing consensus for %s" % seq)
-		FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
-	FA.close()
-	rm_files([self.tmp_file,self.tmp_fa])
+
 
 re_seq = re.compile("([0-9\-]*)([A-Z\*]+)")
 re_I = re.compile("([A-Z\*]+)")
@@ -92,7 +73,7 @@ class bcf:
 		else:
 			self.prefix = prefix
 		self.prefix = self.prefix
-		self.temp_file = "%s.temp" % self.prefix
+		self.temp_file = get_random_file()
 		index_bcf(filename,self.threads)
 		cmd = "bcftools query -l %(filename)s > %(temp_file)s" % vars(self)
 		run_cmd(cmd)
@@ -100,7 +81,27 @@ class bcf:
 			self.samples.append(l.rstrip())
 		os.remove(self.temp_file)
 		self.vcf = "%s.vcf" % self.prefix
-
+	def per_sample_bcf2fa(self,s,ref):
+		self.tmp_sample = s
+		self.ref = ref
+		cmd = "bcftools view --threads %(threads)s -s %(tmp_sample)s  %(filename)s -Ou | bcftools filter -e 'GT=\"het\"' -S . -Ou | bcftools view --threads %(threads)s -i 'GT==\"./.\"' -Ou | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
+		self.tmp_file = "%(prefix)s.%(tmp_sample)s.missing.bed" % vars(self)
+		TMP = open(self.tmp_file,"w")
+		for l in cmd_out(cmd):
+			row = l.rstrip().split()
+			TMP.write("%s\t%s\t%s\n" % (row[0],int(row[1])-1,row[1]))
+		TMP.close()
+		self.tmp_fa = "%(prefix)s.%(tmp_sample)s.tmp.fasta" % vars(self)
+		cmd = "bcftools consensus -f %(ref)s %(filename)s -o %(tmp_fa)s -m %(tmp_file)s -s %(tmp_sample)s" % vars(self)
+		run_cmd(cmd)
+		fa_dict = fasta(self.tmp_fa).fa_dict
+		self.final_fa = "%(prefix)s.%(tmp_sample)s.fasta" % vars(self)
+		FA = open(self.final_fa,"w")
+		for seq in fa_dict:
+			log("Writing consensus for %s" % seq)
+			FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
+		FA.close()
+		rm_files([self.tmp_file,self.tmp_fa])
 	def del_pos2bed(self):
 		self.del_bed = "%s.del_pos.bed" % self.prefix
 		OUT = open(self.del_bed,"w")
@@ -849,10 +850,13 @@ DATA
 		return bcf(self.outfile,threads=self.threads)
 	def generate_consensus(self,ref,threads=4):
 		add_arguments_to_self(self,locals())
-		pool = mp.Pool(processes=threads)
-		results = [pool.apply_async(per_sample_bcf2fa, args=(s,self)) for s in self.samples]
-		output = [p.get() for p in results]
-
+		cmd_file = get_random_file()
+		O = open(cmd_file,"w")
+		for s in self.samples:
+			O.write("bcf2sample_consensus.py %s %s %s\n" % (self.filename,s,ref))
+		O.close()
+		run_cmd("cat %s | parallel" % cmd_file)
+		rm_files([cmd_file])
 	def distance(self,outfile):
 		add_arguments_to_self(self,locals())
 		matrix = [[0 for x in self.samples] for s in self.samples]

@@ -54,5 +54,6 @@ setuptools.setup(
 		 'scripts/fasta_add_data.py',
 		 'scripts/rename_tree_leaves.py',
 		 'scripts/bcf_genotype.py',
+		 'scripts/bcf2sample_consensus.py',
 		],
 )
