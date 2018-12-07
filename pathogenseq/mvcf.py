@@ -855,7 +855,7 @@ DATA
 		for s in self.samples:
 			O.write("bcf2sample_consensus.py %s %s %s\n" % (self.filename,s,ref))
 		O.close()
-		run_cmd("cat %s | parallel" % cmd_file)
+		run_cmd("cat %s | parallel -j %s" % (cmd_file,threads))
 		rm_files([cmd_file])
 	def distance(self,outfile):
 		add_arguments_to_self(self,locals())
@@ -1003,7 +1003,7 @@ DATA
 			print("%s\t%s\t%s\t%s\t%s\t%s\t%s" % (chrom,pos,ref,alt,gene,change,changetype))
 	def get_bed_gt(self,bed_file,ref_file):
 		add_arguments_to_self(self,locals())
-		cmd = "bcftools convert --gvcf2vcf -f %(ref_file)s %(filename)s  | bcftools view -T %(bed_file)s  | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%GT\\t%%AD]\\n'" % vars(self)
+		cmd = "bcftools view -T %(bed_file)s %(filename)s | bcftools convert --gvcf2vcf -f %(ref_file)s   | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%GT\\t%%AD]\\n'" % vars(self)
 		results = defaultdict(lambda : defaultdict(dict))
 		for l in cmd_out(cmd):
 			#Chromosome	4348079	0/0	51
