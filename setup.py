@@ -55,5 +55,6 @@ setuptools.setup(
 		 'scripts/rename_tree_leaves.py',
 		 'scripts/bcf_genotype.py',
 		 'scripts/bcf2sample_consensus.py',
+		 'scripts/tb_run_pipeline.py',
 		],
 )
