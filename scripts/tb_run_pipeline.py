@@ -20,11 +20,12 @@ def main(args):
 		args.r2 = "%s/%s" % (args.fastq_dir,row["R2"])
 		ps.filecheck(args.r2)
 		O.write("illumina_pipeline.py %(ref)s %(r1)s %(r2)s %(id)s -t %(threads)s -m %(mapper)s \n" % vars(args))
-		O.write("tb-profiler -p %(id)s -a %(id)s.bam -t %(threads)s\n" % vars(args))
+		O.write("tb-profiler profile -p %(id)s -a %(id)s.bam -t %(threads)s\n" % vars(args))
 
 	O.write("merge_vcfs.py %(sample_file)s %(ref)s %(prefix)s\n" % vars(args))
 	args.snps_aln_file = "%s.snps.fa" % args.prefix
-	O.write("raxml-ng --msa %(snps_aln_file)s --search --model GTR+G\n" % vars(args))
+	O.write("raxml-ng --msa %(snps_aln_file)s --search --model GTR+G --threads `raxml-ng --msa %(snps_aln_file)s --parse --model GTR+G | grep MPI | awk '{print $9}'`\n" % vars(args))
+	O.write("tb-profile collate\n")
 
 
 
