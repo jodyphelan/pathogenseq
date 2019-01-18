@@ -193,13 +193,13 @@ class bam:
 
 		return bcf(self.params["bcf_file"],prefix=self.prefix)
 
-	def call_variants(self,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
+	def call_variants(self,prefix=None,gff_file=None,bed_file=None,call_method="optimise",min_dp=10,threads=4,mixed_as_missing=False):
 		self.params["min_dp"] = min_dp
 		self.params["bed_file"] = bed_file
-		self.params["gbcf_file"] = "%s.gbcf" % self.prefix
+		self.params["gbcf_file"] = "%s.gbcf" % self.prefix if not prefix else prefix+".gbcf"
 		self.params["missing_bcf_file"] = "%s.missing.bcf" % self.prefix
 #		self.params["mixed_cmd"] = " bcftools +setGT -- -t q -i 'GT=\"het\"' -n . | bcftools view -e 'F_MISSING==1' |" % self.params if mixed_as_missing else ""
-		self.gbcf(call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file,low_dp_as_missing=True)
+		self.gbcf(prefix=prefix,call_method=call_method,min_dp=min_dp,threads=threads,vtype="both",bed_file=bed_file,low_dp_as_missing=True)
 		self.params["bcf_file"] = "%s.bcf" % self.prefix
 
 		self.params["del_bed"] = bcf(self.params["gbcf_file"]).del_pos2bed()
