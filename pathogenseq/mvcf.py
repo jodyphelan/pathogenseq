@@ -1021,3 +1021,18 @@ DATA
 					d[a] = ad[i]
 			results[chrom][pos] = d
 		return results
+	def get_plink_dist(self):
+		tmpfile = get_random_file()
+		cmd = "bcftools view %s > %s" % (self.filename,tmpfile)
+		run_cmd(cmd)
+		cmd = "plink --vcf %s --distance square --allow-extra-chr --out %s" % (tmpfile,tmpfile)
+		run_cmd(cmd)
+		O = open("%s.dist" % (self.prefix),"w")
+		dists = []
+		for l in open("%s.dist"%tmpfile):
+			row = [float(d)/2 for d in l.rstrip().split()]
+			O.write("%s\n" % "\t".join([str(x) for x in row]))
+			dists.append(row)
+		O.close()
+
+		return dists

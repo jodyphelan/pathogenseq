@@ -57,5 +57,6 @@ setuptools.setup(
 		 'scripts/bcf2sample_consensus.py',
 		 'scripts/tb_run_pipeline.py',
 		 'scripts/prepare_ENA_submission.py',
+		 'scripts/bcf2plinkdist.py',
 		],
 )
