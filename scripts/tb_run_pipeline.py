@@ -34,7 +34,7 @@ def process(args):
 		ps.run_cmd("bash %s" % out_script)
 
 def collect(args):
-	samples = [x.rstrip() for x in open("%s.samples.txt" % args.prefix).readlines()]
+	samples = [x.rstrip() for x in open("%s.samples.txt" % args.prefix).readlines()] if not args.samples else [x.rstrip() for x in open(args.samples).readlines()]
 	dataset_stats = {}
 	coverage = []
 	for s in samples:
@@ -86,6 +86,7 @@ parser_sub.set_defaults(func=process)
 
 parser_sub = subparsers.add_parser('collect', help='Run whole pipeline', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser_sub.add_argument('prefix', help='First read file')
+parser_sub.add_argument('--samples','-s', help='First read file')
 parser_sub.add_argument('--dist',default=10,type=int, help='First read file')
 parser_sub.set_defaults(func=collect)
 
