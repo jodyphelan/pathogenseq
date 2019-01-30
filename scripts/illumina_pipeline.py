@@ -38,9 +38,9 @@ def main(args):
 		for seq in fasta:
 			cov_png = "%s.%s.cov.png" % (prefix,seq)
 			bam_qc.plot_cov(seq,cov_png,primers=args.primers)
-		bam_qc.extract_gc_skew(gc_file)
 		if args.bed_cov: bam_qc.save_cov(cov_file,args.bed_cov)
-	variants = bam.gbcf(primers=args.primers,chunk_size=args.window)
+	bam_qc.extract_gc_skew(gc_file)
+	variants = bam.gbcf(primers=args.primers,chunk_size=args.window,call_method=args.call_method)
 	bcfstats = variants.load_stats()
 	stats["hom_variants"] = bcfstats["PSC"][prefix]["nNonRefHom"]
 	stats["het_variants"] = bcfstats["PSC"][prefix]["nHets"]
@@ -60,6 +60,8 @@ parser.add_argument('--primers',"-p",default=None, help='First read file')
 parser.add_argument('--centrifuge',"-c",default=None, help='First read file')
 parser.add_argument('--window',default=50000,type=int, help='First read file')
 parser.add_argument('--nobamstats',action="store_true", help='First read file')
+parser.add_argument('--gcbias',action="store_true", help='First read file')
+parser.add_argument('--call_method',default="low",choices=["low","high","optimise"], help='First read file')
 parser.set_defaults(func=main)
 
 args = parser.parse_args()
