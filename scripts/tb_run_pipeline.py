@@ -64,7 +64,7 @@ def collect(args):
 		dataset_stats[tbprofiler_json[s]["drtype"]]+=1
 
 
-
+	clusters = bcf.get_clusters(args.dist)
 	O = open("%s.stats.txt"%args.prefix,"w")
 	for key in dataset_stats:
 		O.write("%s\t%s\n" % (key,dataset_stats[key]))
