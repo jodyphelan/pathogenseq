@@ -53,7 +53,8 @@ def collect(args):
 			if j<=i:continue
 			if dists[i][j]<min_dist:min_dist = dists[i][j]
 	dataset_stats["min_dist"] = min_dist
-	dataset_stats["num_snps_one_sample"] = bcf_stats["AF"]["SNP"][sorted(list(bcf_stats["AF"]["SNP"].keys()))[0]]
+
+	dataset_stats["num_snps_one_sample"] = len(bcf.num_snps_one_sample())
 	dataset_stats["num_snps_one_sample_pct"] = dataset_stats["num_snps_one_sample"]/dataset_stats["num_variants"]
 	tbprofiler_json = json.load(open("%s.json" % args.prefix))
 	dataset_stats["Drug-resistant"] = 0
@@ -62,8 +63,6 @@ def collect(args):
 	dataset_stats["Sensitive"] = 0
 	for s in tbprofiler_json:
 		dataset_stats[tbprofiler_json[s]["drtype"]]+=1
-
-
 	clusters = bcf.get_clusters(args.dist)
 	O = open("%s.stats.txt"%args.prefix,"w")
 	for key in dataset_stats:

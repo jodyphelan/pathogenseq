@@ -185,7 +185,7 @@ class bcf:
 		if convert:
 			cmd = "bcftools convert --gvcf2vcf --fasta-ref %(ref)s -Ou %(filename)s | bcftools stats -v -s - > %(stats_file)s" % vars(self)
 		else:
-			cmd = "bcftools stats --af-bins %(smallest_bin)s,1 -v -s - %(filename)s > %(stats_file)s" % vars(self)
+			cmd = "bcftools stats -v -s - %(filename)s > %(stats_file)s" % vars(self)
 		run_cmd(cmd)
 		results = defaultdict(lambda:defaultdict(dict))
 		for l in open(self.stats_file):
@@ -1050,3 +1050,9 @@ DATA
 		graph = {"nodes":nodes,"edges":edges}
 		json.dump(graph,open("%s.distance_clusters.json" % self.prefix,"w"))
 		return graph
+	def num_one_sample_snps(self,cutoff=10):
+		cmd = "bcftools query -i 'AC=2'  %(filename)s  -f '%%CHROM\\t%%POS\\n'" % vars(self)
+		positions = []
+		for pos in cmd_out(cmd):
+			positions.append(pos.split())
+		return positions
