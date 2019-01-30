@@ -1038,7 +1038,6 @@ DATA
 		return dists
 	def get_clusters(self,cutoff=10):
 		dists = self.get_plink_dist()
-		print(dists)
 		nodes = [{"id":s} for s in self.samples]
 		edges = []
 		for i in range(len(dists)):
