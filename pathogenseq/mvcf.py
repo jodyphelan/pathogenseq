@@ -180,11 +180,12 @@ class bcf:
 
 	def load_stats(self,convert=False,ref=None):
 		add_arguments_to_self(self,locals())
+		self.smallest_bin = 1/len(self.samples)
 		self.stats_file = "%s.stats.txt" % self.filename
 		if convert:
 			cmd = "bcftools convert --gvcf2vcf --fasta-ref %(ref)s -Ou %(filename)s | bcftools stats -v -s - > %(stats_file)s" % vars(self)
 		else:
-			cmd = "bcftools stats -v -s - %(filename)s > %(stats_file)s" % vars(self)
+			cmd = "bcftools stats --af-bins %(smallest_bin)s,1 -v -s - %(filename)s > %(stats_file)s" % vars(self)
 		run_cmd(cmd)
 		results = defaultdict(lambda:defaultdict(dict))
 		for l in open(self.stats_file):
@@ -1034,5 +1035,18 @@ DATA
 			O.write("%s\n" % "\t".join([str(x) for x in row]))
 			dists.append(row)
 		O.close()
-
 		return dists
+	def get_clusters(self,cutoff=10):
+		dists = self.get_plink_dist()
+		print(dists)
+		nodes = [{"id":s} for s in self.samples]
+		edges = []
+		for i in range(len(dists)):
+			for j in range(len(dists)):
+				if j>=i:continue
+				if dists[i][j]<cutoff:
+					edge = {"source":self.samples[i], "target":self.samples[j]}
+					edges.append(edge)
+		graph = {"nodes":nodes,"edges":edges}
+		json.dump(graph,open("%s.distance_clusters.json" % self.prefix,"w"))
+		return graph

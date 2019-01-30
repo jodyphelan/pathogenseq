@@ -58,5 +58,6 @@ setuptools.setup(
 		 'scripts/tb_run_pipeline.py',
 		 'scripts/prepare_ENA_submission.py',
 		 'scripts/bcf2plinkdist.py',
+		 'scripts/bcf2clusters.py',
 		],
 )
