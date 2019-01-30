@@ -1035,6 +1035,7 @@ DATA
 			O.write("%s\n" % "\t".join([str(x) for x in row]))
 			dists.append(row)
 		O.close()
+		run_cmd("rm %s*" % tmpfile)
 		return dists
 	def get_clusters(self,cutoff=10):
 		dists = self.get_plink_dist()
