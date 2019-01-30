@@ -86,6 +86,7 @@ parser_sub.set_defaults(func=process)
 
 parser_sub = subparsers.add_parser('collect', help='Run whole pipeline', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser_sub.add_argument('prefix', help='First read file')
+parser_sub.add_argument('--dist',default=10,type=int, help='First read file')
 parser_sub.set_defaults(func=collect)
 
 
