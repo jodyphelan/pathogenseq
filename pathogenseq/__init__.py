@@ -11,4 +11,5 @@ from .mutation_db import *
 from .mt_functions import *
 from .profiler import *
 from .tex import *
+from .gemma import *
 name="pathogenseq"
