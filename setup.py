@@ -59,5 +59,6 @@ setuptools.setup(
 		 'scripts/prepare_ENA_submission.py',
 		 'scripts/bcf2plinkdist.py',
 		 'scripts/bcf2clusters.py',
+		 'scripts/run_illumina_pipeline.py',
 		],
 )
