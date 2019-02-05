@@ -108,4 +108,4 @@ class gemma_results:
 				mut = "%s%s%s" % (d["ref"],d["annotation"]["gene_nt"],d["alt"])
 			else:
 				mut = "%s%s%s" % (aa_short2long[d["annotation"]["ref_aa"]],d["annotation"]["codon_num"],aa_short2long[d["annotation"]["alt_aa"][d["alt"]]])
-			print("%s\t%s\t%s\t%s\t%s\t%s" % (drug,d["pos"],d["ref"],d["alt"],d["gene"],mut))
+			print("%s\t%s\t%s\t%s\t%s\t%s" % (drug.upper(),d["pos"],d["ref"],d["alt"],d["gene"],mut))
