@@ -87,7 +87,7 @@ class gemma_results:
 		"bedaquiline":["Rv0678"],
 		"capreomycin":["rrs","Rv1694"],
 		"clofazimine":["Rv0678"],
-		"cycloserine":["Rv2780","Rv3423c"]
+		"cycloserine":["Rv2780","Rv3423c"],
 		"ethambutol":["Rv3794","Rv3795","Rv3793","Rv1267c","Rv3793-Rv3794"],
 		"ethionamide":["Rv1482c-Rv1483","Rv1484","Rv3854c","Rv3854c-Rv3855","Rv3855"],
 		"fluoroquinolones":["Rv0005","Rv0006"],
