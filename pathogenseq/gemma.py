@@ -87,14 +87,15 @@ class gemma_results:
 		"bedaquiline":["Rv0678"],
 		"capreomycin":["rrs","Rv1694"],
 		"clofazimine":["Rv0678"],
+		"cycloserine":["Rv2780","Rv3423c"]
 		"ethambutol":["Rv3794","Rv3795","Rv3793","Rv1267c","Rv3793-Rv3794"],
-		"ethionamide":["Rv3854c","Rv3855","Rv1482c-Rv1483","Rv1484"],
+		"ethionamide":["Rv1482c-Rv1483","Rv1484","Rv3854c","Rv3854c-Rv3855","Rv3855"],
 		"fluoroquinolones":["Rv0005","Rv0006"],
 		"isoniazid":["Rv2428","Rv2427A-Rv2428","Rv1482c-Rv1483","Rv1484","Rv2245","Rv1908c","Rv1908c-Rv1909c"],
 		"kanamycin":["Rv2416c-Rv2417c","rrs"],
 		"linezolid":["Rv0701","rrl"],
-		"para-aminosalicylic_acid":["Rv2447c","Rv2671","Rv2764c"],
-		"pyrazinamide":["Rv3601c","Rv2043c","Rv2043c-Rv2044c","Rv1630"],
+		"para-aminosalicylic_acid":["Rv2447c","Rv2671","Rv2764c","Rv2754c-Rv2755c"],
+		"pyrazinamide":["Rv3601c","Rv2043c","Rv2043c-Rv2044c","Rv1630","Rv2042c"],
 		"rifampicin":["Rv0667","Rv0668"],
 		"streptomycin":["Rv3919c","Rv0682","rrs"]}
 
