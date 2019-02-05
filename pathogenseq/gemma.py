@@ -103,8 +103,8 @@ class gemma_results:
 		self = self.restrict_hits_to_gene(target_genes[drug.lower()])
 		for d in self.data:
 			mut = ""
-			if "-" in d["gene"]:
-				 mut = "%s%s%s" % (d["ref"],d["annotation"]["gene_pos"],d["alt"])
+			if "-" in d["gene"] or d["gene"]=="rrs" or d["gene"]=="rrl":
+				mut = "%s%s%s" % (d["ref"],d["annotation"]["gene_nt"],d["alt"])
 			else:
-				 mut = "%s%s%s" % (aa_short2long[d["annotation"]["ref_aa"]],d["annotation"]["codon_num"],aa_short2long[d["annotation"]["alt_aa"][d["alt"]]])
+				mut = "%s%s%s" % (aa_short2long[d["annotation"]["ref_aa"]],d["annotation"]["codon_num"],aa_short2long[d["annotation"]["alt_aa"][d["alt"]]])
 			print("%s\t%s\t%s\t%s\t%s\t%s" % (drug,d["pos"],d["ref"],d["alt"],d["gene"],mut))
