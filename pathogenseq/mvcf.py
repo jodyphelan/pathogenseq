@@ -796,6 +796,12 @@ DATA
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
 
+	def remove_monomorphic(self,outfile):
+		add_arguments_to_self(self,locals())
+		cmd = " bcftools +fill-AN-AC %(filename)s | bcftools view -c 1 -Ob -o %(outfile)s" % vars(self)
+		run_cmd(cmd)
+		return bcf(self.outfile,threads=self.threads)
+		
 	def sample_filt(self,outfile,miss_cut=0.15,mix_cut=0.15,keep_samples=None):
 		"""Filter out low quality samples"""
 		add_arguments_to_self(self,locals())

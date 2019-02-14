@@ -12,4 +12,5 @@ from .mt_functions import *
 from .profiler import *
 from .tex import *
 from .gemma import *
+from .varmatrix import *
 name="pathogenseq"
