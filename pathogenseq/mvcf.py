@@ -231,7 +231,7 @@ class bcf:
 			self.tmp_file = "%s.tmp.txt" % self.prefix
 			open(self.tmp_file,"w").write("\n".join(meta[m]))
 			self.tmp_bcf = "%s.%s.bcf" % (self.prefix,m)
-			self.remove_monomorphic = "| bcftools view -c1 " if  remove_monomorphic else ""
+			self.remove_monomorphic = "| bcftools +fill-AN-AC | bcftools view --threads %(threads)s -c1 " %vars(self) if  remove_monomorphic else ""
 			cmd = "bcftools view --threads %(threads)s -S %(tmp_file)s %(filename)s %(remove_monomorphic)s -Ob -o %(tmp_bcf)s" % vars(self)
 			run_cmd(cmd)
 
@@ -764,12 +764,13 @@ DATA
 		run_cmd(cmd)
 		rm_files([tmp_header])
 
-	def filt_variants(self,outfile,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1):
+	def filt_variants(self,outfile,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1,remove_monomorphic=T):
 		add_arguments_to_self(self,locals())
 		self.bed_include = "bcftools view --threads %(threads)s -T %s -Ou |" % bed_include if bed_include!=None else ""
 		self.bed_exclude = "bcftools view --threads %(threads)s -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
+		self.remove_monomorphic = "| bcftools +fill-AN-AC | bcftools view --threads %(threads)s -c1 " %vars(self) if  remove_monomorphic else ""
 		"""Extract all variant positions"""
-		cmd = "bcftools view --threads %(threads)s %(filename)s -Ou | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' -o %(outfile)s -O b" % vars(self)
+		cmd = "bcftools view --threads %(threads)s %(filename)s -Ou | %(bed_include)s %(bed_exclude)s bcftools view --threads %(threads)s -i 'AC>=0 && F_MISSING<%(fmiss)s' %(remove_monomorphic)s -o %(outfile)s -O b" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
 
@@ -801,7 +802,7 @@ DATA
 		cmd = " bcftools +fill-AN-AC %(filename)s | bcftools view -c 1 -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
-		
+
 	def sample_filt(self,outfile,miss_cut=0.15,mix_cut=0.15,keep_samples=None):
 		"""Filter out low quality samples"""
 		add_arguments_to_self(self,locals())
@@ -849,10 +850,11 @@ DATA
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
 
-	def mask_mixed(self,outfile):
+	def mask_mixed(self,outfile,remove_monomorphic=True):
 		"""Create a BCF file with mixed called masked as missing"""
 		add_arguments_to_self(self,locals())
-		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view --threads %(threads)s -Ob -o %(outfile)s" % vars(self)
+		self.remove_monomorphic = "| bcftools +fill-AN-AC | bcftools view --threads %(threads)s -c1 " %vars(self) if  remove_monomorphic else ""
+		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view --threads %(threads)s %(remove_monomorphic)s -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
 	def generate_consensus(self,ref,threads=4):
