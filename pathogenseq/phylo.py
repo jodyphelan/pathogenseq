@@ -53,3 +53,40 @@ class phylo:
 		log("Running EXaML")
 		cmd = "examl -s %(prefix)s.binary -n examl -m PSR -D -t RAxML_parsimonyTree.StartingTree" % self.params
 		run_cmd(cmd)
+
+class ancestral_reconstruction:
+	def __init__(self,fa_file,tree_file,bcf_file):
+		self.bcf_file = bcf_file
+		self.tree_file = tree_file
+		self.reconstructed_fasta = fa_file
+		reduced = {}
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(bcf_file)s" % vars(self)
+		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
+			row = l.decode().rstrip().split()
+			reduced[i] = (row[0],row[1])
+		fdict = fasta(self.reconstructed_fasta).fa_dict
+		t = ete3.Tree(self.tree_file, format=1)
+#		R = t.get_midpoint_outgroup()
+#		t.set_outgroup(R)
+
+		for i in range(len(fdict.values()[0])):
+			num_transitions = 0
+			for node in t.traverse("postorder"):
+				if len(node.get_ancestors())==0: continue
+				anc = node.get_ancestors()[0]
+				nuc1 = fdict[anc.name][i]
+				nuc2 = fdict[node.name][i]
+				if nuc1!="?" and nuc2!="?" and nuc1!="N" and nuc2!="N":
+					if nuc1!=nuc2:
+						num_transitions+=1
+						print("%s>%s" % (nuc1,nuc2))
+			if num_transitions>1:
+				print("Site: %s" % i)
+				print("Number of transitions: %s" % num_transitions)
+				print("Location: %s" % (reduced[i][1]))
+				for node in t.traverse("postorder"):
+					nuc = fdict[node.name][i]
+					node.add_features(nuc=nuc)
+					#p = probs[node.name][i][nuc] if node.name in probs else 1.0
+					#node.add_features(prob=p)
+				print(t.get_ascii(attributes=["name", "nuc"], show_internal=True))

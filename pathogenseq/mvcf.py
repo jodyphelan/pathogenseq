@@ -621,14 +621,15 @@ dev.off()
 		return prot_variants if changes else prot_dict
 
 
-	def ancestral_reconstruct(self):
-		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(bcf)s" % vars(self)
+	def ancestral_reconstruct(self,ref_file):
+		self.ref_file = ref_file
+		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(filename)s" % vars(self)
 		variants = {}
 		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
 			row = l.decode().rstrip().split()
 			variants[i] = (row[0],row[1])
 		self.reduced_bcf = "%(prefix)s.reduced.bcf" % vars(self)
-		cmd = "bcftools view --threads %(threads)s -c 3 %(bcf)s -Ob -o %(reduced_bcf)s" % vars(self)
+		cmd = "bcftools view --threads %(threads)s -c 3 %(filename)s -Ob -o %(reduced_bcf)s" % vars(self)
 		run_cmd(cmd)
 		reduced = {}
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(reduced_bcf)s" % vars(self)
@@ -637,12 +638,11 @@ dev.off()
 			reduced[i] = (row[0],row[1])
 		new_bcf = bcf(self.reduced_bcf)
 		self.fasta_file = "%(prefix)s.reduced.snps.fa" % vars(self)
-		new_bcf.vcf_to_fasta(self.fasta_file)
-
+		new_bcf.vcf_to_fasta(self.fasta_file,self.ref_file)
 		self.tree_file = "%s.newick.txt" % self.prefix
 		self.reconstructed_fasta = "%s.reconstructed.fasta" % self.prefix
 		cmd = "fastml -s %(fasta_file)s -x %(tree_file)s -j %(reconstructed_fasta)s -qf -mn" % vars(self)
-#		run_cmd(cmd,verbose=2)
+		run_cmd(cmd,verbose=2)
 
 		fdict = fasta(self.reconstructed_fasta).fa_dict
 		t = Tree(self.tree_file, format=1)
@@ -693,11 +693,11 @@ dev.off()
 			tmp_col = {"A":"#c15959","C":"#77ad78","G":"#3b3561","T":"#76bed0","N":"#c5c5c5"}
 
 			cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),num_var))]
-			col_dict = {d:cols[i] for i,d in enumerate(set(variant_dict.values()))} if amino_acid else {d:tmp_col[d] for d in list(set(variant_dict.values())) if d!=ref}
+			col_dict = {d:cols[i] for i,d in enumerate(set(variant_dict.values()))} if amino_acid else {d:tmp_col[d] for d in list(set(variant_dict.values())) }
 			shape_line = "\t".join(["1" for x in range(num_var)])
 			col_line = "\t".join(col_dict.values())
 			lab_line = "\t".join(col_dict.keys())
-
+			print(col_dict)
 			outfile = "%s.itol.txt" % mutation
 			OUT = open(outfile,"w")
 			OUT.write("""DATASET_COLORSTRIP
@@ -764,7 +764,7 @@ DATA
 		run_cmd(cmd)
 		rm_files([tmp_header])
 
-	def filt_variants(self,outfile,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1,remove_monomorphic=T):
+	def filt_variants(self,outfile,bed_include=None,bed_exclude=None,threads=4,fmiss=0.1,remove_monomorphic=True):
 		add_arguments_to_self(self,locals())
 		self.bed_include = "bcftools view --threads %(threads)s -T %s -Ou |" % bed_include if bed_include!=None else ""
 		self.bed_exclude = "bcftools view --threads %(threads)s -T ^%s -Ou |" % bed_exclude if bed_exclude!=None else ""
