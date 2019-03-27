@@ -13,4 +13,5 @@ from .profiler import *
 from .tex import *
 from .gemma import *
 from .varmatrix import *
+from .delly import *
 name="pathogenseq"

@@ -621,8 +621,9 @@ dev.off()
 		return prot_variants if changes else prot_dict
 
 
-	def ancestral_reconstruct(self,ref_file):
+	def ancestral_reconstruct(self,ref_file,tree_file):
 		self.ref_file = ref_file
+		self.tree_file = tree_file
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\n' %(filename)s" % vars(self)
 		variants = {}
 		for i,l in enumerate(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
@@ -639,35 +640,12 @@ dev.off()
 		new_bcf = bcf(self.reduced_bcf)
 		self.fasta_file = "%(prefix)s.reduced.snps.fa" % vars(self)
 		new_bcf.vcf_to_fasta(self.fasta_file,self.ref_file)
-		self.tree_file = "%s.newick.txt" % self.prefix
+		self.new_tree_file = "%s.newick.txt" % self.prefix
 		self.reconstructed_fasta = "%s.reconstructed.fasta" % self.prefix
-		cmd = "fastml -s %(fasta_file)s -x %(tree_file)s -j %(reconstructed_fasta)s -qf -mn" % vars(self)
+		cmd = "fastml -s %(fasta_file)s -t %(tree_file)s -x %(new_tree_file)s -j %(reconstructed_fasta)s -qf -mn" % vars(self)
 		run_cmd(cmd,verbose=2)
 
-		fdict = fasta(self.reconstructed_fasta).fa_dict
-		t = Tree(self.tree_file, format=1)
 
-		for i in range(len(fdict.values()[0])):
-			num_transitions = 0
-			for node in t.traverse("postorder"):
-				if len(node.get_ancestors())==0: continue
-				anc = node.get_ancestors()[0]
-				nuc1 = fdict[anc.name][i]
-				nuc2 = fdict[node.name][i]
-				if nuc1!="?" and nuc2!="?" and nuc1!="N" and nuc2!="N":
-					if nuc1!=nuc2:
-						num_transitions+=1
-						log("%s>%s" % (nuc1,nuc2))
-			if num_transitions>1:
-				log("Site: %s" % i)
-				log("Number of transitions: %s" % num_transitions)
-				log("Location: %s" % (reduced[i][1]))
-				for node in t.traverse("postorder"):
-					nuc = fdict[node.name][i]
-					node.add_features(nuc=nuc)
-					#p = probs[node.name][i][nuc] if node.name in probs else 1.0
-					#node.add_features(prob=p)
-				log(t.get_ascii(attributes=["name", "nuc"], show_internal=True))
 
 	def itol_from_bcf(self,mutation_file,amino_acid=False,supress_ref=False,supress_missing=False):
 		if amino_acid:

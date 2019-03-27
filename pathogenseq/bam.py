@@ -3,6 +3,7 @@ from .files import *
 from .utils import *
 from .mvcf import *
 from .qc import *
+from .delly import *
 from collections import defaultdict
 import re
 import numpy as np
@@ -60,6 +61,9 @@ class bam:
 		self.params["platform"] = platform
 		self.platform = platform
 		self.params["threads"] = threads
+	def run_delly(self):
+		run_cmd("delly call -g %(ref_file)s %(bam_file)s -o %(prefix)s.bcf" % vars(self))
+		return delly_bcf("%(prefix)s.bcf" % vars(self))
 	def generate_primer_bcf(self,threads=4,flank=30):
 		self.params["failed_primers"] = "%(prefix)s.failed_primers.bed" % self.params
 		primer_ids = []
