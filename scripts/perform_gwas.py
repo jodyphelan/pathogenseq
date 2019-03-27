@@ -5,7 +5,9 @@ import csv
 def main(args):
 	bcf = ps.bcf(args.bcf)
 	bcf.get_mean_genotype()
+	bcf.get_genesum()
 	geno_file = bcf.prefix+".geno"
+	genesum_file = bcf.prefix+".genesum"
 	meta = {}
 	for s in bcf.samples:
 		meta[s] = {}
@@ -24,7 +26,7 @@ def main(args):
 		P = open(pheno_file,"w")
 		P.write("\n".join([meta[s][pheno] if pheno in meta[s] else "NA" for s in bcf.samples]))
 		P.close()
-		X.write("gemma -p %s -g %s -gk 1 -o %s -maf 0.00005 -miss 0.99 && gemma  -lmm 1 -p %s -g %s  -k output/%s.cXX.txt  -o %s -maf 0.00005 -miss 0.99\n" % (pheno_file,geno_file,pheno,pheno_file,geno_file,pheno,pheno))
+		X.write("gemma -p %s -g %s -gk 1 -o %s -maf 0.00005 -miss 0.99 && gemma  -lmm 1 -p %s -g %s  -k output/%s.cXX.txt  -o %s -maf 0.00005 -miss 0.99 && gemma  -lmm 1 -p %s -g %s  -k output/%s.cXX.txt  -o %s.genesum -notsnp\n" % (pheno_file,geno_file,pheno,pheno_file,geno_file,pheno,pheno,pheno_file,genesum_file,pheno,pheno))
 	X.close()
 
 	if args.preprocess:

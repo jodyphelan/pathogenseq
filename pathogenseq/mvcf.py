@@ -930,7 +930,7 @@ DATA
 			self.outfile = self.prefix+".geno"
 		O = open(self.outfile,"w")
 		for l in tqdm(cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT]\\n' %(filename)s" % vars(self))):
-			row = l.decode().rstrip().split()
+			row = l.rstrip().split()
 			alts = row[3].split(",")
 			for alt in alts:
 				ref = "%s/%s" % (row[2],row[2])
@@ -1042,3 +1042,19 @@ DATA
 		for pos in cmd_out(cmd):
 			positions.append(pos.split())
 		return positions
+	def get_genesum(self,outfile=None):
+		add_arguments_to_self(self,locals())
+		if self.outfile==None:
+			self.outfile = self.prefix+".gensum"
+		genesum = defaultdict(lambda:defaultdict(int))
+		O = open(self.outfile,"w")
+		for l in tqdm(cmd_out("bcftools query -f '[%%SAMPLE\\t%%GT\\t%%TBCSQ\\n]' %(filename)s" % vars(self))):
+			row = l.split()
+			#por4A	1/1	synonymous|Rv0002|gene1|protein_coding|+|109L|2378G>A	synonymous|Rv0002|gene1|protein_coding|+|109L|2378G>A
+			info = row[2].split("|")
+			if info[0]=="synonymous": continue
+			if info[0][0]=="@": continue
+			genesum[info[1]][row[0]]+=1
+		for gene in genesum:
+			O.write("%s\tNA\tNA\t%s\n" % (gene,"\t".join(str(genesum[gene][s]) for s in self.samples)))
+		O.close()
