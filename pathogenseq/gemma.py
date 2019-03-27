@@ -109,3 +109,27 @@ class gemma_results:
 			else:
 				mut = "%s%s%s" % (aa_short2long[d["annotation"]["ref_aa"]],d["annotation"]["codon_num"],aa_short2long[d["annotation"]["alt_aa"][d["alt"]]])
 			print("%s\t%s\t%s\t%s\t%s\t%s" % (drug.upper(),d["pos"],d["ref"],d["alt"],d["gene"],mut))
+
+class gemma_genesum_results:
+	def __init__(self,filename=None):
+		self.data = []
+		if filename:
+			for l in tqdm(open(filename)):
+				row = l.rstrip().split()
+				if row[1]=="rs":continue
+				self.data.append({"gene":row[1],"pval":float(row[11])})
+			self.data = sorted(self.data,key=lambda x:x["pval"])
+	def add_results(self,data):
+		for d in data:
+			self.data.append(d)
+		self.data = sorted(self.data,key=lambda x:x["pval"])
+	def top_n_hits(self,n=10):
+		tmp = gemma_results()
+		tmp.add_results(self.data[:n])
+		return tmp
+	def cutoff_hits(self,cutoff=1e-5):
+		tmp = gemma_results()
+		tmp.add_results([x for x in self.data if x["pval"]<cutoff])
+		return tmp
+	def __str__(self):
+		print(self.data)
