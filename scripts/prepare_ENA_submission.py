@@ -23,8 +23,8 @@ def main(args):
 
 
 	for row in csv.DictReader(open(args.sample_file)):
-		md5[row[1]] = open("%s/%s" % (args.fastq_dir,row[1])).readline().strip().split()[0]
-		md5[row[2]] = open("%s/%s" % (args.fastq_dir,row[2])).readline().strip().split()[0]
+		md5[row["R1"]] = open("%s/%s" % (args.fastq_dir,row["R1"])).readline().strip().split()[0]
+		md5[row["R2"]] = open("%s/%s" % (args.fastq_dir,row["R2"])).readline().strip().split()[0]
 		tmp_samp = {"sample_alias":args.sample_alias_prefix+"_"+row["id"],"tax_id":args.tax_id,"scientific_name":args.scientific_name,"common_name":"","sample_title":args.sample_title,"sample_description":""}
 		samp_writer.writerow(tmp_samp)
 		tmp_run = {"project_accession":args.project, "project_alias":"", "sample_alias":args.sample_alias_prefix+"_"+row["id"], "experiment_alias":"", "run_alias":"", "library_name":"unspecified", "library_source":args.library_source, "library_selection":args.library_selection, "library_strategy":args.library_strategy, "design_description":"", "library_construction_protocol":"", "instrument_model":args.instrument_model, "file_type":"fastq", "library_layout":"PAIRED", "insert_size":args.insert_size, "forward_file_name":row["R1"], "forward_file_md5":md5[row["R1"]], "forward_file_unencrypted_md5":"", "reverse_file_name":row["R2"], "reverse_file_md5":md5[row["R2"]], "reverse_file_unencrypted_md5":""}
