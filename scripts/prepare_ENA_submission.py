@@ -18,7 +18,7 @@ def main(args):
 	run_writer = csv.DictWriter(RUNS,fieldnames=runs_fieldnames,delimiter="\t")
 	run_writer.writeheader()
 	md5 = {}
-	for line in subprocess.Popen("awk -F ',' '$1!=\"id\" {print \"%s\"/$2\",%s\"$3}' %s | tr ',' '\\n' |  parallel md5sum" % (args.fastq_dir,args.fastq_dir,args.sample_file), shell=True, stdout=subprocess.PIPE).stdout:
+	for line in subprocess.Popen("awk -F ',' '$1!=\"id\" {print \"%s/\"$2\",%s\"$3}' %s | tr ',' '\\n' |  parallel md5sum" % (args.fastq_dir,args.fastq_dir,args.sample_file), shell=True, stdout=subprocess.PIPE).stdout:
 		#69b7c129e94913c38418826f9dd3e029  94_S14_L001_R1_001.fastq.gz
 		row = line.rstrip().split()
 		md5[row[1]] = row[0]
