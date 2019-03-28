@@ -18,7 +18,7 @@ def main(args):
 	run_writer = csv.DictWriter(RUNS,fieldnames=runs_fieldnames,delimiter="\t")
 	run_writer.writeheader()
 	md5 = {}
-
+	print("awk -F ',' '$1!=\"id\" {print \"%s/\"$2\",%s\"$3}' %s | tr ',' '\\n' |  parallel -j 4 \" if [ ! -f \{\}.md5 ]; then md5sum \{\} > \{\}.md5; fi;\"" % (args.fastq_dir,args.fastq_dir,args.sample_file))
 	subprocess.call("awk -F ',' '$1!=\"id\" {print \"%s/\"$2\",%s\"$3}' %s | tr ',' '\\n' |  parallel -j 4 \" if [ ! -f \{\}.md5 ]; then md5sum \{\} > \{\}.md5; fi;\"" % (args.fastq_dir,args.fastq_dir,args.sample_file), shell=True)
 
 
