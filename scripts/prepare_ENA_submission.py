@@ -18,7 +18,7 @@ def main(args):
 	run_writer = csv.DictWriter(RUNS,fieldnames=runs_fieldnames,delimiter="\t")
 	run_writer.writeheader()
 	md5 = {}
-	for line in subprocess.Popen("awk -F ',' '$1!=\"id\" {print $2\",\"$3}' %s | tr ',' '\\n' |  parallel md5sum" % args.sample_file, shell=True, stdout=subprocess.PIPE).stdout:
+	for line in subprocess.Popen("awk -F ',' '$1!=\"id\" {print \"%s\"/$2\",%s\"$3}' %s | tr ',' '\\n' |  parallel md5sum" % (args.fastq_dir,args.fastq_dir,args.sample_file), shell=True, stdout=subprocess.PIPE).stdout:
 		#69b7c129e94913c38418826f9dd3e029  94_S14_L001_R1_001.fastq.gz
 		row = line.rstrip().split()
 		md5[row[1]] = row[0]
@@ -34,8 +34,8 @@ def main(args):
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('prefix', help='file prefix')
 parser.add_argument('sample_file', help='BAM file')
-parser.add_argument('scientific_name', help='BAM file')
 parser.add_argument('sample_title', help='Reference Sequence')
+parser.add_argument('scientific_name', help='BAM file')
 parser.add_argument('tax_id', help='Prefix for files')
 parser.add_argument('project', help='Prefix for files')
 parser.add_argument('--library_source',default="GENOMIC",choices=["GENOMIC","TRANSCRIPTOMIC","METAGENOMIC"], help='Prefix for files')
@@ -44,6 +44,7 @@ parser.add_argument('--library_strategy', choices=["WGS","WGA","RNA-seq"],defaul
 parser.add_argument('--instrument_model',default="Illumina HiSeq 2500", choices=["Illumina HiSeq 2000","Illumina HiSeq 2500","Illumina HiSeq 3000","Illumina HiSeq 4000","Illumina MiSeq","Illumina NovaSeq 6000"])
 parser.add_argument('--insert_size',default="500")
 parser.add_argument('--sample_alias_prefix',default="")
+parser.add_argument('--fastq_dir',default=".")
 parser.set_defaults(func=main)
 
 args = parser.parse_args()

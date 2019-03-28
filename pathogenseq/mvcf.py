@@ -1023,16 +1023,51 @@ DATA
 		O.close()
 		run_cmd("rm %s*" % tmpfile)
 		return dists
-	def get_clusters(self,cutoff=10):
+	def get_clusters(self,cutoff=10,meta_file=None,col_scheme=None,remove_singletons=False):
+		if meta_file:
+			meta = {}
+			colour_vals = set()
+			shape_vals = set()
+			for l in open(meta_file):
+				row = l.rstrip().split()
+				meta[row[0]] = row[1:]
+				colour_vals.add(row[1])
+				shape_vals.add(row[2])
+			meta_cols = {}
+			if col_scheme:
+				for l in open(col_scheme):
+					row = l.rstrip().split()
+					meta_cols[row[0]] = row[1]
+			else:
+				cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),len(colour_vals)))]
+				for i,x in enumerate(colour_vals):
+					meta_cols[x] = cols[i]
+		meta_shapes = {}
+		shapes = ["circle","square","triangle","cross","diamond","star","wye"]
+		for i,x in enumerate(shape_vals):
+			meta_shapes[x] = shapes[i]
+
 		dists = self.get_plink_dist()
-		nodes = [{"id":s} for s in self.samples]
 		edges = []
+		tmp_node_set = set()
 		for i in range(len(dists)):
 			for j in range(len(dists)):
 				if j>=i:continue
 				if dists[i][j]<cutoff:
 					edge = {"source":self.samples[i], "target":self.samples[j]}
+					tmp_node_set.add(self.samples[i])
+					tmp_node_set.add(self.samples[j])
 					edges.append(edge)
+		nodes = [{"id":s} for s in tmp_node_set] if remove_singletons else [{"id":s} for s in self.samples]
+		if meta_file:
+			for n in nodes:
+				n["meta1"] = meta[n["id"]][0]
+				print(meta[n["id"]])
+				n["col"]=meta_cols[meta[n["id"]][0]]
+				if len(meta[n["id"]])>1:
+					n["meta2"] = meta[n["id"]][1]
+					print(meta_shapes)
+					n["shape"]=meta_shapes[meta[n["id"]][1]]
 		graph = {"nodes":nodes,"edges":edges}
 		json.dump(graph,open("%s.distance_clusters.json" % self.prefix,"w"))
 		return graph
