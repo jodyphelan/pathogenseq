@@ -24,6 +24,7 @@ def main(args):
 
 	for row in csv.DictReader(open(args.sample_file)):
 		print(row)
+		print("%s/%s" % (args.fastq_dir,row["R1"]))
 		print(open("%s/%s" % (args.fastq_dir,row["R1"])).readline())
 		md5[row["R1"]] = open("%s/%s" % (args.fastq_dir,row["R1"])).readline().strip().split()[0]
 		md5[row["R2"]] = open("%s/%s" % (args.fastq_dir,row["R2"])).readline().strip().split()[0]
