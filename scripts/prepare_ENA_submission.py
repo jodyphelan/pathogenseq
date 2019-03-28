@@ -23,7 +23,8 @@ def main(args):
 
 
 	for row in csv.DictReader(open(args.sample_file)):
-		print(md5[row["R1"]] = open("%s/%s" % (args.fastq_dir,row["R1"])).readline())
+		print(row)
+		print(open("%s/%s" % (args.fastq_dir,row["R1"])).readline())
 		md5[row["R1"]] = open("%s/%s" % (args.fastq_dir,row["R1"])).readline().strip().split()[0]
 		md5[row["R2"]] = open("%s/%s" % (args.fastq_dir,row["R2"])).readline().strip().split()[0]
 		tmp_samp = {"sample_alias":args.sample_alias_prefix+"_"+row["id"],"tax_id":args.tax_id,"scientific_name":args.scientific_name,"common_name":"","sample_title":args.sample_title,"sample_description":""}
