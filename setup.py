@@ -60,5 +60,6 @@ setuptools.setup(
 		 'scripts/bcf2plinkdist.py',
 		 'scripts/bcf2clusters.py',
 		 'scripts/run_illumina_pipeline.py',
+		 'scripts/mauve2vcf.py',
 		],
 )
