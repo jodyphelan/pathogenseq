@@ -12,7 +12,7 @@ class fasta:
 	Returns:
 		fasta: A fasta class object
 	"""
-	def __init__(self,filename):
+	def __init__(self,filename,uc=False):
 		fa_dict = OrderedDict()
 		seq_name = ""
 		self.fa_file = filename
@@ -22,7 +22,7 @@ class fasta:
 				seq_name = line[1:].split()[0]
 				fa_dict[seq_name] = []
 			else:
-				fa_dict[seq_name].append(line)
+				fa_dict[seq_name].append(line.upper() if uc else line)
 		result = {}
 		counter = 0
 		sum_length = {}

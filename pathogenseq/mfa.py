@@ -6,8 +6,8 @@ def mauve_call_variants(ref_file,query_file,prefix):
 	aln_file = "%s.xmfa" % prefix
 	cmd = "progressiveMauve --output=%s %s %s" % (aln_file,ref_file,query_file)
 	run_cmd(cmd)
-	ref_dict = fasta(ref_file)
-	query_dict = fasta(query_file)
+	ref_dict = fasta(ref_file,uc=True)
+	query_dict = fasta(query_file,uc=True)
 	variant_file = "%s.vars" % prefix
 	O = open(variant_file,"w")
 	alignment = AlignIO.parse(open(aln_file),"mauve")

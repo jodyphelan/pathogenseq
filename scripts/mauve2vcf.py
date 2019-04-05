@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import pathogenseq as ps
-
+import sys
 ref = sys.argv[1]
 query =sys.argv[2]
 prefix = sys.argv[3]
