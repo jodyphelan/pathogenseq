@@ -15,7 +15,7 @@ def mauve_call_variants(ref_file,query_file,prefix):
 		seq_names = []
 		seqs = {}
 		for record in seg:
-			seqs[record.id] = record.seq
+			seqs[record.id] = record.seq.upper()
 			seq_names.append(record.id)
 		if len(seq_names)<2: continue
 		ref_pos = 0
