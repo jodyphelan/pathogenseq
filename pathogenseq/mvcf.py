@@ -1023,7 +1023,7 @@ DATA
 		O.close()
 		run_cmd("rm %s*" % tmpfile)
 		return dists
-	def get_clusters(self,cutoff=10,meta_file=None,col_scheme=None,remove_singletons=False):
+	def get_clusters(self,cutoff=10,meta_file=None,col_scheme=None,shape_sceme=None,remove_singletons=False):
 		if meta_file:
 			meta = {}
 			colour_vals = set()
@@ -1042,11 +1042,15 @@ DATA
 				cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),len(colour_vals)))]
 				for i,x in enumerate(colour_vals):
 					meta_cols[x] = cols[i]
-			print(shape_vals)
-			meta_shapes = {}
-			shapes = ["circle","square","triangle","cross","diamond","star","wye"]
-			for i,x in enumerate(shape_vals):
-				meta_shapes[x] = shapes[i]
+			if shape_sceme:
+				for l in open(col_scheme):
+					row = l.rstrip().split()
+					meta_shapes[row[0]] = row[1]
+			else:
+				meta_shapes = {}
+				shapes = ["circle","square","triangle","cross","diamond","star","wye"]
+				for i,x in enumerate(shape_vals):
+					meta_shapes[x] = shapes[i]
 
 
 		dists = self.get_plink_dist()
