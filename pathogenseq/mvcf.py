@@ -1042,12 +1042,12 @@ DATA
 				cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),len(colour_vals)))]
 				for i,x in enumerate(colour_vals):
 					meta_cols[x] = cols[i]
+			meta_shapes = {}
 			if shape_sceme:
 				for l in open(col_scheme):
 					row = l.rstrip().split()
 					meta_shapes[row[0]] = row[1]
 			else:
-				meta_shapes = {}
 				shapes = ["circle","square","triangle","cross","diamond","star","wye"]
 				for i,x in enumerate(shape_vals):
 					meta_shapes[x] = shapes[i]
