@@ -293,7 +293,10 @@ class fasta:
 			if s not in self.fa_dict: log("%s not found in fasta file" % s,ext=True)
 			O.write(">%s\n%s\n" % s,self.fa_dict[s])
 		O.close()
-
+	def get_ref_variants(self,refseq,prefix):
+		add_arguments_to_self(self,locals())
+		run_cmd("minimap2 %(refseq)s %(fa_file)s --cs | sort -k6,6 -k8,8n | paftools.js call -l 100 -L 100 -f %(refseq)s -s %(prefix)s - | bcftools view -Oz -o %(prefix)s.vcf.gz" % vars(self))
+		return "%s.vcf.gz" % self.prefix
 
 def revcom(s):
 	"""Return reverse complement of a sequence"""

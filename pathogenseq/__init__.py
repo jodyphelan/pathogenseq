@@ -14,4 +14,6 @@ from .tex import *
 from .gemma import *
 from .varmatrix import *
 from .delly import *
+from .nucmer import *
+from .abi import *
 name="pathogenseq"

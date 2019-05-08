@@ -156,10 +156,10 @@ class bcf:
 		else:
 			return variants
 
-	def load_variants_alt(self,chrom=None,pos=None):
+	def load_variants_alt(self,tchrom=None,tpos=None):
 		variants = defaultdict(lambda:defaultdict(dict))
 		raw_variants = defaultdict(lambda:defaultdict(dict))
-		if chrom and pos:
+		if tchrom and tpos:
 			cmd = "bcftools view --threads %s %s %s:%s | bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g'" % (self.threads,self.filename,chrom,pos)
 		else:
 			cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n' %s  | sed 's/\.\/\./N/g'" % self.filename
@@ -173,8 +173,8 @@ class bcf:
 				variants[chrom][int(pos)] = raw_variants[chrom][pos]
 		if chrom and pos and len(variants)==0:
 			log("Variant not found",True)
-		if chrom and pos:
-			return variants[chrom][int(pos)]
+		if tchrom and tpos:
+			return variants[tchrom][int(tpos)]
 		else:
 			return variants
 
@@ -414,9 +414,9 @@ dev.off()
 		cmd = "awk '{print $1\"\\t\"$2-1\"\\t\"$3}' %s > %s" % (bed_file,temp_bed)
 		run_cmd(cmd)
 		if vcf:
-			cmd = "bcftools view --threads %(threads)s -R %s %s -o %s " % (temp_bed,self.filename,out_file)
+			cmd = "bcftools view -R %s %s -o %s " % (temp_bed,self.filename,out_file)
 		else:
-			cmd = "bcftools view --threads %(threads)s -R %s %s -Ob -o %s " % (temp_bed,self.filename,out_file)
+			cmd = "bcftools view -R %s %s -Ob -o %s " % (temp_bed,self.filename,out_file)
 		run_cmd(cmd)
 		if not vcf:
 			return bcf(out_file)
@@ -427,17 +427,19 @@ dev.off()
 		subset_bcf_name = "%s.subset.bcf" % self.prefix
 		subset_bcf = self.bed_subset(bed_file,subset_bcf_name)
 		variants = subset_bcf.load_csq(ann_file)
-
 		for gene in bed_dict:
 
 			for drug_combo in bed_dict[gene]:
-				for var in bed_dict[gene][drug_combo][1].split(";"):
-					for drug in bed_dict[gene][drug_combo][0].split(";"):
+				for var in bed_dict[gene][drug_combo][0].split(","):
+					for drug in bed_dict[gene][drug_combo][1].split(","):
 						if drug not in drugs: continue
+						print(drugs)
+						print(drug)
 
 						tbl = [[0.5,0.5],[0.5,0.5]]
 						change_num,ref_aa,alt_aa = parse_mutation(var)
-
+						print(gene)
+						print(var)
 						if gene not in variants: continue
 						if change_num not in variants[gene]:	continue
 						try:
@@ -450,8 +452,6 @@ dev.off()
 						if tbl[0][0]+tbl[1][0]==1: continue
 						OR = (tbl[0][0]/tbl[0][1])/(tbl[1][0]/tbl[1][1])
 						log("%s\t%s\t%s\t%s\t%s" % (var,gene,drug,OR,tbl))
-#		for record in tqdm(vcf_reader):
-#			if record.CHROM in bed_dict and record.POS in bed_dict[record.CHROM]:
 
 	def load_csq_alt(self,ann_file=None,changes=False,use_genomic=True,use_gene=True):
 		ann = defaultdict(dict)
@@ -543,7 +543,7 @@ dev.off()
 		cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%SAMPLE\\t%%TBCSQ]\\n' %s" % self.filename
 		sys.stderr.write("%s\n"%cmd)
 		for line in tqdm(subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).stdout):
-			row = line.rstrip().split()
+			row = line.decode().rstrip().split()
 			chrom = row[0]
 			pos = int(row[1])
 			ref = row[2]
@@ -1042,10 +1042,12 @@ DATA
 				cols = [x.get_hex() for x in list(Color("red").range_to(Color("blue"),len(colour_vals)))]
 				for i,x in enumerate(colour_vals):
 					meta_cols[x] = cols[i]
-		meta_shapes = {}
-		shapes = ["circle","square","triangle","cross","diamond","star","wye"]
-		for i,x in enumerate(shape_vals):
-			meta_shapes[x] = shapes[i]
+			print(shape_vals)
+			meta_shapes = {}
+			shapes = ["circle","square","triangle","cross","diamond","star","wye"]
+			for i,x in enumerate(shape_vals):
+				meta_shapes[x] = shapes[i]
+
 
 		dists = self.get_plink_dist()
 		edges = []

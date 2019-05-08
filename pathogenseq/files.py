@@ -65,8 +65,8 @@ def load_tsv(filename):
 		meta[row["sample"]] = {}
 		columns = set(row)-set(["sample"])
 		for c in columns:
-			meta[row["sample"]][c.upper()] = row[c]
-	columns = [c.upper() for c in set(row)-set(["sample"])]
+			meta[row["sample"]][c.lower()] = row[c]
+	columns = [c.lower() for c in set(row)-set(["sample"])]
 	return columns,meta
 
 def load_bed(filename,columns,key1,key2=None,intasint=False):
