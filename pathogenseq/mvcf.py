@@ -1023,7 +1023,7 @@ DATA
 		O.close()
 		run_cmd("rm %s*" % tmpfile)
 		return dists
-	def get_clusters(self,cutoff=10,meta_file=None,col_scheme=None,shape_sceme=None,remove_singletons=False):
+	def get_clusters(self,cutoff=10,meta_file=None,col_scheme=None,shape_scheme=None,remove_singletons=False):
 		if meta_file:
 			meta = {}
 			colour_vals = set()
