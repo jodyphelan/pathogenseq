@@ -1043,7 +1043,7 @@ DATA
 				for i,x in enumerate(colour_vals):
 					meta_cols[x] = cols[i]
 			meta_shapes = {}
-			if shape_sceme:
+			if shape_scheme:
 				for l in open(shape_scheme):
 					row = l.rstrip().split()
 					meta_shapes[row[0]] = row[1]
