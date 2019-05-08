@@ -5,7 +5,7 @@ import argparse
 
 def main(args):
     bcf = ps.bcf(args.bcf_file)
-    clusters = bcf.get_clusters(args.dist,args.meta,args.cols,args.remove_singletons)
+    clusters = bcf.get_clusters(args.dist,args.meta,args.cols,args.shapes,args.remove_singletons)
 
 
 parser = argparse.ArgumentParser(description='bcf2matrix.py',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
