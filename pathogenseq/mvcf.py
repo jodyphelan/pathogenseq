@@ -1044,7 +1044,7 @@ DATA
 					meta_cols[x] = cols[i]
 			meta_shapes = {}
 			if shape_sceme:
-				for l in open(col_scheme):
+				for l in open(shape_scheme):
 					row = l.rstrip().split()
 					meta_shapes[row[0]] = row[1]
 			else:
