@@ -1046,12 +1046,13 @@ DATA
 			if shape_sceme:
 				for l in open(col_scheme):
 					row = l.rstrip().split()
-					meta_shapes[row[0]] = row[2]
+					meta_shapes[row[0]] = row[1]
 			else:
 				shapes = ["circle","square","triangle","cross","diamond","star","wye"]
 				for i,x in enumerate(shape_vals):
 					meta_shapes[x] = shapes[i]
-
+			print(meta_shapes)
+			print(meta_cols)
 
 		dists = self.get_plink_dist()
 		edges = []
