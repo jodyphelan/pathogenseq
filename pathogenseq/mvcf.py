@@ -1061,7 +1061,7 @@ DATA
 			for j in range(len(dists)):
 				if j>=i:continue
 				if dists[i][j]<cutoff:
-					edge = {"source":self.samples[i], "target":self.samples[j]}
+					edge = {"source":self.samples[i], "target":self.samples[j], "snps":dists[i][j]}
 					tmp_node_set.add(self.samples[i])
 					tmp_node_set.add(self.samples[j])
 					edges.append(edge)

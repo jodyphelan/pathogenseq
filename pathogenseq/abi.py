@@ -8,17 +8,19 @@ from .fasta import *
 import matplotlib as mpl
 mpl.use('TkAgg')
 class abi:
-	def __init__(self,in_obj):
-		if isinstance(in_obj,str):
-			self.filename = in_obj
-			self.record = SeqIO.read(in_obj,'abi')
-			self.prefix = in_obj.replace(".ab1","")
+	def __init__(self,in_obj,prefix):
+		if isinstance(in_obj,list):
+			self.filenames = in_obj
+			self.records = [SeqIO.read(x,'abi') for x in self.filenames]
+			self.prefix = prefix
 		elif isinstance(in_obj,SeqIO.SeqRecord):
-			self.record = in_obj
+			self.records = in_obj
 			self.prefix = in_obj.prefix
-		self.quals = [ord(x) for x in self.record.annotations["abif_raw"]["PCON1"]]
+		self.quals = {}
+		for rec in self.records:
+			self.quals[rec.name] = [ord(x) for x in rec.annotations["abif_raw"]["PCON1"]]
 	def trim_seq(self,rec):
-		return abi(SeqIO.AbiIO._abi_trim(self.record))
+		return abi([SeqIO.AbiIO._abi_trim(x) for x in self.records])
 	def plot_chromatogram(self,start,end,refsequence):
 		self.signals = {}
 		self.channels = {'DATA9':"A", 'DATA10':"C", 'DATA11':"G", 'DATA12':"T"}
@@ -39,18 +41,19 @@ class abi:
 		plt.show()
 	def write_seq(self):
 		self.fasta = "%s.fasta" % self.prefix
-		open(self.fasta,"w").write(">%s\n%s\n" % (self.prefix,self.record.seq))
-
+		with open(self.fasta,"w") as F:
+			for rec in self.records:
+				F.write(">%s\n%s\n" % (rec.name,rec.seq))
 	def nucmer_align(self,refseq):
 		add_arguments_to_self(self,locals())
 		self.write_seq()
 		run_cmd("nucmer %(refseq)s %(fasta)s -p %(prefix)s" % vars(self))
 		return delta("%s.delta" % self.prefix)
-	def get_variants_vcf(self,refseq):
+	def get_variants_vcf(self,refseq,gff=None):
 		add_arguments_to_self(self,locals())
 		self.write_seq()
 		fa = fasta(self.prefix+".fasta")
-		return bcf(fa.get_ref_variants(refseq,self.prefix))
+		return bcf(fa.get_ref_variants(refseq,self.prefix,gff))
 	def get_variants(self,refseq):
 		add_arguments_to_self(self,locals())
 		variants = []
@@ -71,7 +74,7 @@ class abi:
 		start = start - self.maf[self.prefix]["start"]-1
 		end = end - self.maf[self.prefix]["start"]
 		print((start,end))
-		return self.maf["KY241726"]["seq"][start:end]
+		return self.maf[list(self.maf.keys())[0]]["seq"][start:end]
 	def plot_variants(self,refseq):
 		variants = self.get_variants(refseq)
 		for var in variants:

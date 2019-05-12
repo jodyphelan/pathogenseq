@@ -6,6 +6,7 @@ from .fastq import *
 from .bam import *
 from .mutation_db import *
 from .qc import *
+from .abi import *
 def profiler(conf_file,prefix,r1=None,r2=None,bam_file=None,call_method="low",min_depth=10,platform="Illumina",mapper="bwa",threads=4):
         conf = json.load(open(conf_file))
         for f in conf:
@@ -55,3 +56,15 @@ def profiler(conf_file,prefix,r1=None,r2=None,bam_file=None,call_method="low",mi
         results["barcode"] = barcode_mutations
         results = db_compare(db_file=conf["json_db"],mutations=results)
         return results
+
+def abi_profiler(conf_file,prefix,files):
+	conf = json.load(open(conf_file))
+	files = files.split(",")
+	for f in conf:
+		filecheck(conf[f])
+	for f in files:
+		filecheck(f)
+	abi_obj = abi(files,prefix)
+	bcf_obj = abi_obj.get_variants_vcf(conf["ref"],conf["gff"])
+	csq = bcf_obj.load_csq_alt(ann_file=conf["ann"],changes=True)
+	return csq
