@@ -20,7 +20,7 @@ def main(args):
 	md5 = {}
 
 	subprocess.call("awk -F ',' '$1!=\"id\" {print \"%s/\"$2\",%s\"$3}' %s | tr ',' '\\n' |  parallel -j 4 \" if [ ! -f {}.md5 ]; then md5sum {} > {}.md5; fi;\"" % (args.fastq_dir,args.fastq_dir,args.sample_file), shell=True)
-
+	print("awk -F ',' '$1!=\"id\" {print \"%s/\"$2\",%s\"$3}' %s | tr ',' '\\n' |  parallel -j 4 \" if [ ! -f {}.md5 ]; then md5sum {} > {}.md5; fi;\"")
 
 	for row in csv.DictReader(open(args.sample_file)):
 		print(row["id"])
