@@ -65,9 +65,9 @@ class bcf:
 			elif filename[-5:]==".gbcf":
 				self.prefix = filename[:-5]
 			elif filename[-7:]==".vcf.gz":
-				self.prefix = filename[-7:]==".vcf.gz"
+				self.prefix = filename[:-7]
 			elif filename[-4:]==".vcf":
-				self.prefix = filename[-4:]==".vcf"
+				self.prefix = filename[:-4]
 			else:
 				self.prefix = filename
 		else:
