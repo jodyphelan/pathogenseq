@@ -128,7 +128,7 @@ class bcf:
 		else:
 			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n' %s  | sed 's/\.\/\./N\/N/g' | sed 's/\*[\/|]\*/\.\/\./g'" % self.filename
 		log(cmd)
-		for l in tqdm(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout):
+		for l in cmd_out(cmd):
 			row = l.decode().rstrip().split()
 			alts = row[3].split(",")
 			alleles = [row[2]]+alts
