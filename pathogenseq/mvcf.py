@@ -263,7 +263,7 @@ class bcf:
 		self.cmd_split_chr = "splitchr.py %(ref_file)s %(chunk_size)s --bed %(bed_file)s --reformat" % vars(self) if bed_file else "splitchr.py %(ref_file)s %(chunk_size)s --reformat" % vars(self)
 		self.tmp_file = "%s.tmp.txt" % self.prefix
 		self.threads = threads
-		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view  %(filename)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % vars(self)
+		cmd = "%(cmd_split_chr)s | parallel --col-sep '\\t' -j %(threads)s \"bcftools view  %(filename)s -r {1} -Ou | bcftools query -f '%%POS[\\t%%IUPACGT]\\n' | sed 's/\*[\/|]\*/\.\/\./g' |  datamash transpose > %(prefix)s.{2}.tmp.txt\"" % vars(self)
 		run_cmd(cmd)
 		cmd = "paste `%(cmd_split_chr)s | awk '{print \"%(prefix)s.\"$2\".tmp.txt\"}'` > %(tmp_file)s" % vars(self)
 		run_cmd(cmd)
