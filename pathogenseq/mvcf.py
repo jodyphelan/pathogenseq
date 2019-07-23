@@ -124,9 +124,9 @@ class bcf:
 		variants = defaultdict(lambda:defaultdict(lambda:defaultdict(dict)))
 		raw_variants = defaultdict(lambda:defaultdict(lambda:defaultdict(dict)))
 		if chrom and pos:
-			cmd = "bcftools view --threads %(threads)s %s %s:%s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n'  | sed 's/\.\/\./N\/N/g'" % (self.filename,chrom,pos)
+			cmd = "bcftools view --threads %(threads)s %s %s:%s | bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n'  | sed 's/\.\/\./N\/N/g' | sed 's/\*[\/|]\*/\.\/\./g'" % (self.filename,chrom,pos)
 		else:
-			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n' %s  | sed 's/\.\/\./N\/N/g'" % self.filename
+			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT[\\t%%TGT:%%AD]\\n' %s  | sed 's/\.\/\./N\/N/g' | sed 's/\*[\/|]\*/\.\/\./g'" % self.filename
 		log(cmd)
 		for l in tqdm(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout):
 			row = l.decode().rstrip().split()
