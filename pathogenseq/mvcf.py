@@ -133,8 +133,8 @@ class bcf:
 			alts = row[3].split(",")
 			alleles = [row[2]]+alts
 			for i in range(len(self.samples)):
-				calls,ad = row[i+4].split(":")
-				call1,call2 = calls.split("/")
+				calls,ad = row[i+4].replace("|","/").split(":")
+				call1,call2 = calls.split("[/|]")
 				if calls=="N/N":
 					raw_variants[row[0]][row[1]][self.samples[i]]["N"] = 1.0
 					continue
