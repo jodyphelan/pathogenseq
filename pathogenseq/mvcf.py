@@ -242,11 +242,14 @@ class bcf:
 		cmd = "bcftools csq -p m -f %(ref_file)s -g %(gff_file)s %(bcf)s -o %(ann_file)s" % vars(self)
 		run_cmd(cmd,verbose=v)
 
-	def extract_matrix(self,matrix_file=None,fmt="old"):
+	def extract_matrix(self,matrix_file=None,fmt="old",annotation=False):
 		self.matrix_file = matrix_file if matrix_file==True else self.prefix+".mat"
 		if fmt=="new":
 			O = open(self.matrix_file,"w").write("chr\tpos\tref\tinfo\ttype\t%s\n" % ("\t".join(self.samples)))
-			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t.\\t.[\\t%%IUPACGT]\\n' %(filename)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % vars(self)
+			if annotation:
+				cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%BCSQ\\t.[\\t%%IUPACGT]\\n' %(filename)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % vars(self)
+			else:
+				cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t.\\t.[\\t%%IUPACGT]\\n' %(filename)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % vars(self)
 		elif fmt=="old":
 			O = open(self.matrix_file,"w").write("chr\tpos\tref\t%s\n" % ("\t".join(self.samples)))
 			cmd = "bcftools query -f '%%CHROM\\t%%POS\\t%%REF[\\t%%IUPACGT]\\n' %(filename)s  | sed 's/\.\/\./N/g' >> %(matrix_file)s" % vars(self)
