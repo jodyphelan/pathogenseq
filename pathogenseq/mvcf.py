@@ -1103,3 +1103,9 @@ DATA
 		for gene in genesum:
 			O.write("%s\tNA\tNA\t%s\n" % (gene,"\t".join(str(genesum[gene][s]) for s in self.samples)))
 		O.close()
+	def get_snp_pos(self):
+		positions = []
+		for l in cmd_out("bcftools query -f '%%CHROM\\t%%POS\\n' %(filename)s" % vars(self)):
+			row = l.rstrip().split()
+			positions.append((row[0],int(row[1])))
+		return positions
