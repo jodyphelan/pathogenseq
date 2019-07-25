@@ -160,7 +160,7 @@ class bcf:
 		variants = defaultdict(lambda:defaultdict(dict))
 		raw_variants = defaultdict(lambda:defaultdict(dict))
 		if tchrom and tpos:
-			cmd = "bcftools view --threads %s %s %s:%s | bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g'" % (self.threads,self.filename,chrom,pos)
+			cmd = "bcftools view --threads %s %s %s:%s | bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n'  | sed 's/\.\/\./N/g'" % (self.threads,self.filename,tchrom,tpos)
 		else:
 			cmd = "bcftools query -f '%%CHROM\\t%%POS[\\t%%IUPACGT]\\n' %s  | sed 's/\.\/\./N/g'" % self.filename
 		log(cmd)
