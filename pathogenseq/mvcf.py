@@ -81,7 +81,7 @@ class bcf:
 			self.samples.append(l.rstrip())
 		os.remove(self.temp_file)
 		self.vcf = "%s.vcf" % self.prefix
-	def per_sample_bcf2fa(self,s,ref):
+	def per_sample_bcf2fa(self,s,ref,nochrom=False):
 		self.tmp_sample = s
 		self.ref = ref
 		cmd = "bcftools view --threads %(threads)s -s %(tmp_sample)s  %(filename)s -Ou | bcftools filter -e 'GT=\"het\"' -S . -Ou | bcftools view --threads %(threads)s -i 'GT==\"./.\"' -Ou | bcftools query -f '%%CHROM\\t%%POS\\n'" % vars(self)
@@ -99,7 +99,10 @@ class bcf:
 		FA = open(self.final_fa,"w")
 		for seq in fa_dict:
 			log("Writing consensus for %s" % seq)
-			FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
+			if nochrom:
+				FA.write(">%s\n%s\n" % (self.tmp_sample,fa_dict[seq]))
+			else:
+				FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
 		FA.close()
 		rm_files([self.tmp_file,self.tmp_fa])
 	def del_pos2bed(self):
@@ -838,12 +841,13 @@ DATA
 		cmd = "bcftools +setGT %(filename)s -Ou -- -t q -i 'GT=\"het\"' -n . | bcftools view --threads %(threads)s %(remove_monomorphic)s -Ob -o %(outfile)s" % vars(self)
 		run_cmd(cmd)
 		return bcf(self.outfile,threads=self.threads)
-	def generate_consensus(self,ref,threads=4):
+	def generate_consensus(self,ref,threads=4,no_chrom=False):
 		add_arguments_to_self(self,locals())
 		cmd_file = get_random_file()
 		O = open(cmd_file,"w")
+		nochrom = "--no-chrom" if no_chrom else ""
 		for s in self.samples:
-			O.write("bcf2sample_consensus.py %s %s %s\n" % (self.filename,s,ref))
+			O.write("bcf2sample_consensus.py %s %s %s %s\n" % (self.filename,s,ref,nochrom))
 		O.close()
 		run_cmd("cat %s | parallel -j %s" % (cmd_file,threads))
 		rm_files([cmd_file])
