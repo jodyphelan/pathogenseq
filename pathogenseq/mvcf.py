@@ -274,7 +274,7 @@ class bcf:
 			row = l.rstrip().split()
 			if i==0: continue
 			s = self.samples[i-1]
-			seq = "".join(row).replace("./.","N")
+			seq = "".join(row).replace("./.","N").replace("*/*","N")
 			O.write(">%s\n%s\n" % ( s,seq))
 		O.close()
 
