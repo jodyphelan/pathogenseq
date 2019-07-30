@@ -100,9 +100,9 @@ class bcf:
 		for seq in fa_dict:
 			log("Writing consensus for %s" % seq)
 			if nochrom:
-				FA.write(">%s\n%s\n" % (self.tmp_sample,fa_dict[seq]))
+				FA.write(">%s\n%s\n" % (self.tmp_sample,fa_dict[seq].replace("*","N")))
 			else:
-				FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq]))
+				FA.write(">%s_%s\n%s\n" % (self.tmp_sample,seq,fa_dict[seq].replace("*","N")))
 		FA.close()
 		rm_files([self.tmp_file,self.tmp_fa])
 	def del_pos2bed(self):
