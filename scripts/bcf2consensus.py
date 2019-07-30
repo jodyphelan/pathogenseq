@@ -10,8 +10,8 @@ def main(args):
 	bcf.generate_consensus(ref_file,threads=args.threads,no_chrom=args.combine)
 	if args.combine:
 		files = " ".join(["%s.%s.fasta" % (bcf.prefix,s) for s in bcf.samples])
-		run_cmd("cat %s > %s.genome.fasta" % (files,bcf.prefix))
-		run_cmd("rm %s" % (files))
+		ps.run_cmd("cat %s > %s.genome.fasta" % (files,bcf.prefix))
+		ps.run_cmd("rm %s" % (files))
 
 parser = argparse.ArgumentParser(description='TBProfiler pipeline',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('bcf',help='bcf file')
