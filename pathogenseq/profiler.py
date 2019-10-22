@@ -12,7 +12,7 @@ def profiler(conf_file,prefix,r1=None,r2=None,bam_file=None,call_method="low",mi
         for f in conf:
             filecheck(conf[f])
         if not r1 and not r2 and not bam_file:
-            log("Please provide at least one fastQ file (-1) or a BAM file (-b)", True)
+            log("Please provide at least one fastQ file (-1) or a BAM file (-a)", True)
         elif (r1 or r2) and bam_file:
             log("Please provide fastQ files or a BAM file but not both",True)
         elif not r1 and r2:

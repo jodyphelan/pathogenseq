@@ -5,8 +5,8 @@ from .files import *
 from .nucmer import *
 from .mvcf import *
 from .fasta import *
-import matplotlib as mpl
-mpl.use('TkAgg')
+#import matplotlib as mpl
+#mpl.use('TkAgg')
 class abi:
 	def __init__(self,in_obj,prefix):
 		if isinstance(in_obj,list):

@@ -6,10 +6,10 @@ from .fasta import *
 from .fastq import *
 import numpy as np
 import gzip
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-plt.ioff()
+#import matplotlib as mpl
+#mpl.use('Agg')
+#import matplotlib.pyplot as plt
+#plt.ioff()
 import json
 import re
 

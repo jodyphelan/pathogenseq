@@ -1019,7 +1019,7 @@ DATA
 		tmpfile = get_random_file()
 		cmd = "bcftools view %s > %s" % (self.filename,tmpfile)
 		run_cmd(cmd)
-		cmd = "plink --vcf %s --distance square --allow-extra-chr --out %s" % (tmpfile,tmpfile)
+		cmd = "plink --vcf %s --distance square --allow-extra-chr --out %s --double-id" % (tmpfile,tmpfile)
 		run_cmd(cmd)
 		O = open("%s.dist" % (self.prefix),"w")
 		dists = []
@@ -1113,3 +1113,9 @@ DATA
 			row = l.rstrip().split()
 			positions.append((row[0],int(row[1])))
 		return positions
+	def get_snp_info(self):
+		info = []
+		for l in cmd_out("bcftools query -f '%%CHROM\\t%%POS\\t%%REF\\t%%ALT\\t%%BCSQ\\n' %(filename)s" % vars(self)):
+			row = l.rstrip().split()
+			info.append(row)
+		return info
